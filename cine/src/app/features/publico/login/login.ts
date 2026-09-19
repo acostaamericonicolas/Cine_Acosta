@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { form, FormField, required, email } from '@angular/forms/signals';
 import { AuthService } from '../../../core/auth.service';
 
@@ -12,6 +12,7 @@ import { AuthService } from '../../../core/auth.service';
 export class Login {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   modelo = signal({ email: '', password: '' });
 
@@ -33,7 +34,11 @@ export class Login {
     try {
       const m = this.modelo();
       await this.auth.login(m.email, m.password);
-      this.router.navigate([this.auth.rutaInicial()]);
+      const volverA = this.route.snapshot.queryParamMap.get('volverA');
+      const destino = volverA && volverA.startsWith('/') && !volverA.startsWith('//')
+        ? volverA
+        : this.auth.rutaInicial();
+      this.router.navigateByUrl(destino);
     } catch {
       this.error.set('Mail o contraseña incorrectos');
     } finally {

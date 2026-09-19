@@ -1,9 +1,16 @@
 <nav>
   <a routerLink="/">Cine</a>
-  @if (auth.logueado()) {
-  <span>Hola, {{ auth.perfil()?.nombre }}</span>
-  <button (click)="salir()">Salir</button>
-  } @else {
+    @if (auth.logueado()) {
+    <a routerLink="/cliente">Mi perfil</a>
+    @if (auth.rol() === 'empleado' || auth.rol() === 'admin') {
+    <a routerLink="/empleado">Validar</a>
+    }
+    @if (auth.rol() === 'admin') {
+    <a routerLink="/admin">Admin</a>
+    }
+    <span>Hola, {{ auth.perfil()?.nombre }}</span>
+    <button (click)="salir()">Salir</button>
+    } @else {
   <a routerLink="/login">Ingresar</a>
   <a routerLink="/registro">Registrarme</a>
   }

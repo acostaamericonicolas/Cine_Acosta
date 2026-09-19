@@ -37,9 +37,8 @@ export class AuthService {
     readonly logueado = computed(() => this.perfil() !== null);
     readonly rol = computed(() => this.perfil()?.rol ?? null);
 
-    constructor() {
-        this.restaurarSesion();
-    }
+    // Promesa que se resuelve cuando ya se intentó restaurar la sesión (la usan los guards)
+    readonly inicializada = this.restaurarSesion();
 
     private async restaurarSesion() {
         try {

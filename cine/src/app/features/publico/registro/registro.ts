@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { form, FormField, required, email, minLength, min, max, validate } from '@angular/forms/signals';
 import { AuthService, DatosRegistro } from '../../../core/auth.service';
+import { ConCambios } from '../../../core/guards/cambios.guard';
 
 @Component({
   selector: 'app-registro',
@@ -9,13 +10,18 @@ import { AuthService, DatosRegistro } from '../../../core/auth.service';
   templateUrl: './registro.html',
   styleUrl: './registro.css',
 })
-export class Registro {
+export class Registro implements ConCambios {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private guardado = false;
+
+  hayCambios(): boolean {
+    return this.f().dirty() && !this.guardado;
+  }
 
   private hoy = new Date().toISOString().slice(0, 10);
-  tiposSangre = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', '0+', '0-'];
-  coloresOjos = ['Marrón', 'Negro', 'Azul', 'Verde', 'Gris', 'Miel'];
+  tiposSangre = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', '0+', '0-', 'Prefiero no responder'];
+  coloresOjos = ['Marrón', 'Negro', 'Azul', 'Verde', 'Gris', 'Miel', 'Prefiero no responder'];
 
   modelo = signal<DatosRegistro>({
     email: '',
@@ -56,6 +62,7 @@ export class Registro {
     this.error.set('');
     try {
       await this.auth.registrar(this.modelo());
+      this.guardado = true;
       this.router.navigate(['/']);
     } catch (e) {
       this.error.set((e as { message?: string }).message ?? 'No se pudo completar el registro');

@@ -1,0 +1,85 @@
+<h1>{{ id === null ? 'Nueva película' : 'Editar película' }}</h1>
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else {
+<form (submit)="guardar($event)">
+    <label>Nombre
+        <input type="text" [formField]="f.nombre" />
+    </label>
+    @if (f.nombre().touched() && f.nombre().invalid()) {
+    <p class="error">{{ f.nombre().errors()[0].message }}</p>
+    }
+
+    <label>URL de la imagen
+        <input type="url" [formField]="f.imagenUrl" />
+    </label>
+    @if (f.imagenUrl().touched() && f.imagenUrl().invalid()) {
+    <p class="error">{{ f.imagenUrl().errors()[0].message }}</p>
+    }
+    @if (f.imagenUrl().valid()) {
+    <img [src]="modelo().imagenUrl" alt="Vista previa del póster" width="120" />
+    }
+
+    <label>Sinopsis
+        <textarea rows="4" [formField]="f.sinopsis"></textarea>
+    </label>
+    <small>{{ modelo().sinopsis.length }}/600</small>
+    @if (f.sinopsis().touched() && f.sinopsis().invalid()) {
+    <p class="error">{{ f.sinopsis().errors()[0].message }}</p>
+    }
+
+    <label>Duración (minutos)
+        <input type="number" [formField]="f.duracionMin" />
+    </label>
+    @if (f.duracionMin().touched() && f.duracionMin().invalid()) {
+    <p class="error">{{ f.duracionMin().errors()[0].message }}</p>
+    }
+
+    <fieldset>
+        <legend>Géneros</legend>
+        @for (g of generosDisponibles; track g) {
+        <label>
+            <input #chk type="checkbox" [checked]="modelo().generos.includes(g)"
+                (change)="alternarGenero(g, chk.checked)" />
+            {{ g }}
+        </label>
+        }
+        @if (modelo().generos.length === 0) {
+        <p class="error">Elegí al menos un género</p>
+        }
+    </fieldset>
+
+    <label>Restricción de edad
+        <select [formField]="f.restriccion">
+            @for (r of restricciones; track r.valor) {
+            <option [value]="r.valor">{{ r.texto }}</option>
+            }
+        </select>
+    </label>
+
+    <label>Estado
+        <select [formField]="f.estado">
+            @for (e of estados; track e.valor) {
+            <option [value]="e.valor">{{ e.texto }}</option>
+            }
+        </select>
+    </label>
+
+    <label>Fecha de estreno
+        <input type="date" [formField]="f.fechaEstreno" />
+    </label>
+    @if (f.fechaEstreno().touched() && f.fechaEstreno().invalid()) {
+    <p class="error">{{ f.fechaEstreno().errors()[0].message }}</p>
+    }
+
+    @if (error()) {
+    <p class="error">{{ error() }}</p>
+    }
+
+    <button type="submit" [disabled]="f().invalid() || guardando()">
+        {{ guardando() ? 'Guardando...' : 'Guardar' }}
+    </button>
+    <a routerLink="/admin/peliculas">Cancelar</a>
+</form>
+}

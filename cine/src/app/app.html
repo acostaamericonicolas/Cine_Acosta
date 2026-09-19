@@ -6,7 +6,8 @@
     <a routerLink="/empleado">Validar</a>
     }
     @if (auth.rol() === 'admin') {
-    <a routerLink="/admin">Admin</a>
+      <a routerLink="/admin/peliculas">Películas</a>
+      <a routerLink="/admin/usuarios">Usuarios</a>
     }
     <span>Hola, {{ auth.perfil()?.nombre }}</span>
     <button (click)="salir()">Salir</button>

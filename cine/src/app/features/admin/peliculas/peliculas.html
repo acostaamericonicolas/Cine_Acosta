@@ -1,0 +1,52 @@
+<h1>Películas</h1>
+<a routerLink="/admin/peliculas/nueva">+ Nueva película</a>
+
+@if (error()) {
+<p class="error">{{ error() }}</p>
+}
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else {
+<table>
+    <thead>
+        <tr>
+            <th>Póster</th>
+            <th>Nombre</th>
+            <th>Géneros</th>
+            <th>Duración</th>
+            <th>Edad</th>
+            <th>Estreno</th>
+            <th>Estado</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (p of peliculas(); track p.id) {
+        <tr>
+            <td><img [src]="p.imagen_url" [alt]="p.nombre" width="50" /></td>
+            <td>{{ p.nombre }}</td>
+            <td>{{ p.generos.join(', ') }}</td>
+            <td>{{ p.duracion_min }} min</td>
+            <td>{{ p.restriccion_edad === 0 ? 'Todo público' : '+' + p.restriccion_edad }}</td>
+            <td>{{ p.fecha_estreno | date: 'dd/MM/yyyy' }}</td>
+            <td>
+                <select #sel (change)="cambiarEstado(p, sel)">
+                    @for (e of estados; track e.valor) {
+                    <option [value]="e.valor" [selected]="e.valor === p.estado">{{ e.texto }}</option>
+                    }
+                </select>
+            </td>
+            <td>
+                <a [routerLink]="['/admin/peliculas', p.id]">Editar</a>
+                <button (click)="eliminar(p)">Eliminar</button>
+            </td>
+        </tr>
+        } @empty {
+        <tr>
+            <td colspan="8">Todavía no hay películas cargadas.</td>
+        </tr>
+        }
+    </tbody>
+</table>
+}

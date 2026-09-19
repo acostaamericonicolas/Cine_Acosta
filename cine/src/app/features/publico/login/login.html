@@ -1,0 +1,27 @@
+<h1>Ingresar</h1>
+
+<form (submit)="enviar($event)">
+    <label>Mail
+        <input type="email" [formField]="f.email" />
+    </label>
+    @if (f.email().touched() && f.email().invalid()) {
+    <p class="error">{{ f.email().errors()[0].message }}</p>
+    }
+
+    <label>Contraseña
+        <input type="password" [formField]="f.password" />
+    </label>
+    @if (f.password().touched() && f.password().invalid()) {
+    <p class="error">{{ f.password().errors()[0].message }}</p>
+    }
+
+    @if (error()) {
+    <p class="error">{{ error() }}</p>
+    }
+
+    <button type="submit" [disabled]="f().invalid() || cargando()">
+        {{ cargando() ? 'Ingresando...' : 'Ingresar' }}
+    </button>
+</form>
+
+<p>¿No tenés cuenta? <a routerLink="/registro">Registrate</a></p>

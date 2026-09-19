@@ -1,0 +1,79 @@
+<h1>Crear cuenta</h1>
+
+<form (submit)="enviar($event)">
+    <label>Mail
+        <input type="email" [formField]="f.email" />
+    </label>
+    @if (f.email().touched() && f.email().invalid()) {
+    <p class="error">{{ f.email().errors()[0].message }}</p>
+    }
+
+    <label>Contraseña
+        <input type="password" [formField]="f.password" />
+    </label>
+    @if (f.password().touched() && f.password().invalid()) {
+    <p class="error">{{ f.password().errors()[0].message }}</p>
+    }
+
+    <label>Nombre
+        <input type="text" [formField]="f.nombre" />
+    </label>
+    @if (f.nombre().touched() && f.nombre().invalid()) {
+    <p class="error">{{ f.nombre().errors()[0].message }}</p>
+    }
+
+    <label>Apellido
+        <input type="text" [formField]="f.apellido" />
+    </label>
+    @if (f.apellido().touched() && f.apellido().invalid()) {
+    <p class="error">{{ f.apellido().errors()[0].message }}</p>
+    }
+
+    <label>Fecha de nacimiento
+        <input type="date" [formField]="f.fechaNacimiento" />
+    </label>
+    @if (f.fechaNacimiento().touched() && f.fechaNacimiento().invalid()) {
+    <p class="error">{{ f.fechaNacimiento().errors()[0].message }}</p>
+    }
+
+    <label>Tipo de sangre
+        <select [formField]="f.tipoSangre">
+            <option value="">Elegí una opción</option>
+            @for (t of tiposSangre; track t) {
+            <option [value]="t">{{ t }}</option>
+            }
+        </select>
+    </label>
+    @if (f.tipoSangre().touched() && f.tipoSangre().invalid()) {
+    <p class="error">{{ f.tipoSangre().errors()[0].message }}</p>
+    }
+
+    <label>Color de ojos
+        <select [formField]="f.colorOjos">
+            <option value="">Elegí una opción</option>
+            @for (c of coloresOjos; track c) {
+            <option [value]="c">{{ c }}</option>
+            }
+        </select>
+    </label>
+    @if (f.colorOjos().touched() && f.colorOjos().invalid()) {
+    <p class="error">{{ f.colorOjos().errors()[0].message }}</p>
+    }
+
+    <label>Días de vacaciones por año
+        <input type="number" [formField]="f.diasVacaciones" />
+    </label>
+    @if (f.diasVacaciones().touched() && f.diasVacaciones().invalid()) {
+    <p class="error">{{ f.diasVacaciones().errors()[0].message }}</p>
+    }
+
+    @if (error()) {
+    <p class="error">{{ error() }}</p>
+    }
+
+    <button type="submit" [disabled]="f().invalid() || cargando()">
+        {{ cargando() ? 'Registrando...' : 'Registrarme' }}
+    </button>
+</form>
+
+<p>¿Ya tenés cuenta? <a routerLink="/login">Ingresá</a></p>

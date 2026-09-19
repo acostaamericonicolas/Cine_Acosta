@@ -1,0 +1,12 @@
+<nav>
+  <a routerLink="/">Cine</a>
+  @if (auth.logueado()) {
+  <span>Hola, {{ auth.perfil()?.nombre }}</span>
+  <button (click)="salir()">Salir</button>
+  } @else {
+  <a routerLink="/login">Ingresar</a>
+  <a routerLink="/registro">Registrarme</a>
+  }
+</nav>
+
+<router-outlet />

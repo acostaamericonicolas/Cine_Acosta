@@ -5,6 +5,17 @@ import {
   ESTADOS, EstadoPelicula, Pelicula, PeliculasService,
 } from '../../../core/peliculas.service';
 
+
+export const TIPOS_IMAGEN = ['image/jpeg', 'image/png', 'image/webp'];
+export const MAX_IMAGEN_BYTES = 2 * 1024 * 1024; // 2 MB
+
+const EXTENSIONES: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+};
+
+
 @Component({
   selector: 'app-peliculas',
   imports: [RouterLink, DatePipe],
@@ -50,6 +61,7 @@ export class Peliculas {
     this.error.set('');
     try {
       await this.service.eliminar(p.id);
+      if (p.imagen_path) await this.service.eliminarPoster(p.imagen_path).catch(() => { });
       this.peliculas.update(lista => lista.filter(x => x.id !== p.id));
     } catch (e) {
       this.error.set((e as { message?: string }).message ?? 'No se pudo eliminar');

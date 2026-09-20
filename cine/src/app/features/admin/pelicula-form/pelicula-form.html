@@ -11,14 +11,17 @@
     <p class="error">{{ f.nombre().errors()[0].message }}</p>
     }
 
-    <label>URL de la imagen
-        <input type="url" [formField]="f.imagenUrl" />
+    <label>Póster
+        <input type="file" accept="image/jpeg,image/png,image/webp" (change)="seleccionarArchivo($event)" />
     </label>
-    @if (f.imagenUrl().touched() && f.imagenUrl().invalid()) {
-    <p class="error">{{ f.imagenUrl().errors()[0].message }}</p>
+    <small>JPG, PNG o WebP. Máximo 2 MB.</small>
+    @if (errorImagen()) {
+    <p class="error">{{ errorImagen() }}</p>
     }
-    @if (f.imagenUrl().valid()) {
-    <img [src]="modelo().imagenUrl" alt="Vista previa del póster" width="120" />
+    @if (imagenMostrada(); as src) {
+    <img [src]="src" alt="Vista previa del póster" width="120" />
+    } @else {
+    <p class="error">Elegí una imagen para el póster</p>
     }
 
     <label>Sinopsis
@@ -77,7 +80,7 @@
     <p class="error">{{ error() }}</p>
     }
 
-    <button type="submit" [disabled]="f().invalid() || guardando()">
+    <button type="submit" [disabled]="!puedeGuardar()">
         {{ guardando() ? 'Guardando...' : 'Guardar' }}
     </button>
     <a routerLink="/admin/peliculas">Cancelar</a>

@@ -1,0 +1,43 @@
+.tarjeta {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.tarjeta img {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.75rem;
+    flex: 1;
+}
+
+.info h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.meta {
+    margin: 0;
+    color: #555;
+    font-size: 0.85rem;
+}
+
+.edad {
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.info a {
+    margin-top: auto;
+}

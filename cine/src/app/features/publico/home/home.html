@@ -1,1 +1,44 @@
-<p>home works!</p>
+<h1>Cartelera</h1>
+
+@if (error()) {
+<p class="error">{{ error() }}</p>
+}
+
+@if (cargando()) {
+<p>Cargando cartelera...</p>
+} @else if (peliculas().length === 0) {
+<p>Por el momento no hay películas en cartelera.</p>
+} @else {
+<section class="filtros">
+    <input #q type="search" placeholder="Buscar película por nombre" aria-label="Buscar película por nombre"
+        [value]="busqueda()" (input)="busqueda.set(q.value)" />
+
+    <div class="generos">
+        @for (g of generosDisponibles(); track g) {
+        <button type="button" class="chip" [ngClass]="{ activo: generosElegidos().includes(g) }"
+            [attr.aria-pressed]="generosElegidos().includes(g)" (click)="alternarGenero(g)">
+            {{ g }}
+        </button>
+        }
+    </div>
+
+    @if (hayFiltros()) {
+    <button type="button" (click)="limpiarFiltros()">Limpiar filtros</button>
+    }
+</section>
+
+@if (filtradas().length === 0) {
+<p>No encontramos películas con esos filtros.</p>
+} @else {
+<div class="grilla">
+    @for (p of filtradas(); track p.id) {
+    @let puesto = top3().indexOf(p.id) + 1;
+    <app-tarjeta-pelicula [pelicula]="p">
+        @if (puesto > 0) {
+        <span class="insignia-top">🔥 Más vendida #{{ puesto }}</span>
+        }
+    </app-tarjeta-pelicula>
+    }
+</div>
+}
+}

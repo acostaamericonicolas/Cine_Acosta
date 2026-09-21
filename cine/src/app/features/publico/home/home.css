@@ -1,0 +1,49 @@
+.filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.filtros input[type='search'] {
+    flex: 1 1 260px;
+    padding: 0.5rem 0.75rem;
+}
+
+.generos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.chip {
+    border: 1px solid #999;
+    background: #fff;
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    cursor: pointer;
+}
+
+.chip.activo {
+    background: #1f3864;
+    color: #fff;
+    border-color: #1f3864;
+}
+
+.grilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+/* La insignia se proyecta desde acá, por eso su estilo va en este archivo y no en el de la tarjeta */
+.insignia-top {
+    align-self: flex-start;
+    background: #fff3cd;
+    color: #7a5b00;
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+}

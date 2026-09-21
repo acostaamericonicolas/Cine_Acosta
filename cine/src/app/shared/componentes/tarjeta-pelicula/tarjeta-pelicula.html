@@ -1,0 +1,19 @@
+<article class="tarjeta">
+    <img [src]="pelicula.imagen_url" [alt]="'Póster de ' + pelicula.nombre" loading="lazy" />
+
+    <div class="info">
+        <!-- Lo que el padre escriba dentro de <app-tarjeta-pelicula> aparece acá -->
+        <ng-content />
+
+        <h3>{{ pelicula.nombre }}</h3>
+        <p class="meta">{{ pelicula.duracion_min | duracion }} · {{ pelicula.generos.join(', ') }}</p>
+
+        @if (pelicula.restriccion_edad > 0) {
+        <span class="edad">+{{ pelicula.restriccion_edad }}</span>
+        } @else {
+        <span class="edad">Todo público</span>
+        }
+
+        <a [routerLink]="['/pelicula', pelicula.id]">Ver funciones</a>
+    </div>
+</article>

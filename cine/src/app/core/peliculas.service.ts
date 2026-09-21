@@ -110,4 +110,15 @@ export class PeliculasService {
             throw new Error('No tenés permiso para hacer este cambio');
         }
     }
+
+    async listarCartelera(): Promise<Pelicula[]> {
+        const { data, error } = await this.supabase
+            .from('peliculas')
+            .select('*')
+            .eq('estado', 'cartelera')
+            .order('vendidas', { ascending: false })
+            .order('nombre');
+        if (error) throw error;
+        return data as Pelicula[];
+    }
 }

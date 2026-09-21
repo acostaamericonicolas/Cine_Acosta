@@ -100,7 +100,13 @@ export class PeliculasService {
             .delete()
             .eq('id', id)
             .select();
-        if (error) throw error;
+        if (error) {
+            // 23503 = violación de clave foránea (la película tiene funciones asociadas)
+            if (error.code === '23503') {
+                throw new Error('No se puede eliminar: la película tiene funciones o reseñas asociadas. Ocultala en su lugar.');
+            }
+            throw error;
+        }
         this.verificarPermiso(data);
     }
 
@@ -110,6 +116,8 @@ export class PeliculasService {
             throw new Error('No tenés permiso para hacer este cambio');
         }
     }
+
+    //Trae solo las películas en cartelera, ordenadas de más a menos vendidas y, si empatan, por nombre. Para quien no inició sesión ya funciona, porque la policy de select que creamos permite ver las películas visibles.
 
     async listarCartelera(): Promise<Pelicula[]> {
         const { data, error } = await this.supabase

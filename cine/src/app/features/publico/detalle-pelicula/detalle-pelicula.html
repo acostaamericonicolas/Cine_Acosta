@@ -1,0 +1,92 @@
+<a routerLink="/">← Volver a la cartelera</a>
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else if (noEncontrada()) {
+<h1>No encontramos la película</h1>
+<p>Puede que ya no esté disponible.</p>
+} @else if (pelicula(); as p) {
+<article class="cabecera">
+    <img [src]="p.imagen_url" [alt]="'Póster de ' + p.nombre" />
+
+    <div>
+        <h1>{{ p.nombre }}</h1>
+        <p class="meta">{{ p.duracion_min | duracion }} · {{ p.generos.join(', ') }}</p>
+
+        @if (p.restriccion_edad > 0) {
+        <p class="restriccion">
+            <strong>Restricción de edad: +{{ p.restriccion_edad }}.</strong> Debe asistir un adulto.
+        </p>
+        } @else {
+        <p class="restriccion">Apta para todo público.</p>
+        }
+
+        @if (resenas().length > 0) {
+        <p class="promedio">
+            <span aria-hidden="true">{{ promedio() | estrellas }}</span>
+            <strong>{{ promedio() | number: '1.1-1' }}</strong> de 5
+        </p>
+        }
+
+        <p>{{ p.sinopsis }}</p>
+    </div>
+</article>
+
+<section>
+    <h2>Funciones</h2>
+
+    @if (p.estado !== 'cartelera') {
+    <p>Se estrena el {{ p.fecha_estreno | date: 'dd/MM/yyyy' }}. Todavía no hay venta de entradas.</p>
+    } @else if (errorFunciones()) {
+    <p class="error">{{ errorFunciones() }}</p>
+    } @else {
+    @for (dia of dias(); track dia.clave) {
+    <h3 class="dia">{{ dia.fecha | date: "EEEE d 'de' MMMM" }}</h3>
+    <ul class="funciones">
+        @for (f of dia.funciones; track f.id) {
+        <li>
+            <strong>{{ f.inicio | date: 'HH:mm' }}</strong>
+            <span class="etiqueta">{{ f.formato }}</span>
+            <span class="etiqueta">{{ f.idioma === 'castellano' ? 'Castellano' : 'Subtitulada' }}</span>
+            <a class="comprar" [routerLink]="['/comprar', f.id]">Comprar</a>
+        </li>
+        }
+    </ul>
+    } @empty {
+    <p>Por el momento no hay funciones programadas.</p>
+    }
+    }
+</section>
+
+<section>
+    <h2>Reseñas</h2>
+
+    @if (errorResenas()) {
+    <p class="error">{{ errorResenas() }}</p>
+    } @else if (resenas().length === 0) {
+    <p>Todavía no hay reseñas de esta película.</p>
+    } @else {
+    <p>
+        {{ resenas().length }} {{ resenas().length === 1 ? 'reseña' : 'reseñas' }}
+    </p>
+
+    <ul class="resenas">
+        @for (r of resenasVisibles(); track r.id) {
+        <li>
+            <span class="estrellas" [attr.aria-label]="r.estrellas + ' de 5 estrellas'">{{ r.estrellas | estrellas
+                }}</span>
+            <strong>{{ r.autor }}</strong>
+            <small>{{ r.creado_en | date: 'dd/MM/yyyy' }}</small>
+            <p>{{ r.comentario }}</p>
+        </li>
+        }
+    </ul>
+
+    @if (resenas().length > resenasIniciales) {
+    <button type="button" (click)="verTodas.set(!verTodas())">
+        {{ verTodas() ? 'Ver menos' : 'Ver todas las reseñas' }}
+    </button>
+    }
+    }
+</section>
+}

@@ -26,5 +26,9 @@ export const routes: Routes = [
         canActivateChild: [adminChildGuard],
         loadChildren: () => import('./features/admin/admin.routes').then(m => m.ADMIN_ROUTES),
     },
+    {
+        path: 'pelicula/:id',
+        loadComponent: () => import('./features/publico/detalle-pelicula/detalle-pelicula').then(m => m.DetallePelicula),
+    },
     { path: '**', redirectTo: '' },
 ];

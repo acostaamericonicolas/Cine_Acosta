@@ -1,0 +1,178 @@
+:host {
+    display: block;
+}
+
+.mapa {
+    --tam: 28px;
+    --sep: 4px;
+    --pasillo: 28px;
+    background: #0b1a30;
+    border-radius: 12px;
+    padding: 3rem 1rem 1rem;
+    /* el espacio de arriba es para que el tooltip de la fila A no se corte */
+    overflow-x: auto;
+    color: #e5edf7;
+}
+
+@media (max-width: 1100px) {
+    .mapa {
+        --tam: 20px;
+        --pasillo: 20px;
+    }
+}
+
+.plano {
+    width: max-content;
+    margin: 0 auto;
+    padding: 0 3rem;
+}
+
+.fila {
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--sep);
+}
+
+.fila.pasillo {
+    margin-bottom: 18px;
+}
+
+.bloque {
+    display: flex;
+    gap: var(--sep);
+}
+
+.bloque+.bloque {
+    margin-left: var(--pasillo);
+}
+
+.letra {
+    width: 28px;
+    margin-right: 10px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.num {
+    width: var(--tam);
+    text-align: center;
+    font-size: 0.7rem;
+    color: #8fa3bf;
+    flex: none;
+}
+
+.hueco {
+    width: var(--tam);
+    height: var(--tam);
+    flex: none;
+}
+
+/* Colores por tipo */
+.general {
+    --color: #34d97b;
+}
+
+.accesible {
+    --color: #ffc933;
+}
+
+.vip {
+    --color: #ff4d79;
+}
+
+.butaca {
+    position: relative;
+    width: var(--tam);
+    height: var(--tam);
+    flex: none;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: var(--color);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Estados (van después de los tipos para que los pisen) */
+.butaca.deshabilitada {
+    background: repeating-linear-gradient(45deg, #4b5563 0 4px, #374151 4px 8px);
+    opacity: 0.75;
+}
+
+.butaca.ocupada {
+    background: #6b7280;
+    opacity: 0.55;
+}
+
+.butaca.seleccionada {
+    outline: 3px solid #fff;
+    outline-offset: 1px;
+}
+
+/* La butaca se eleva */
+.butaca:hover,
+.butaca:focus-visible {
+    transform: translateY(-6px) scale(1.15);
+    box-shadow: 0 8px 14px rgba(0, 0, 0, 0.45);
+    z-index: 10;
+}
+
+/* Tooltip: "J-10 · Accesible" */
+.butaca::after {
+    content: attr(data-etiqueta);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0.25rem 0.55rem;
+    border-radius: 4px;
+    background: #fff;
+    color: #0b1a30;
+    font-size: 0.75rem;
+    font-weight: bold;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.butaca:hover::after,
+.butaca:focus-visible::after {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .butaca,
+    .butaca::after {
+        transition: none;
+    }
+}
+
+.pantalla {
+    margin: 1.25rem auto 0;
+    width: 70%;
+    padding: 0.7rem 0;
+    text-align: center;
+    letter-spacing: 0.4em;
+    border-top: 3px solid #5cb3ff;
+    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    background: linear-gradient(180deg, rgba(92, 179, 255, 0.35), transparent);
+}
+
+.leyenda {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 0.75rem;
+}
+
+.muestra {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    background: var(--color);
+    vertical-align: middle;
+}

@@ -15,4 +15,6 @@ export const ADMIN_ROUTES: Routes = [
         canDeactivate: [cambiosGuard],
         loadComponent: () => import('./pelicula-form/pelicula-form').then(m => m.PeliculaForm),
     },
+    { path: 'salas', loadComponent: () => import('./salas/salas').then(m => m.Salas) },
+    { path: 'salas/:id', loadComponent: () => import('./sala-butacas/sala-butacas').then(m => m.SalaButacas) },
 ];

@@ -1,0 +1,68 @@
+<h1>Salas</h1>
+
+@if (error()) {
+<p class="error">{{ error() }}</p>
+}
+@if (mensaje()) {
+<p class="ok">{{ mensaje() }}</p>
+}
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else {
+<section>
+    <h2>Salas del cine</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Estado</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (s of salas(); track s.id) {
+            <tr>
+                <td>{{ s.nombre }}</td>
+                <td>{{ s.activa ? 'Activa' : 'Desactivada' }}</td>
+                <td>
+                    <a [routerLink]="['/admin/salas', s.id]">Ver butacas</a>
+                    <button type="button" (click)="alternarActiva(s)">
+                        {{ s.activa ? 'Desactivar' : 'Activar' }}
+                    </button>
+                </td>
+            </tr>
+            } @empty {
+            <tr>
+                <td colspan="3">Todavía no hay salas.</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+
+    <form (submit)="agregar($event)">
+        <input type="text" [formField]="fSala.nombre" placeholder="Nombre de la nueva sala"
+            aria-label="Nombre de la nueva sala" />
+        <button type="submit" [disabled]="fSala().invalid()">Agregar sala</button>
+    </form>
+</section>
+
+<section>
+    <h2>Precios por tipo de butaca</h2>
+
+    <form (submit)="guardarPrecios($event)">
+        @for (t of tipos; track t) {
+        <label>{{ textoTipo[t] }} ($)
+            <input type="number" [formField]="fPrecios[t]" />
+        </label>
+        @if (fPrecios[t]().touched() && fPrecios[t]().invalid()) {
+        <p class="error">{{ fPrecios[t]().errors()[0].message }}</p>
+        }
+        }
+        <button type="submit" [disabled]="fPrecios().invalid() || guardandoPrecios()">
+            {{ guardandoPrecios() ? 'Guardando...' : 'Guardar precios' }}
+        </button>
+    </form>
+</section>
+}

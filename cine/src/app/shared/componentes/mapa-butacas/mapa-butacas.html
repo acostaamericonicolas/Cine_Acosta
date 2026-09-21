@@ -1,0 +1,45 @@
+<div class="mapa">
+    <div class="plano">
+
+        <!-- Números de columna -->
+        <div class="fila">
+            <span class="letra"></span>
+            @for (bloque of sala[0].bloques; track $index) {
+            <div class="bloque">
+                @for (b of bloque; track $index) {
+                <span class="num">{{ b?.numero }}</span>
+                }
+            </div>
+            }
+        </div>
+
+        @for (fila of sala; track fila.letra) {
+        <div class="fila" [ngClass]="{ pasillo: fila.letra === 'J' || fila.letra === 'P' }">
+            <span class="letra">{{ fila.letra }}</span>
+
+            @for (bloque of fila.bloques; track $index) {
+            <div class="bloque">
+                @for (b of bloque; track $index) {
+                @if (b) {
+                @let e = estado(b);
+                <button type="button" class="butaca" [ngClass]="[b.tipo, e]" [attr.data-etiqueta]="etiqueta(b, e)"
+                    [attr.aria-label]="etiqueta(b, e)" [attr.aria-pressed]="e === 'seleccionada'"
+                    (click)="butacaClick.emit(b)"></button>
+                } @else {
+                <span class="hueco"></span>
+                }
+                }
+            </div>
+            }
+        </div>
+        }
+
+        <div class="pantalla">PANTALLA</div>
+    </div>
+</div>
+
+<div class="leyenda">
+    @for (t of tipos; track t) {
+    <span><i class="muestra" [ngClass]="t"></i> {{ textoTipo[t] }}</span>
+    }
+</div>

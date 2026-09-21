@@ -1,0 +1,19 @@
+<a routerLink="/admin/salas">← Volver a salas</a>
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else if (noEncontrada()) {
+<h1>No encontramos la sala</h1>
+} @else if (sala(); as s) {
+<h1>{{ s.nombre }}</h1>
+<p>
+    <strong>{{ habilitadas() }} de {{ total }}</strong> butacas habilitadas.
+    Hacé clic en una butaca para deshabilitarla o volver a habilitarla.
+</p>
+
+@if (error()) {
+<p class="error">{{ error() }}</p>
+}
+
+<app-mapa-butacas [deshabilitadas]="deshabilitadas()" (butacaClick)="alternar($event)" />
+}

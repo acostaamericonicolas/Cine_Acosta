@@ -90,7 +90,13 @@ export class PeliculasService {
             .update(cambios)
             .eq('id', id)
             .select();
-        if (error) throw error;
+        if (error) {
+            // 23P01 = exclusion_violation: el nuevo fin de la película pisaría otra función
+            if (error.code === '23P01') {
+                throw new Error('No se puede cambiar la duración: alguna función programada quedaría a menos de 30 minutos de la siguiente en su sala.');
+            }
+            throw error;
+        }
         this.verificarPermiso(data);
     }
 

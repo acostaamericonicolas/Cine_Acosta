@@ -1,0 +1,100 @@
+<a routerLink="/admin/funciones">← Volver a funciones</a>
+<h1>Función recurrente</h1>
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else if (!resultados()) {
+<form (submit)="crear($event)">
+    <label>Película
+        <select [formField]="f.peliculaId">
+            <option value="">Elegí una película</option>
+            @for (p of peliculas(); track p.id) {
+            <option [value]="p.id">{{ p.nombre }} ({{ p.duracion_min }} min)</option>
+            }
+        </select>
+    </label>
+    @if (f.peliculaId().touched() && f.peliculaId().invalid()) {
+    <p class="error">{{ f.peliculaId().errors()[0].message }}</p>
+    }
+
+    <fieldset>
+        <legend>Días</legend>
+        @for (d of dias; track d.valor) {
+        <label>
+            <input #chk type="checkbox" [checked]="modelo().dias.includes(d.valor)"
+                (change)="alternarDia(d.valor, chk.checked)" />
+            {{ d.texto }}
+        </label>
+        }
+        @if (f.dias().touched() && f.dias().invalid()) {
+        <p class="error">{{ f.dias().errors()[0].message }}</p>
+        }
+    </fieldset>
+
+    <label>Hora
+        <input type="time" [formField]="f.hora" />
+    </label>
+    @if (f.hora().touched() && f.hora().invalid()) {
+    <p class="error">{{ f.hora().errors()[0].message }}</p>
+    }
+
+    <label>Desde
+        <input type="date" [min]="hoy" [formField]="f.desde" />
+    </label>
+    @if (f.desde().touched() && f.desde().invalid()) {
+    <p class="error">{{ f.desde().errors()[0].message }}</p>
+    }
+
+    <label>Hasta
+        <input type="date" [min]="modelo().desde || hoy" [formField]="f.hasta" />
+    </label>
+    @if (f.hasta().touched() && f.hasta().invalid()) {
+    <p class="error">{{ f.hasta().errors()[0].message }}</p>
+    }
+
+    <label>Formato
+        <select [formField]="f.formato">
+            @for (fo of formatos; track fo) {
+            <option [value]="fo">{{ fo }}</option>
+            }
+        </select>
+    </label>
+
+    <label>Idioma
+        <select [formField]="f.idioma">
+            @for (i of idiomas; track i.valor) {
+            <option [value]="i.valor">{{ i.texto }}</option>
+            }
+        </select>
+    </label>
+
+    @if (fechasPrevistas().length > 0) {
+    <p class="ayuda">Se van a crear <strong>{{ fechasPrevistas().length }}</strong> funciones.</p>
+    }
+
+    @if (error()) {
+    <p class="error">{{ error() }}</p>
+    }
+
+    <button type="submit" [disabled]="f().invalid() || fechasPrevistas().length === 0 || creando()">
+        {{ creando() ? 'Creando funciones...' : 'Crear funciones' }}
+    </button>
+</form>
+} @else {
+<h2>Resultado</h2>
+<p>
+    <strong>{{ creadas() }}</strong> funciones creadas
+    @if (fallidas() > 0) {
+    , <strong>{{ fallidas() }}</strong> no se pudieron crear
+    }
+</p>
+}
+<ul class="resultados">
+    @for (r of resultados(); track r.fecha) {
+    <li [class.ok]="r.ok" [class.fallo]="!r.ok">
+        {{ r.fecha | date: "EEEE d 'de' MMMM, HH:mm" }} — {{ r.detalle }}
+    </li>
+    }
+</ul>
+
+<a routerLink="/admin/funciones">Ir al listado de funciones</a>

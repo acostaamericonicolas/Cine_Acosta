@@ -19,4 +19,5 @@ export const ADMIN_ROUTES: Routes = [
     { path: 'salas/:id', loadComponent: () => import('./sala-butacas/sala-butacas').then(m => m.SalaButacas) },
     { path: 'funciones', loadComponent: () => import('./funciones/funciones').then(m => m.Funciones) },
     { path: 'funciones/nueva', loadComponent: () => import('./funcion-form/funcion-form').then(m => m.FuncionForm) },
+    { path: 'funciones/recurrente', loadComponent: () => import('./funcion-recurrente-form/funcion-recurrente-form').then(m => m.FuncionRecurrenteForm) },
 ];

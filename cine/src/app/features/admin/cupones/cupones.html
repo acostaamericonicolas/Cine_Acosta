@@ -1,0 +1,99 @@
+<h1>Cupones</h1>
+
+@if (error()) { <p class="error">{{ error() }}</p> }
+@if (mensaje()) { <p class="ok">{{ mensaje() }}</p> }
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else {
+<section>
+    <h2>Cupón de primera compra</h2>
+    <p class="ayuda">Se le asigna automáticamente a cada usuario cuando se registra.</p>
+
+    <form (submit)="guardarPrimeraCompra($event)">
+        <label>Porcentaje de descuento (%)
+            <input type="number" [formField]="fPrimeraCompra.porcentaje" />
+        </label>
+        @if (fPrimeraCompra.porcentaje().touched() && fPrimeraCompra.porcentaje().invalid()) {
+        <p class="error">{{ fPrimeraCompra.porcentaje().errors()[0].message }}</p>
+        }
+        <button type="submit" [disabled]="fPrimeraCompra().invalid() || guardandoPrimeraCompra()">
+            {{ guardandoPrimeraCompra() ? 'Guardando...' : 'Guardar' }}
+        </button>
+    </form>
+</section>
+
+<section>
+    <h2>Cupones por edad</h2>
+    <p class="ayuda">Se aplican solos a los usuarios que tengan como mínimo la edad indicada, mientras estén vigentes.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Edad mínima</th>
+                <th>Porcentaje</th>
+                <th>Desde</th>
+                <th>Hasta</th>
+                <th>Estado</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (c of cupones(); track c.id) {
+            <tr>
+                <td>{{ c.edad_minima }} años</td>
+                <td>{{ c.porcentaje }}%</td>
+                <td>{{ c.vigente_desde | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ c.vigente_hasta | date: 'dd/MM/yyyy' }}</td>
+                <td>{{ estadoVigencia(c) }}</td>
+                <td>
+                    <button type="button" (click)="alternarActivo(c)">
+                        {{ c.activo ? 'Desactivar' : 'Activar' }}
+                    </button>
+                    <button type="button" (click)="eliminar(c)">Eliminar</button>
+                </td>
+            </tr>
+            } @empty {
+            <tr>
+                <td colspan="6">Todavía no hay cupones por edad.</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+
+    <form (submit)="agregarCupon($event)">
+        <label>Edad mínima
+            <input type="number" [formField]="fNuevoCupon.edadMinima" />
+        </label>
+        @if (fNuevoCupon.edadMinima().touched() && fNuevoCupon.edadMinima().invalid()) {
+        <p class="error">{{ fNuevoCupon.edadMinima().errors()[0].message }}</p>
+        }
+
+        <label>Porcentaje (%)
+            <input type="number" [formField]="fNuevoCupon.porcentaje" />
+        </label>
+        @if (fNuevoCupon.porcentaje().touched() && fNuevoCupon.porcentaje().invalid()) {
+        <p class="error">{{ fNuevoCupon.porcentaje().errors()[0].message }}</p>
+        }
+
+        <label>Desde
+            <input type="date" [formField]="fNuevoCupon.desde" />
+        </label>
+        @if (fNuevoCupon.desde().touched() && fNuevoCupon.desde().invalid()) {
+        <p class="error">{{ fNuevoCupon.desde().errors()[0].message }}</p>
+        }
+
+        <label>Hasta
+            <input type="date" [formField]="fNuevoCupon.hasta" />
+        </label>
+        @if (fNuevoCupon.hasta().touched() && fNuevoCupon.hasta().invalid()) {
+        <p class="error">{{ fNuevoCupon.hasta().errors()[0].message }}</p>
+        }
+
+        <button type="submit" [disabled]="fNuevoCupon().invalid() || guardandoCupon()">
+            {{ guardandoCupon() ? 'Creando...' : 'Crear cupón' }}
+        </button>
+    </form>
+</section>
+}

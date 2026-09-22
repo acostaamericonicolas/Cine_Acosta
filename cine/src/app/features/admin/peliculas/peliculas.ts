@@ -1,9 +1,8 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import {
-  ESTADOS, EstadoPelicula, Pelicula, PeliculasService,
-} from '../../../core/peliculas.service';
+import { ESTADOS, EstadoPelicula, Pelicula, PeliculasService} from '../../../core/peliculas.service';
+import { ImagenesService } from '../../../core/imagenes.service';
 
 @Component({
   selector: 'app-peliculas',
@@ -13,7 +12,8 @@ import {
 })
 export class Peliculas {
   private service = inject(PeliculasService);
-
+  private imagenes = inject(ImagenesService);
+  
   readonly estados = ESTADOS;
   peliculas = signal<Pelicula[]>([]);
   cargando = signal(true);
@@ -50,7 +50,7 @@ export class Peliculas {
     this.error.set('');
     try {
       await this.service.eliminar(p.id);
-      if (p.imagen_path) await this.service.eliminarPoster(p.imagen_path).catch(() => { });
+      if (p.imagen_path) await this.imagenes.eliminar('posters', p.imagen_path).catch(() => { });
       this.peliculas.update(lista => lista.filter(x => x.id !== p.id));
     } catch (e) {
       this.error.set((e as { message?: string }).message ?? 'No se pudo eliminar');

@@ -1,0 +1,10 @@
+.fila-producto {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.3rem 0;
+}
+
+.fila-producto input[type='number'] {
+    width: 4rem;
+}

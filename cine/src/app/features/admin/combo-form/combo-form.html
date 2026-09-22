@@ -1,0 +1,71 @@
+<a routerLink="/admin/combos">← Volver a combos</a>
+<h1>{{ id === null ? 'Nuevo combo' : 'Editar combo' }}</h1>
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else {
+<form (submit)="guardar($event)">
+    <label>Nombre
+        <input type="text" [formField]="f.nombre" />
+    </label>
+    @if (f.nombre().touched() && f.nombre().invalid()) {
+    <p class="error">{{ f.nombre().errors()[0].message }}</p>
+    }
+
+    <label>Precio fijo del combo
+        <input type="number" [formField]="f.precio" />
+    </label>
+    @if (f.precio().touched() && f.precio().invalid()) {
+    <p class="error">{{ f.precio().errors()[0].message }}</p>
+    }
+
+    <label>
+        <input type="checkbox" [formField]="f.incluyeEntrada" />
+        Incluye una entrada
+    </label>
+    <label>Imagen del combo
+        <input type="file" accept="image/jpeg,image/png,image/webp" (change)="seleccionarArchivo($event)" />
+    </label>
+    <small>JPG, PNG o WebP. Máximo 2 MB.</small>
+    @if (errorImagen()) { <p class="error">{{ errorImagen() }}</p> }
+    @if (imagenMostrada(); as src) {
+    <img [src]="src" alt="Vista previa del combo" width="120" />
+    } @else {
+    <p class="error">Elegí una imagen para el combo</p>
+    }
+
+    <label>
+        <input type="checkbox" [formField]="f.activo" />
+        Activo (visible en la compra)
+    </label>
+
+    <fieldset>
+        <legend>Productos del combo</legend>
+        @if (productos().length === 0) {
+        <p>No hay productos activos para armar combos. Cargá alguno primero.</p>
+        }
+        @for (p of productos(); track p.id) {
+        <div class="fila-producto">
+            <label>
+                <input #chk type="checkbox" [checked]="estaElegido(p.id)"
+                    (change)="alternarProducto(p.id, chk.checked)" />
+                {{ p.nombre }}
+            </label>
+            @if (estaElegido(p.id)) {
+            <input #cant type="number" min="1" [value]="cantidadDe(p.id)"
+                (change)="cambiarCantidad(p.id, +cant.value)" />
+            }
+        </div>
+        }
+        @if (items().length === 0) {
+        <p class="error">Elegí al menos un producto</p>
+        }
+    </fieldset>
+
+    @if (error()) { <p class="error">{{ error() }}</p> }
+
+    <button type="submit" [disabled]="!puedeGuardar()">
+        {{ guardando() ? 'Guardando...' : 'Guardar' }}
+    </button>
+</form>
+}

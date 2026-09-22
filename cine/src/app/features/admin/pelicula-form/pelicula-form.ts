@@ -1,12 +1,9 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import {
-  form, FormField, required, min, max, minLength, maxLength, validate,
-} from '@angular/forms/signals';
+import { form, FormField, required, min, max, minLength, maxLength, validate} from '@angular/forms/signals';
 import { ConCambios } from '../../../core/guards/cambios.guard';
-import {
-  ESTADOS, EstadoPelicula, MAX_IMAGEN_BYTES, PeliculaNueva, PeliculasService, TIPOS_IMAGEN,
-} from '../../../core/peliculas.service';
+import {ESTADOS, EstadoPelicula, PeliculaNueva, PeliculasService} from '../../../core/peliculas.service';
+import { MAX_IMAGEN_BYTES, TIPOS_IMAGEN, ImagenesService } from '../../../core/imagenes.service';
 import { GENEROS } from '../../../shared/generos';
 
 interface PeliculaModelo {
@@ -29,6 +26,7 @@ export class PeliculaForm implements ConCambios {
   private service = inject(PeliculasService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private imagenes = inject(ImagenesService);
 
   readonly generosDisponibles = GENEROS;
   readonly estados = ESTADOS;
@@ -176,7 +174,7 @@ export class PeliculaForm implements ConCambios {
       // 1) Si se eligió un archivo, se sube primero
       const archivo = this.archivo();
       if (archivo) {
-        const r = await this.service.subirPoster(archivo);
+        const r = await this.imagenes.subir('posters', archivo);
         subido = r.path;
         imagenUrl = r.url;
         imagenPath = r.path;
@@ -204,14 +202,14 @@ export class PeliculaForm implements ConCambios {
 
       // 3) Si se reemplazó el póster, se borra el anterior (si falla, no es grave)
       if (subido && this.imagenPathActual) {
-        await this.service.eliminarPoster(this.imagenPathActual).catch(() => { });
+        await this.imagenes.eliminar('posters', this.imagenPathActual).catch(() => { });
       }
 
       this.guardado = true;   // para que el guard no pregunte al salir
       this.router.navigate(['/admin/peliculas']);
     } catch (e) {
       // Si el archivo se subió pero la película no se guardó, no dejamos un archivo huérfano
-      if (subido) await this.service.eliminarPoster(subido).catch(() => { });
+      if (subido) await this.imagenes.eliminar('posters', subido).catch(() => { });
       this.error.set((e as { message?: string }).message ?? 'No se pudo guardar');
     } finally {
       this.guardando.set(false);

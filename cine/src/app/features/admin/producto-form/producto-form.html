@@ -1,0 +1,56 @@
+<a routerLink="/admin/candy/productos">← Volver a productos</a>
+<h1>{{ id === null ? 'Nuevo producto' : 'Editar producto' }}</h1>
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else {
+<form (submit)="guardar($event)">
+    <label>Nombre
+        <input type="text" [formField]="f.nombre" />
+    </label>
+    @if (f.nombre().touched() && f.nombre().invalid()) {
+    <p class="error">{{ f.nombre().errors()[0].message }}</p>
+    }
+
+    <label>Categoría
+        <select [formField]="f.categoriaId">
+            <option value="">Elegí una categoría</option>
+            @for (c of categorias(); track c.id) {
+            <option [value]="c.id">{{ c.nombre }}</option>
+            }
+        </select>
+    </label>
+    @if (f.categoriaId().touched() && f.categoriaId().invalid()) {
+    <p class="error">{{ f.categoriaId().errors()[0].message }}</p>
+    }
+
+    <label>Precio
+        <input type="number" [formField]="f.precio" />
+    </label>
+    @if (f.precio().touched() && f.precio().invalid()) {
+    <p class="error">{{ f.precio().errors()[0].message }}</p>
+    }
+
+    <label>
+        <input type="checkbox" [formField]="f.activo" />
+        Activo (visible para la venta)
+    </label>
+
+    <label>Imagen
+        <input type="file" accept="image/jpeg,image/png,image/webp" (change)="seleccionarArchivo($event)" />
+    </label>
+    <small>JPG, PNG o WebP. Máximo 2 MB.</small>
+    @if (errorImagen()) { <p class="error">{{ errorImagen() }}</p> }
+    @if (imagenMostrada(); as src) {
+    <img [src]="src" alt="Vista previa del producto" width="100" />
+    } @else {
+    <p class="error">Elegí una imagen para el producto</p>
+    }
+
+    @if (error()) { <p class="error">{{ error() }}</p> }
+
+    <button type="submit" [disabled]="!puedeGuardar()">
+        {{ guardando() ? 'Guardando...' : 'Guardar' }}
+    </button>
+</form>
+}

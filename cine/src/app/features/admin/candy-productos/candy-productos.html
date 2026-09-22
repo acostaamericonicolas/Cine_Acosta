@@ -1,0 +1,54 @@
+<h1>Productos del candy</h1>
+<a routerLink="/admin/candy/categorias">Categorías</a>
+<a routerLink="/admin/candy/productos/nuevo">+ Nuevo producto</a>
+
+@if (error()) { <p class="error">{{ error() }}</p> }
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else {
+<label>Filtrar por categoría
+    <select #sel (change)="filtroCategoria.set(sel.value === '' ? null : +sel.value)">
+        <option value="">Todas</option>
+        @for (c of categorias(); track c.id) {
+        <option [value]="c.id">{{ c.nombre }}</option>
+        }
+    </select>
+</label>
+
+<table>
+    <thead>
+        <tr>
+            <th>Imagen</th>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th>Precio</th>
+            <th>Estado</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (p of filtrados(); track p.id) {
+        <tr>
+            <td>@if (p.imagen_url) { <img [src]="p.imagen_url" [alt]="p.nombre" width="40" /> }</td>
+            <td>{{ p.nombre }}</td>
+            <td>{{ categoriaNombre(p.categoria_id) }}</td>
+            <td>{{ p.precio | number: '1.2-2' }}</td>
+            <td>
+                <button type="button" (click)="alternarActivo(p)">
+                    {{ p.activo ? 'Activo' : 'Inactivo' }}
+                </button>
+            </td>
+            <td>
+                <a [routerLink]="['/admin/candy/productos', p.id]">Editar</a>
+                <button type="button" (click)="eliminar(p)">Eliminar</button>
+            </td>
+        </tr>
+        } @empty {
+        <tr>
+            <td colspan="6">No hay productos que coincidan.</td>
+        </tr>
+        }
+    </tbody>
+</table>
+}

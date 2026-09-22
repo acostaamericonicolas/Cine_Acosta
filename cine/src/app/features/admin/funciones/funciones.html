@@ -1,0 +1,41 @@
+<h1>Funciones</h1>
+<a routerLink="/admin/funciones/nueva">+ Nueva función</a>
+
+@if (error()) {
+<p class="error">{{ error() }}</p>
+}
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else {
+<table>
+    <thead>
+        <tr>
+            <th>Película</th>
+            <th>Sala</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+            <th>Formato</th>
+            <th>Idioma</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (f of filas(); track f.id) {
+        <tr>
+            <td>{{ f.pelicula }}</td>
+            <td>{{ f.sala }}</td>
+            <td>{{ f.inicio | date: "dd/MM HH:mm" }}</td>
+            <td>{{ f.fin | date: 'HH:mm' }}</td>
+            <td>{{ f.formato }}</td>
+            <td>{{ f.idioma === 'castellano' ? 'Castellano' : 'Subtitulada' }}</td>
+            <td><button type="button" (click)="eliminar(f)">Eliminar</button></td>
+        </tr>
+        } @empty {
+        <tr>
+            <td colspan="7">No hay funciones programadas en los próximos 30 días.</td>
+        </tr>
+        }
+    </tbody>
+</table>
+}

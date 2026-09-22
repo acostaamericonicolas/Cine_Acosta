@@ -1,0 +1,64 @@
+<a routerLink="/admin/funciones">← Volver a funciones</a>
+<h1>Nueva función</h1>
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else {
+<form (submit)="guardar($event)">
+    <label>Película
+        <select [formField]="f.peliculaId">
+            <option value="">Elegí una película</option>
+            @for (p of peliculas(); track p.id) {
+            <option [value]="p.id">{{ p.nombre }} ({{ p.duracion_min }} min)</option>
+            }
+        </select>
+    </label>
+    @if (f.peliculaId().touched() && f.peliculaId().invalid()) {
+    <p class="error">{{ f.peliculaId().errors()[0].message }}</p>
+    }
+    @if (peliculaElegida(); as p) {
+    <p class="ayuda">Termina {{ p.duracion_min }} minutos después de empezar. La sala queda libre 30 min más tarde.</p>
+    }
+
+    <label>Fecha
+        <input type="date" [min]="hoy" [formField]="f.fecha" />
+    </label>
+    @if (f.fecha().touched() && f.fecha().invalid()) {
+    <p class="error">{{ f.fecha().errors()[0].message }}</p>
+    }
+
+    <label>Hora
+        <input type="time" [formField]="f.hora" />
+    </label>
+    @if (f.hora().touched() && f.hora().invalid()) {
+    <p class="error">{{ f.hora().errors()[0].message }}</p>
+    }
+
+    <label>Formato
+        <select [formField]="f.formato">
+            @for (fo of formatos; track fo) {
+            <option [value]="fo">{{ fo }}</option>
+            }
+        </select>
+    </label>
+
+    <label>Idioma
+        <select [formField]="f.idioma">
+            @for (i of idiomas; track i.valor) {
+            <option [value]="i.valor">{{ i.texto }}</option>
+            }
+        </select>
+    </label>
+
+    @if (error()) {
+    <p class="error">{{ error() }}</p>
+    }
+    @if (exito()) {
+    <p class="ok">{{ exito() }}</p>
+    }
+
+    <button type="submit" [disabled]="f().invalid() || guardando()">
+        {{ guardando() ? 'Asignando sala...' : 'Crear función' }}
+    </button>
+</form>
+}

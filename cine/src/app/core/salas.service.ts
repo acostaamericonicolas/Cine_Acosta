@@ -20,6 +20,16 @@ export class SalasService {
         return data as Sala[];
     }
 
+    async listarActivas(): Promise<Sala[]> {
+        const { data, error } = await this.supabase
+            .from('salas')
+            .select('*')
+            .eq('activa', true)
+            .order('nombre');
+        if (error) throw error;
+        return data as Sala[];
+    }
+
     async obtener(id: number): Promise<Sala> {
         const { data, error } = await this.supabase.from('salas').select('*').eq('id', id).single();
         if (error) throw error;

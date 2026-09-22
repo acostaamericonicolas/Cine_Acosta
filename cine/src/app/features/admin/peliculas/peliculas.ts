@@ -5,17 +5,6 @@ import {
   ESTADOS, EstadoPelicula, Pelicula, PeliculasService,
 } from '../../../core/peliculas.service';
 
-
-export const TIPOS_IMAGEN = ['image/jpeg', 'image/png', 'image/webp'];
-export const MAX_IMAGEN_BYTES = 2 * 1024 * 1024; // 2 MB
-
-const EXTENSIONES: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-};
-
-
 @Component({
   selector: 'app-peliculas',
   imports: [RouterLink, DatePipe],

@@ -1,5 +1,5 @@
 <a routerLink="/admin/funciones">← Volver a funciones</a>
-<h1>Nueva función</h1>
+<h1>{{ esEdicion ? 'Editar función' : 'Nueva función' }}</h1>
 
 @if (cargando()) {
 <p>Cargando...</p>
@@ -18,6 +18,20 @@
     }
     @if (peliculaElegida(); as p) {
     <p class="ayuda">Termina {{ p.duracion_min }} minutos después de empezar. La sala queda libre 30 min más tarde.</p>
+    }
+
+    @if (esEdicion) {
+    <label>Sala
+        <select [formField]="f.salaId">
+            <option value="">Elegí una sala</option>
+            @for (s of salas(); track s.id) {
+            <option [value]="s.id">{{ s.nombre }}{{ s.activa ? '' : ' (inactiva)' }}</option>
+            }
+        </select>
+    </label>
+    @if (f.salaId().touched() && !modelo().salaId) {
+    <p class="error">Elegí una sala</p>
+    }
     }
 
     <label>Fecha
@@ -49,7 +63,7 @@
             }
         </select>
     </label>
-
+    
     @if (error()) {
     <p class="error">{{ error() }}</p>
     }
@@ -58,7 +72,7 @@
     }
 
     <button type="submit" [disabled]="f().invalid() || guardando()">
-        {{ guardando() ? 'Asignando sala...' : 'Crear función' }}
+        {{ guardando() ? 'Guardando...' : (esEdicion ? 'Guardar cambios' : 'Crear función') }}
     </button>
 </form>
 }

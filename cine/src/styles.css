@@ -1,1 +1,8 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* Al imprimir (comprobante, reportes) no se imprime la barra de navegación */
+@media print {
+    nav {
+        display: none;
+    }
+}

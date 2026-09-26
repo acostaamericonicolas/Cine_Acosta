@@ -69,8 +69,13 @@ export class PasoPago {
   // ----- Canje de puntos (HU-31): clave del ítem ('entrada', 'producto-3') → cantidad -----
   canjes = signal<Record<string, number>>({});
 
+  // Se puede canjear la entrada y los productos que ya están en el carrito (se pagan con puntos)
+  canjeables = computed(() =>
+    this.recompensas().filter(r => r.tipo === 'entrada' || this.enCarrito(r) > 0)
+  );
+
   puntosUsados = computed(() =>
-    this.recompensas().reduce((s, r) => s + r.puntos * this.cantidadCanje(r), 0)
+    this.canjeables().reduce((s, r) => s + r.puntos * this.cantidadCanje(r), 0)
   );
   puntosRestantes = computed(() => this.puntosDisponibles() - this.puntosUsados());
 
@@ -78,11 +83,19 @@ export class PasoPago {
     this.recompensas().filter(r => r.tipo === 'entrada').reduce((s, r) => s + this.cantidadCanje(r), 0)
   );
 
-  // Productos canjeados, para mostrarlos en el resumen (se retiran a $0)
+  // Productos del carrito pagados con puntos: se descuentan sus pesos del total
   productosCanjeados = computed(() =>
-    this.recompensas()
+    this.canjeables()
       .filter(r => r.tipo === 'producto' && this.cantidadCanje(r) > 0)
-      .map(r => ({ nombre: r.nombre, cantidad: this.cantidadCanje(r), puntos: r.puntos * this.cantidadCanje(r) }))
+      .map(r => ({
+        nombre: r.nombre,
+        cantidad: this.cantidadCanje(r),
+        puntos: r.puntos * this.cantidadCanje(r),
+        pesos: r.precio * this.cantidadCanje(r),
+      }))
+  );
+  pesosProductos = computed(() =>
+    this.productosCanjeados().reduce((s, p) => s + p.pesos, 0)
   );
 
   // Las entradas que se pueden canjear: las butacas que no cubre ya un combo
@@ -92,13 +105,24 @@ export class PasoPago {
 
   readonly claveCanje = claveCanje;
 
+  // Cuántas unidades de ese producto hay en el carrito
+  enCarrito(r: ItemCanjeable): number {
+    return this.items()
+      .filter(i => i.tipo === 'producto' && i.id === r.producto_id)
+      .reduce((s, i) => s + i.cantidad, 0);
+  }
+
+  // Si volvió al candy y sacó productos, el canje no puede quedar por encima de lo que hay
   cantidadCanje(r: ItemCanjeable): number {
-    return this.canjes()[claveCanje(r)] ?? 0;
+    const elegida = this.canjes()[claveCanje(r)] ?? 0;
+    return r.tipo === 'producto' ? Math.min(elegida, this.enCarrito(r)) : elegida;
   }
 
   puedeSumarCanje(r: ItemCanjeable): boolean {
-    if (this.cantidadCanje(r) >= 20 || this.puntosRestantes() < r.puntos) return false;
-    return r.tipo !== 'entrada' || this.entradasCanjeadas() < this.entradasSinCubrir();
+    if (this.puntosRestantes() < r.puntos) return false;
+    return r.tipo === 'entrada'
+      ? this.entradasCanjeadas() < this.entradasSinCubrir()
+      : this.cantidadCanje(r) < this.enCarrito(r);
   }
 
   cambiarCanje(r: ItemCanjeable, delta: number) {
@@ -115,9 +139,14 @@ export class PasoPago {
 
   totales = computed(() =>
     calcularTotales(
-      this.entradas(), this.items(), this.precioGeneral(), this.entradasCanjeadas(),
+      this.entradas(), this.items(), this.precioGeneral(), this.entradasCanjeadas(), this.pesosProductos(),
       this.porcentajeCupon(), this.modelo().usarCredito, this.creditoDisponible(),
     )
+  );
+
+  // Parte del descuento por canjes que corresponde a entradas (el resto son productos)
+  descuentoEntradasCanjeadas = computed(() =>
+    Math.round((this.totales().descuentoCanjes - this.pesosProductos()) * 100) / 100
   );
 
   hayVip = computed(() => this.entradas().some(e => e.butaca.tipo === 'vip'));
@@ -165,7 +194,7 @@ export class PasoPago {
     const m = this.modelo();
     const numero = m.numero.replace(/\s/g, '');
     this.confirmar.emit({
-      canjes: this.recompensas()
+      canjes: this.canjeables()
         .filter(r => this.cantidadCanje(r) > 0)
         .map(r => ({ tipo: r.tipo, productoId: r.producto_id, cantidad: this.cantidadCanje(r) })),
       cupon: m.cupon || null,

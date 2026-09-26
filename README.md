@@ -44,6 +44,8 @@ Los cambios de la base a partir de HU-21 están en [`supabase/`](supabase/), num
 | `03_compras.sql` | 17, 24, 25, 26 | tablas `compras`, `entradas`, `compra_items`, función `confirmar_compra` y bloqueo de funciones con ventas |
 | `04_puntos.sql` | 30, 31 | tablas `recompensas` y `canjes`; redefine `confirmar_compra` para canjear puntos |
 | `05_puntos_por_precio.sql` | 30 | vista `catalogo_canjes`: cada ítem cuesta en puntos lo que vale en pesos; `recompensas` guarda solo las excepciones |
+| `06_canje_descuenta.sql` | 31 | canjear un producto del carrito descuenta sus pesos (antes lo agregaba gratis) |
+| `07_comprobante.sql` | 27 | función `obtener_comprobante` (dueño, admin, o invitado con código + mail) |
 
 Lo anterior (tablas, triggers y policies de las HU 01 a 20) se creó directamente en Supabase y está documentado en la [sección 6](#6-base-de-datos-supabase).
 
@@ -81,6 +83,7 @@ En Supabase → Authentication, la **confirmación de mail tiene que estar desac
 | 30 | Costo en puntos de cada recompensa | Hecha: por defecto igual al precio, editable (requiere `supabase/04_puntos.sql` y `05_puntos_por_precio.sql`) |
 | 31 | Canjear puntos | Hecha, dentro de la compra (requiere `supabase/04_puntos.sql`) |
 | 05 | Perfil: puntos, crédito, cupones, historial de canjes | Hecha ("Mis películas" se llena con HU-12) |
+| 27 | Comprobante con código único y QR, imprimible / PDF | Hecha (requiere `supabase/07_comprobante.sql`). Incluye "Buscar mi compra" para invitados. |
 | 32, 34 | Validación, roles | Pantallas creadas, sin implementar |
 | Resto | Semanas 3 y 4 | Pendiente |
 
@@ -95,12 +98,12 @@ cine/src/app/
 │   └── *.service.ts
 ├── models/                interfaces y tipos de datos (sin lógica)
 ├── features/              una carpeta por área, cada una cargada con lazy loading
-│   ├── publico/           home, detalle, compra, login, registro
+│   ├── publico/           home, detalle, compra, comprobante, buscar-compra, login, registro
 │   ├── cliente/           perfil
 │   ├── empleado/          validación
 │   └── admin/             ABMs del panel
 └── shared/                lo que usan varias áreas
-    ├── componentes/       tarjeta-pelicula, mapa-butacas
+    ├── componentes/       tarjeta-pelicula, mapa-butacas, codigo-qr
     ├── pipes/             duracion-pipe, estrellas-pipe
     ├── sala-layout.ts     distribución fija de butacas
     ├── fechas.ts          fecha local, edad, sumar días (ver 4.8)
@@ -356,11 +359,31 @@ Surgieron de revisar las historias contra los requerimientos funcionales:
 - **Configurar (HU-30):** como 1 peso pagado da 1 punto, **cada ítem cuesta en puntos lo mismo que vale en pesos**, redondeado hacia arriba. Eso vale para la **entrada general** (precio general) y para **cada producto activo del candy**. No hace falta cargar nada: un producto nuevo ya es canjeable, y si cambia el precio, el costo en puntos cambia solo.
   - En **Admin → Puntos** aparecen todos los ítems con su precio y sus puntos. El admin puede **fijar otro costo**, **volver al precio** o **desactivar el canje** de un ítem.
   - Solo se guardan esas excepciones. Si un ítem vuelve al precio y está activo, su fila se borra.
-- **Canjear (HU-31):** en el paso de pago, el registrado ve su saldo y suma canjes con − / +. No puede pasarse de sus puntos.
+- **Canjear (HU-31):** canjear es **pagar con puntos en lugar de pesos**. En el paso de pago, el registrado ve su saldo y suma canjes con − / +, sin pasarse de sus puntos.
   - **Entrada:** cubre el valor de una entrada general, como un combo con entrada. Si la butaca es VIP, se paga la diferencia. Entre combos y canjes no se pueden cubrir más entradas que butacas.
-  - **Producto:** se agrega a la compra a $0 como "Pochoclo grande (canje)" y se retira en el candy con el mismo código.
+  - **Producto:** solo se pueden canjear productos **que ya están en la compra**, hasta la cantidad elegida en el candy. Su precio se descuenta del total: 4 pochoclos de $ 10.000 canjeados restan $ 40.000 y cuestan 40.000 puntos. En `compra_items` queda la parte pagada en pesos y, aparte, la canjeada a $0 ("Pochoclos (canje)"). Todo se retira en el candy con el mismo código.
+  - Primero se canjeaba un producto **agregándolo gratis**. Se cambió en el script 06 porque así el cliente terminaba pagando y canjeando lo mismo dos veces.
 - Los canjes se descuentan en la misma transacción que la compra y quedan en `canjes`. El perfil los muestra en **Historial de canjes**.
 - **Intransferibles (RF-29):** no existe ninguna función para mover puntos entre usuarios. El cliente no puede modificar `perfiles.puntos` (no hay policy de update), así que solo cambian a través de `confirmar_compra`.
+
+### 5.14 Comprobante con QR (HU-27) y "Buscar mi compra"
+
+- Al confirmar la compra se muestra el **código** y su **QR**, con un botón **"Ver comprobante / Guardar como PDF"**.
+- **Ruta `/comprobante/:codigo`:** comprobante imprimible con:
+  - película, fecha y hora, sala, formato, idioma y duración;
+  - cada butaca con su tipo;
+  - aviso de **"debe asistir un adulto"** si la película es +13 o +18;
+  - candy (pendiente o entregado);
+  - el desglose del pago, el QR y el código.
+
+  Si la compra fue cancelada o ya se usó, lo indica arriba.
+- **PDF:** "Imprimir / Guardar como PDF" usa la impresión del navegador (`window.print()`), así no hace falta una librería de PDF. Con `@media print` se ocultan la barra de navegación y los botones, y el comprobante ocupa la hoja.
+- **QR:** componente compartido **`CodigoQr`** (`input()` con el código), que genera la imagen con la librería **`qrcode`** (aprobada). El QR contiene **solo el código**: el lector de la puerta lo "escribe" como un teclado en el campo de validación del empleado (HU-32). Si el QR no se pudiera generar, el código impreso alcanza.
+- **Quién lo ve:**
+  - **registrado:** con solo el código, desde la compra (y después desde "Mis compras", HU-28);
+  - **invitado:** con **código + mail**. Justo después de comprar no se le pide: el mail queda recordado en la pestaña (`sessionStorage`);
+  - **admin:** cualquiera.
+- **"Buscar mi compra"** (`/mi-compra`, en el menú cuando no hay sesión): el invitado ingresa código y mail y va al comprobante. Si no coinciden, el mensaje es el mismo que si el código no existiera. Así nadie puede probar códigos para averiguar cuáles son válidos.
 
 ---
 
@@ -413,6 +436,7 @@ Resumen:
 | Una butaca, un solo comprador | tabla `butacas_ocupadas` + `reservar_butaca()` | `ReservasService` con `rpc()` |
 | Mapa de butacas en tiempo real | publicación `supabase_realtime` | `ReservasService.escuchar()` |
 | Compra atómica con errores por paso | `confirmar_compra()` | `ComprasService.confirmar()` → `PasoPago` |
+| Comprobante para dueño, admin o invitado (código + mail) | `obtener_comprobante()` | `ComprasService.obtenerComprobante()` → `Comprobante` |
 | Puntos: ganar y canjear sin pasarse del saldo | `confirmar_compra()` + tabla `canjes` | `PasoPago` (canjes) y `Perfil` (historial) |
 | Función con ventas no se borra ni se mueve | FK `compras.funcion_id` + trigger `funciones_bloquear_con_ventas` | `FuncionesService` traduce el `23503` |
 
@@ -556,12 +580,25 @@ Supabase devuelve los dos en el `error` de `rpc()`: Angular muestra `error.messa
   - RLS: todos pueden leer las recompensas y solo el admin las escribe.
   - `canjes`: cada usuario ve los suyos y nadie los inserta directo.
   - `confirmar_compra` se **redefine** con un parámetro más, `p_canjes`. Primero se hace `drop` de la versión anterior: si no, Postgres tendría dos funciones con el mismo nombre y distintos parámetros, y `rpc()` podría llamar a la equivocada.
-  - El paso nuevo (`hint = 'puntos'`) valida el ítem y el saldo. Desde el script 05, el costo lo toma **de la vista `catalogo_canjes`**, la misma que ve el cliente. Después descuenta los puntos canjeados, suma los ganados en el mismo `update` y registra cada canje. `p_canjes` identifica el ítem por tipo: `{"tipo": "entrada"}` o `{"tipo": "producto", "producto_id": 3}`.
+  - El paso nuevo (`hint = 'puntos'`) valida el ítem y el saldo. Desde el script 05, el costo lo toma **de la vista `catalogo_canjes`**, la misma que ve el cliente. Después descuenta los puntos canjeados, suma los ganados en el mismo `update` y registra cada canje. `p_canjes` identifica el ítem por tipo: `{"tipo": "entrada"}` o `{"tipo": "producto", "producto_id": 3}`. Desde el script 06, un producto canjeado tiene que estar en `p_items` con al menos esa cantidad (si no, error "Querés canjear 4 × "Pochoclos" pero en la compra hay 2"). Su precio suma a `descuento_canjes`, junto con las entradas cubiertas.
 - **Angular:**
   - `RecompensasService.catalogo()` lee la vista `catalogo_canjes` como si fuera una tabla, y `canjeables()` se queda con las activas.
   - `guardarExcepcion()` inserta, actualiza o borra la fila de `recompensas` según el caso.
-  - `calcularTotales()` recibe cuántas entradas se canjean, para mostrar el descuento igual que la base.
+  - `calcularTotales()` recibe cuántas entradas se canjean y los pesos de los productos canjeados, para mostrar el descuento igual que la base.
+  - `PasoPago` solo ofrece canjear la entrada y los productos del carrito, con tope en la cantidad elegida. Si el cliente vuelve al candy y saca productos, el canje se ajusta solo.
   - La pantalla **Admin → Puntos** (`Recompensas`) lista el catálogo completo y edita las excepciones, y el **Perfil** lista `misCanjes()`.
+
+#### 6.2.10 Comprobante (HU-27) — `supabase/07_comprobante.sql`
+
+- **Base:** `obtener_comprobante(codigo, email)` (`security definer`, `stable`) devuelve en **un solo JSON** la compra, la película, la función, la sala, las entradas y el candy.
+  - **Dueño o admin:** alcanza con el código. Se controla con `auth.uid()` y `es_admin()`.
+  - **Invitado:** el mail tiene que coincidir con el de la compra. Hace falta porque sin sesión las policies de `compras` no le devuelven nada.
+  - Si no se cumple nada de eso, el error es **siempre el mismo** ("No encontramos una compra con ese código y ese mail"), exista o no el código.
+  - `coalesce(usuario_id = auth.uid(), false)`: sin sesión, `auth.uid()` es null, la comparación da null y un `not (null or …)` no cortaría. Con el `coalesce`, un invitado con el mail equivocado recibe el error.
+- **Angular:**
+  - `ComprasService.obtenerComprobante()` llama a `rpc()` y convierte los montos a número para los pipes.
+  - `recordarMail()` y `mailRecordado()` guardan el mail del invitado en `sessionStorage`, por código.
+  - La pantalla `Comprobante` primero intenta sin mail (sirve para el registrado) y, si no hay sesión, lo pide.
 
 ### 6.3 Seguridad (RLS)
 
@@ -590,8 +627,8 @@ Tres buckets **públicos de lectura**: `posters`, `candy` y `combos`. Son públi
 | Cupón para mayores de 50 | Cupones por edad mínima configurable | Cubre el caso pedido y otros (jubilados, etc.) |
 | Contraseña en el registro | Se agregó | Supabase Auth la necesita |
 | Butacas en tiempo real | Reserva temporal de 10 min + Supabase Realtime | Aprobado por el docente |
-| PDF de la entrada | Vista imprimible + "Guardar como PDF" (pendiente, HU-27) | No se vieron librerías de PDF |
-| QR en la entrada | Librería `qrcode` (pendiente, HU-27) | Acordado |
+| PDF de la entrada | Comprobante imprimible + "Guardar como PDF" del navegador | No se vieron librerías de PDF |
+| QR en la entrada | Librería `qrcode`; el QR contiene el código de compra | Aprobado |
 | Escaneo con cámara | Campo de texto (los lectores USB escriben como teclado) | No se vio acceso a la cámara |
 | Pagos | Pago simulado con formulario validado | Fuera del alcance |
 | Alertas por mail | Avisos dentro de la app | No se vio envío de mails |

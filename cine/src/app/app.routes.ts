@@ -36,5 +36,13 @@ export const routes: Routes = [
         path: 'comprar/:funcionId',
         loadComponent: () => import('./features/publico/compra/compra').then(m => m.Compra),
     },
+    {
+        path: 'comprobante/:codigo',
+        loadComponent: () => import('./features/publico/comprobante/comprobante').then(m => m.Comprobante),
+    },
+    {
+        path: 'mi-compra',
+        loadComponent: () => import('./features/publico/buscar-compra/buscar-compra').then(m => m.BuscarCompra),
+    },
     { path: '**', redirectTo: '' },
 ];

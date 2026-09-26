@@ -22,22 +22,22 @@
             <span>$ {{ i.precio * i.cantidad | number: '1.2-2' }}</span>
         </li>
         }
-        @for (c of productosCanjeados(); track c.nombre) {
-        <li class="descuento">
-            <span>{{ c.cantidad }} × {{ c.nombre }} (canje, {{ c.puntos }} pts)</span>
-            <span>$ 0,00</span>
-        </li>
-        }
         @if (t.descuentoCombos > 0) {
         <li class="descuento">
             <span>Entradas incluidas en combos ({{ t.combosConEntrada }})</span>
             <span>− $ {{ t.descuentoCombos | number: '1.2-2' }}</span>
         </li>
         }
-        @if (t.descuentoCanjes > 0) {
+        @if (descuentoEntradasCanjeadas() > 0) {
         <li class="descuento">
             <span>Entradas canjeadas con puntos ({{ entradasCanjeadas() }})</span>
-            <span>− $ {{ t.descuentoCanjes | number: '1.2-2' }}</span>
+            <span>− $ {{ descuentoEntradasCanjeadas() | number: '1.2-2' }}</span>
+        </li>
+        }
+        @for (c of productosCanjeados(); track c.nombre) {
+        <li class="descuento">
+            <span>{{ c.cantidad }} × {{ c.nombre }} pagados con {{ c.puntos | number: '1.0-0' }} puntos</span>
+            <span>− $ {{ c.pesos | number: '1.2-2' }}</span>
         </li>
         }
         @if (t.descuentoCupon > 0) {
@@ -65,14 +65,16 @@
 
 <form (submit)="enviar($event)">
     @if (registrado()) {
-    @if (recompensas().length > 0) {
+    @if (canjeables().length > 0) {
     <fieldset class="canjes">
         <legend>Canjear puntos (te quedan {{ puntosRestantes() | number: '1.0-0' }})</legend>
-        @for (r of recompensas(); track claveCanje(r)) {
+        <p class="ayuda">Pagá con puntos una entrada o lo que agregaste del candy.</p>
+        @for (r of canjeables(); track claveCanje(r)) {
         <div class="canje">
             <span>
                 {{ r.nombre }} · <strong>{{ r.puntos }} pts</strong>
                 @if (r.tipo === 'entrada') { <small>(cubre una entrada general; la VIP paga la diferencia)</small> }
+                @else { <small>(tenés {{ enCarrito(r) }} en la compra)</small> }
             </span>
             <span class="cantidad">
                 <button type="button" [disabled]="cantidadCanje(r) === 0" (click)="cambiarCanje(r, -1)"

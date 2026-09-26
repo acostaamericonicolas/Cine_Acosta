@@ -1,0 +1,6 @@
+<figure>
+    @if (imagen(); as src) {
+    <img [src]="src" [width]="tamanio()" [height]="tamanio()" [alt]="'Código QR de la compra ' + codigo()" />
+    }
+    <figcaption>{{ codigo() }}</figcaption>
+</figure>

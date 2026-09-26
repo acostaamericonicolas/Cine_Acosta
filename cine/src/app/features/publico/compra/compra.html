@@ -157,9 +157,14 @@
 @if (resultado(); as r) {
 <section class="listo">
     <h2>¡Compra confirmada!</h2>
-    <p>Tu código de compra es</p>
-    <p class="codigo">{{ r.codigo }}</p>
-    <p>Presentalo en la entrada del cine y en el candy. Lo asociamos a <strong>{{ r.email }}</strong>.</p>
+    <p>Presentá este código o el QR en la entrada del cine y en el candy. Lo asociamos a <strong>{{ r.email }}</strong>.</p>
+    <app-codigo-qr [codigo]="r.codigo" />
+    <p>
+        <a class="continuar" [routerLink]="['/comprobante', r.codigo]">Ver comprobante / Guardar como PDF</a>
+    </p>
+    @if (!registrado()) {
+    <p class="ayuda">Anotá el código: con él y tu mail podés volver a ver el comprobante desde "Buscar mi compra".</p>
+    }
 
     <ul>
         <li><span>Entradas</span><span>$ {{ r.subtotal_entradas | number: '1.2-2' }}</span></li>
@@ -170,7 +175,7 @@
         <li><span>Entradas incluidas en combos</span><span>− $ {{ r.descuento_combos | number: '1.2-2' }}</span></li>
         }
         @if (r.descuento_canjes > 0) {
-        <li><span>Entradas canjeadas con puntos</span><span>− $ {{ r.descuento_canjes | number: '1.2-2' }}</span></li>
+        <li><span>Pagado con puntos ({{ r.puntos_canjeados }} pts)</span><span>− $ {{ r.descuento_canjes | number: '1.2-2' }}</span></li>
         }
         @if (r.descuento_cupon > 0) {
         <li><span>Cupón</span><span>− $ {{ r.descuento_cupon | number: '1.2-2' }}</span></li>

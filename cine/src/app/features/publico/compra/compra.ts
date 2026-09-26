@@ -25,6 +25,7 @@ import { MapaButacas } from '../../../shared/componentes/mapa-butacas/mapa-butac
 import { edad, fechaLocal } from '../../../shared/fechas';
 import { precioEntrada } from '../../../shared/precios';
 import { BUTACAS, Butaca, TEXTO_TIPO } from '../../../shared/sala-layout';
+import { CodigoQr } from '../../../shared/componentes/codigo-qr/codigo-qr';
 import { PasoCandy, claveCombo, claveProducto } from './paso-candy/paso-candy';
 import { PasoPago } from './paso-pago/paso-pago';
 
@@ -34,7 +35,7 @@ const idDe = (fila: string, numero: number) => `${fila}-${numero}`;
 
 @Component({
   selector: 'app-compra',
-  imports: [DatePipe, DecimalPipe, RouterLink, FormField, MapaButacas, PasoCandy, PasoPago],
+  imports: [DatePipe, DecimalPipe, RouterLink, FormField, MapaButacas, PasoCandy, PasoPago, CodigoQr],
   templateUrl: './compra.html',
   styleUrl: './compra.css',
 })
@@ -366,6 +367,7 @@ export class Compra {
       );
       this.resultado.set(r);
       this.paso.set('listo');
+      if (!this.registrado()) this.comprasService.recordarMail(r.codigo, r.email);   // para abrir el comprobante sin volver a pedirlo
       if (this.registrado()) this.auth.refrescarPerfil().catch(() => { });   // crédito y puntos nuevos
     } catch (e) {
       this.errorCompra.set(e as ErrorCompra);

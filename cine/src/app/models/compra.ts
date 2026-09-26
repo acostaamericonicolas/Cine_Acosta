@@ -1,4 +1,4 @@
-import { Butaca } from '../shared/sala-layout';
+import { Butaca, TipoButaca } from '../shared/sala-layout';
 
 // Lo que el cliente agregó del candy (HU-25)
 export interface ItemCarrito {
@@ -54,4 +54,34 @@ export type PasoError = 'funcion' | 'comprador' | 'edad' | 'reserva' | 'butaca' 
 export interface ErrorCompra {
     mensaje: string;
     paso: PasoError | null;
+}
+
+// Lo que devuelve obtener_comprobante (HU-27)
+export type EstadoCompra = 'vigente' | 'usada' | 'cancelada';
+
+export interface Comprobante {
+    codigo: string;
+    estado: EstadoCompra;
+    email: string;
+    creado_en: string;
+    subtotal_entradas: number;
+    subtotal_candy: number;
+    descuento_combos: number;
+    descuento_canjes: number;
+    descuento_cupon: number;
+    credito_usado: number;
+    total_pagado: number;
+    medio_pago: string | null;
+    puntos_ganados: number;
+    puntos_canjeados: number;
+    pelicula: string;
+    restriccion_edad: number;
+    imagen_url: string;
+    duracion_min: number;
+    inicio: string;
+    formato: string;
+    idioma: string;
+    sala: string;
+    entradas: { fila: string; numero: number; tipo: TipoButaca; precio: number; usada_en: string | null }[];
+    items: { nombre: string; cantidad: number; precio_unitario: number; entregado_en: string | null }[];
 }

@@ -31,6 +31,7 @@ export function calcularTotales(
     items: ItemCarrito[],
     precioGeneral: number,
     entradasCanjeadas: number,
+    productosCanjeados: number,   // pesos de los productos del carrito pagados con puntos
     cuponPorcentaje: number | null,
     usarCredito: boolean,
     creditoDisponible: number,
@@ -44,7 +45,8 @@ export function calcularTotales(
     const cubre = (precios: number[]) => precios.reduce((s, p) => s + Math.min(p, precioGeneral), 0);
     const ordenadas = entradas.map(e => e.precio).sort((a, b) => a - b);
     const descuentoCombos = cubre(ordenadas.slice(0, combosConEntrada));
-    const descuentoCanjes = cubre(ordenadas.slice(combosConEntrada, combosConEntrada + entradasCanjeadas));
+    const descuentoCanjes = cubre(ordenadas.slice(combosConEntrada, combosConEntrada + entradasCanjeadas))
+        + productosCanjeados;
 
     const base = subtotalEntradas + subtotalCandy - descuentoCombos - descuentoCanjes;
     const descuentoCupon = cuponPorcentaje ? redondear(base * cuponPorcentaje / 100) : 0;

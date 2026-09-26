@@ -1,0 +1,20 @@
+<h1>Buscar mi compra</h1>
+<p>Ingresá el código que te dimos al comprar y el mail que usaste. Te mostramos el comprobante con el QR.</p>
+
+<form (submit)="buscar($event)">
+    <label>Código de compra
+        <input type="text" [formField]="f.codigo" autocomplete="off" placeholder="Ej: 3F9A1C0B7E" />
+    </label>
+    @if (f.codigo().touched() && f.codigo().invalid()) {
+    <p class="error">{{ f.codigo().errors()[0].message }}</p>
+    }
+
+    <label>Mail
+        <input type="email" [formField]="f.email" autocomplete="email" />
+    </label>
+    @if (f.email().touched() && f.email().invalid()) {
+    <p class="error">{{ f.email().errors()[0].message }}</p>
+    }
+
+    <button type="submit" [disabled]="f().invalid()">Buscar</button>
+</form>

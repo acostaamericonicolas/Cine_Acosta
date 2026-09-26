@@ -18,6 +18,7 @@
     <span>Hola, {{ auth.perfil()?.nombre }}</span>
     <button (click)="salir()">Salir</button>
     } @else {
+  <a routerLink="/mi-compra">Buscar mi compra</a>
   <a routerLink="/login">Ingresar</a>
   <a routerLink="/registro">Registrarme</a>
   }

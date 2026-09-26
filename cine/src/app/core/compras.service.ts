@@ -1,7 +1,9 @@
 import { Service, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { ReservasService } from './reservas.service';
-import { DatosPago, ErrorCompra, ItemCarrito, PasoError, ResultadoCompra } from '../models/compra';
+import { Comprobante, DatosPago, ErrorCompra, ItemCarrito, PasoError, ResultadoCompra } from '../models/compra';
+
+const CLAVE_MAIL = 'mail-compra-';
 
 @Service()
 export class ComprasService {
@@ -36,5 +38,33 @@ export class ComprasService {
             throw e;
         }
         return data as ResultadoCompra;
+    }
+
+    /**
+     * Comprobante de una compra (07_comprobante.sql). El dueño registrado lo ve solo con el código;
+     * el invitado necesita además el mail de la compra.
+     */
+    async obtenerComprobante(codigo: string, email: string | null): Promise<Comprobante> {
+        const { data, error } = await this.supabase.rpc('obtener_comprobante', {
+            p_codigo: codigo,
+            p_email: email,
+        });
+        if (error) throw new Error(error.message);
+        const c = data as Comprobante;
+        // numeric llega como número o texto según el caso: se normaliza para los pipes
+        return {
+            ...c,
+            entradas: c.entradas.map(e => ({ ...e, precio: Number(e.precio) })),
+            items: c.items.map(i => ({ ...i, precio_unitario: Number(i.precio_unitario) })),
+        };
+    }
+
+    // El invitado no tiene sesión: el mail de su compra se recuerda en la pestaña para abrir el comprobante
+    recordarMail(codigo: string, email: string) {
+        try { sessionStorage.setItem(CLAVE_MAIL + codigo, email); } catch { /* sin sessionStorage se pide el mail */ }
+    }
+
+    mailRecordado(codigo: string): string | null {
+        try { return sessionStorage.getItem(CLAVE_MAIL + codigo); } catch { return null; }
     }
 }

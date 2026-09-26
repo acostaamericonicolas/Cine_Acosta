@@ -1,6 +1,7 @@
 import { NgClass } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { Pelicula, PeliculasService } from '../../../core/peliculas.service';
+import { PeliculasService } from '../../../core/peliculas.service';
+import { Pelicula } from '../../../models/pelicula';
 import { TarjetaPelicula } from '../../../shared/componentes/tarjeta-pelicula/tarjeta-pelicula';
 
 // Ignora mayúsculas y tildes: "amelie" encuentra "Amélie"

@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { form, FormField, required, min, maxLength } from '@angular/forms/signals';
-import { CandyService, CategoriaCandy } from '../../../core/candy.service';
+import { CandyService } from '../../../core/candy.service';
+import { CategoriaCandy } from '../../../models/candy';
 
 @Component({
   selector: 'app-candy-categorias',

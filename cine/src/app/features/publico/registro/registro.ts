@@ -1,8 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { form, FormField, required, email, minLength, min, max, validate } from '@angular/forms/signals';
-import { AuthService, DatosRegistro } from '../../../core/auth.service';
-import { ConCambios } from '../../../core/guards/cambios.guard';
+import { AuthService } from '../../../core/auth.service';
+import { DatosRegistro } from '../../../models/perfil';
+import { ConCambios } from '../../../core/guards/form-guard';
+import { fechaLocal } from '../../../shared/fechas';
 
 @Component({
   selector: 'app-registro',
@@ -19,7 +21,7 @@ export class Registro implements ConCambios {
     return this.f().dirty() && !this.guardado;
   }
 
-  private hoy = new Date().toISOString().slice(0, 10);
+  private hoy = fechaLocal();
   tiposSangre = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', '0+', '0-', 'Prefiero no responder'];
   coloresOjos = ['Marrón', 'Negro', 'Azul', 'Verde', 'Gris', 'Miel', 'Prefiero no responder'];
 

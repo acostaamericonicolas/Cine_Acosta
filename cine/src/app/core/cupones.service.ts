@@ -1,18 +1,8 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { CuponPorEdad, CuponPorEdadNuevo } from '../models/cupon';
 
-export interface CuponPorEdad {
-    id: number;
-    edad_minima: number;
-    porcentaje: number;
-    activo: boolean;
-    vigente_desde: string;
-    vigente_hasta: string;
-}
-
-export type CuponPorEdadNuevo = Omit<CuponPorEdad, 'id'>;
-
-@Injectable({ providedIn: 'root' })
+@Service()
 export class CuponesService {
     private supabase = inject(SupabaseService).client;
 

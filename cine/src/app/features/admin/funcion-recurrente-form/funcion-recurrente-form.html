@@ -88,7 +88,6 @@
     , <strong>{{ fallidas() }}</strong> no se pudieron crear
     }
 </p>
-}
 <ul class="resultados">
     @for (r of resultados(); track r.fecha) {
     <li [class.ok]="r.ok" [class.fallo]="!r.ok">
@@ -98,3 +97,4 @@
 </ul>
 
 <a routerLink="/admin/funciones">Ir al listado de funciones</a>
+}

@@ -1,7 +1,8 @@
 import { DecimalPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CandyService, CategoriaCandy, ProductoCandy } from '../../../core/candy.service';
+import { CandyService } from '../../../core/candy.service';
+import { CategoriaCandy, ProductoCandy } from '../../../models/candy';
 import { ImagenesService } from '../../../core/imagenes.service';
 
 @Component({

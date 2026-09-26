@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common';
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { Butaca, SALA, TEXTO_TIPO, TipoButaca } from '../../sala-layout';
 
 type EstadoButaca = 'libre' | 'deshabilitada' | 'ocupada' | 'seleccionada';
@@ -22,17 +22,17 @@ export class MapaButacas {
   readonly tipos: TipoButaca[] = ['general', 'accesible', 'vip'];
   readonly textoTipo = TEXTO_TIPO;
 
-  // Los @Input llegan como listas de ids ('J-10'); se guardan en señales como Set para consultar rápido
-  private idsDeshabilitadas = signal(new Set<string>());
-  private idsOcupadas = signal(new Set<string>());
-  private idsSeleccionadas = signal(new Set<string>());
+  // Los inputs llegan como listas de ids ('J-10'); se pasan a Set para consultar rápido
+  deshabilitadas = input<string[]>([]);
+  ocupadas = input<string[]>([]);
+  seleccionadas = input<string[]>([]);
 
-  @Input() set deshabilitadas(ids: string[]) { this.idsDeshabilitadas.set(new Set(ids)); }
-  @Input() set ocupadas(ids: string[]) { this.idsOcupadas.set(new Set(ids)); }
-  @Input() set seleccionadas(ids: string[]) { this.idsSeleccionadas.set(new Set(ids)); }
+  private idsDeshabilitadas = computed(() => new Set(this.deshabilitadas()));
+  private idsOcupadas = computed(() => new Set(this.ocupadas()));
+  private idsSeleccionadas = computed(() => new Set(this.seleccionadas()));
 
   // El padre decide qué hacer con el clic (el admin deshabilita, el cliente selecciona)
-  @Output() butacaClick = new EventEmitter<Butaca>();
+  butacaClick = output<Butaca>();
 
   estado(b: Butaca): EstadoButaca {
     if (this.idsDeshabilitadas().has(b.id)) return 'deshabilitada';

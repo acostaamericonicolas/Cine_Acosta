@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Sala, SalasService } from '../../../core/salas.service';
+import { SalasService } from '../../../core/salas.service';
+import { Sala } from '../../../models/sala';
 import { MapaButacas } from '../../../shared/componentes/mapa-butacas/mapa-butacas';
 import { BUTACAS, Butaca } from '../../../shared/sala-layout';
 

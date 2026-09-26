@@ -1,7 +1,7 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Pelicula } from '../../../core/peliculas.service';
-import { DuracionPipe } from '../../pipes/duracion.pipe';
+import { Pelicula } from '../../../models/pelicula';
+import { DuracionPipe } from '../../pipes/duracion-pipe';
 
 @Component({
   selector: 'app-tarjeta-pelicula',
@@ -10,5 +10,5 @@ import { DuracionPipe } from '../../pipes/duracion.pipe';
   styleUrl: './tarjeta-pelicula.css',
 })
 export class TarjetaPelicula {
-  @Input({ required: true }) pelicula!: Pelicula;
+  pelicula = input.required<Pelicula>();
 }

@@ -1,7 +1,8 @@
 import { DecimalPipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Combo, CombosService } from '../../../core/combos.service';
+import { CombosService } from '../../../core/combos.service';
+import { Combo } from '../../../models/combo';
 import { ImagenesService } from '../../../core/imagenes.service';
 
 @Component({

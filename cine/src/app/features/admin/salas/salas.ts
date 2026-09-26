@@ -1,7 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { form, FormField, required, min, maxLength } from '@angular/forms/signals';
-import { Sala, SalasService } from '../../../core/salas.service';
+import { SalasService } from '../../../core/salas.service';
+import { Sala } from '../../../models/sala';
 import { TEXTO_TIPO, TipoButaca } from '../../../shared/sala-layout';
 
 @Component({

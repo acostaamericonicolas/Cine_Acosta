@@ -1,9 +1,11 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { form, FormField, required, min, maxLength } from '@angular/forms/signals';
-import { ConCambios } from '../../../core/guards/cambios.guard';
-import { CandyService, ProductoCandy } from '../../../core/candy.service';
-import { CombosService, ItemCombo } from '../../../core/combos.service';
+import { ConCambios } from '../../../core/guards/form-guard';
+import { CandyService } from '../../../core/candy.service';
+import { ProductoCandy } from '../../../models/candy';
+import { CombosService } from '../../../core/combos.service';
+import { ItemCombo } from '../../../models/combo';
 import { ImagenesService, MAX_IMAGEN_BYTES, TIPOS_IMAGEN } from '../../../core/imagenes.service';
 
 interface ComboModelo {

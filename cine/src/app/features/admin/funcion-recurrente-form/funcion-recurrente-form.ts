@@ -1,9 +1,13 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { form, FormField, required, validate } from '@angular/forms/signals';
+import { ConCambios } from '../../../core/guards/form-guard';
 import { FuncionesService } from '../../../core/funciones.service';
-import { Pelicula, PeliculasService } from '../../../core/peliculas.service';
+import { Formato, FORMATOS, Idioma, IDIOMAS } from '../../../models/funcion';
+import { PeliculasService } from '../../../core/peliculas.service';
+import { Pelicula } from '../../../models/pelicula';
 import { DIAS_SEMANA, generarFechas } from '../../../shared/fechas-recurrentes';
+import { fechaLocal } from '../../../shared/fechas';
 import { DatePipe } from '@angular/common';
 
 interface FuncionRecurrenteModelo {
@@ -12,8 +16,8 @@ interface FuncionRecurrenteModelo {
   hora: string;
   desde: string;
   hasta: string;
-  formato: string;
-  idioma: string;
+  formato: Formato;
+  idioma: Idioma;
 }
 
 interface Resultado {
@@ -28,17 +32,14 @@ interface Resultado {
   templateUrl: './funcion-recurrente-form.html',
   styleUrl: './funcion-recurrente-form.css',
 })
-export class FuncionRecurrenteForm {
+export class FuncionRecurrenteForm implements ConCambios {
   private peliculasService = inject(PeliculasService);
   private funcionesService = inject(FuncionesService);
 
   readonly dias = DIAS_SEMANA;
-  readonly formatos = ['2D', '3D', '4D', '5D'];
-  readonly idiomas = [
-    { valor: 'castellano', texto: 'Castellano' },
-    { valor: 'subtitulada', texto: 'Subtitulada' },
-  ];
-  readonly hoy = new Date().toISOString().slice(0, 10);
+  readonly formatos = FORMATOS;
+  readonly idiomas = IDIOMAS;
+  readonly hoy = fechaLocal();
 
   peliculas = signal<Pelicula[]>([]);
   cargando = signal(true);
@@ -47,6 +48,8 @@ export class FuncionRecurrenteForm {
   modelo = signal<FuncionRecurrenteModelo>({
     peliculaId: '', dias: [], hora: '', desde: '', hasta: '', formato: '2D', idioma: 'castellano',
   });
+
+  private inicial = JSON.stringify(this.modelo());
 
   f = form(this.modelo, (s) => {
     required(s.peliculaId, { message: 'Elegí una película' });
@@ -88,6 +91,11 @@ export class FuncionRecurrenteForm {
     }
   }
 
+  // Lo consulta formGuard: hay cambios si se tocó el formulario y todavía no se crearon las funciones
+  hayCambios(): boolean {
+    return this.resultados() === null && JSON.stringify(this.modelo()) !== this.inicial;
+  }
+
   alternarDia(dia: number, marcado: boolean) {
     this.modelo.update(m => ({
       ...m,
@@ -115,8 +123,8 @@ export class FuncionRecurrenteForm {
         const funcion = await this.funcionesService.crearConAsignacionAutomatica({
           pelicula_id: Number(m.peliculaId),
           inicio: fecha,
-          formato: m.formato as any,
-          idioma: m.idioma as any,
+          formato: m.formato,
+          idioma: m.idioma,
         });
         resultados.push({ fecha, ok: true, detalle: `Sala #${funcion.sala_id}` });
       } catch (e) {

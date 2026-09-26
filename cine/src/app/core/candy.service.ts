@@ -1,29 +1,8 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { CategoriaCandy, ProductoCandy, ProductoNuevo } from '../models/candy';
 
-export interface CategoriaCandy {
-    id: number;
-    nombre: string;
-    orden: number;
-}
-
-export interface ProductoCandy {
-    id: number;
-    categoria_id: number;
-    nombre: string;
-    precio: number;
-    imagen_url: string | null;
-    imagen_path: string | null;
-    activo: boolean;
-}
-
-export type ProductoNuevo = Omit<ProductoCandy, 'id'>;
-
-export const TIPOS_IMAGEN = ['image/jpeg', 'image/png', 'image/webp'];
-export const MAX_IMAGEN_BYTES = 2 * 1024 * 1024;
-const EXTENSIONES: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
-
-@Injectable({ providedIn: 'root' })
+@Service()
 export class CandyService {
     private supabase = inject(SupabaseService).client;
 
@@ -81,22 +60,6 @@ export class CandyService {
             throw error;
         }
         this.verificarPermiso(data);
-    }
-
-    // --- Imágenes (mismo patrón que los pósters) ---
-    async subirImagen(archivo: File): Promise<{ path: string; url: string }> {
-        const ext = EXTENSIONES[archivo.type];
-        if (!ext) throw new Error('Formato no permitido. Usá JPG, PNG o WebP.');
-        const path = `${crypto.randomUUID()}.${ext}`;
-        const { error } = await this.supabase.storage.from('candy').upload(path, archivo, { contentType: archivo.type });
-        if (error) throw error;
-        const { data } = this.supabase.storage.from('candy').getPublicUrl(path);
-        return { path, url: data.publicUrl };
-    }
-
-    async eliminarImagen(path: string) {
-        const { error } = await this.supabase.storage.from('candy').remove([path]);
-        if (error) throw error;
     }
 
     private verificarPermiso(filas: unknown[] | null) {

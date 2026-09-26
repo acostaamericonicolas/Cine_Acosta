@@ -1,11 +1,14 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Funcion, FuncionesService } from '../../../core/funciones.service';
-import { Pelicula, PeliculasService } from '../../../core/peliculas.service';
-import { Resena, ResenasService } from '../../../core/resenas.service';
-import { DuracionPipe } from '../../../shared/pipes/duracion.pipe';
-import { EstrellasPipe } from '../../../shared/pipes/estrellas.pipe';
+import { FuncionesService } from '../../../core/funciones.service';
+import { Funcion } from '../../../models/funcion';
+import { PeliculasService } from '../../../core/peliculas.service';
+import { Pelicula } from '../../../models/pelicula';
+import { ResenasService } from '../../../core/resenas.service';
+import { Resena } from '../../../models/resena';
+import { DuracionPipe } from '../../../shared/pipes/duracion-pipe';
+import { EstrellasPipe } from '../../../shared/pipes/estrellas-pipe';
 
 const RESENAS_INICIALES = 5;
 

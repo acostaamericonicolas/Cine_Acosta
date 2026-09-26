@@ -1,10 +1,10 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { form, FormField, required, min, maxLength } from '@angular/forms/signals';
-import { ConCambios } from '../../../core/guards/cambios.guard';
-import {
-  CandyService, CategoriaCandy, MAX_IMAGEN_BYTES, ProductoNuevo, TIPOS_IMAGEN,
-} from '../../../core/candy.service';
+import { ConCambios } from '../../../core/guards/form-guard';
+import { CandyService } from '../../../core/candy.service';
+import { ImagenesService, MAX_IMAGEN_BYTES, TIPOS_IMAGEN } from '../../../core/imagenes.service';
+import { CategoriaCandy, ProductoNuevo } from '../../../models/candy';
 
 interface ProductoModelo {
   nombre: string;
@@ -21,6 +21,7 @@ interface ProductoModelo {
 })
 export class ProductoForm implements ConCambios {
   private service = inject(CandyService);
+  private imagenes = inject(ImagenesService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -124,7 +125,7 @@ export class ProductoForm implements ConCambios {
 
       const archivo = this.archivo();
       if (archivo) {
-        const r = await this.service.subirImagen(archivo);
+        const r = await this.imagenes.subir('candy', archivo);
         subido = r.path;
         imagenUrl = r.url;
         imagenPath = r.path;
@@ -147,13 +148,13 @@ export class ProductoForm implements ConCambios {
       }
 
       if (subido && this.imagenPathActual) {
-        await this.service.eliminarImagen(this.imagenPathActual).catch(() => { });
+        await this.imagenes.eliminar('candy', this.imagenPathActual).catch(() => { });
       }
 
       this.guardado = true;
       this.router.navigate(['/admin/candy/productos']);
     } catch (e) {
-      if (subido) await this.service.eliminarImagen(subido).catch(() => { });
+      if (subido) await this.imagenes.eliminar('candy', subido).catch(() => { });
       this.error.set(this.texto(e, 'No se pudo guardar'));
     } finally {
       this.guardando.set(false);

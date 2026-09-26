@@ -1,13 +1,15 @@
 import { Routes } from '@angular/router';
-import { adminChildGuard, adminGuard, authGuard, empleadoGuard } from './core/guards/acceso.guard';
-import { cambiosGuard } from './core/guards/cambios.guard';
+import { authGuard } from './core/guards/auth-guard';
+import { adminGuard, empleadoGuard } from './core/guards/role-guard';
+import { adminChildGuard } from './core/guards/child-guard';
+import { formGuard } from './core/guards/form-guard';
 
 export const routes: Routes = [
     { path: '', loadComponent: () => import('./features/publico/home/home').then(m => m.Home) },
     { path: 'login', loadComponent: () => import('./features/publico/login/login').then(m => m.Login) },
     {
         path: 'registro',
-        canDeactivate: [cambiosGuard],
+        canDeactivate: [formGuard],
         loadComponent: () => import('./features/publico/registro/registro').then(m => m.Registro),
     },
     {

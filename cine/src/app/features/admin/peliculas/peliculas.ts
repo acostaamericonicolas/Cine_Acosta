@@ -1,7 +1,8 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ESTADOS, EstadoPelicula, Pelicula, PeliculasService} from '../../../core/peliculas.service';
+import { PeliculasService } from '../../../core/peliculas.service';
+import { ESTADOS, EstadoPelicula, Pelicula } from '../../../models/pelicula';
 import { ImagenesService } from '../../../core/imagenes.service';
 
 @Component({

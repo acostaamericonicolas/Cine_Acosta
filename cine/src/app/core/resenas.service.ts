@@ -1,16 +1,8 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { Resena } from '../models/resena';
 
-export interface Resena {
-    id: number;
-    pelicula_id: number;
-    autor: string;
-    estrellas: number;
-    comentario: string;
-    creado_en: string;
-}
-
-@Injectable({ providedIn: 'root' })
+@Service()
 export class ResenasService {
     private supabase = inject(SupabaseService).client;
 

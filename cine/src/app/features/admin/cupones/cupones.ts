@@ -1,7 +1,9 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { form, FormField, required, min, max, validate } from '@angular/forms/signals';
-import { CuponesService, CuponPorEdad } from '../../../core/cupones.service';
+import { CuponesService } from '../../../core/cupones.service';
+import { CuponPorEdad } from '../../../models/cupon';
+import { fechaLocal } from '../../../shared/fechas';
 
 type EstadoVigencia = 'Vigente' | 'Programado' | 'Vencido' | 'Desactivado';
 
@@ -13,7 +15,7 @@ type EstadoVigencia = 'Vigente' | 'Programado' | 'Vencido' | 'Desactivado';
 })
 export class Cupones {
   private service = inject(CuponesService);
-  private hoy = new Date().toISOString().slice(0, 10);
+  private hoy = fechaLocal();
 
   cargando = signal(true);
   error = signal('');

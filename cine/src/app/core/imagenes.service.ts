@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 
 export const TIPOS_IMAGEN = ['image/jpeg', 'image/png', 'image/webp'];
@@ -10,7 +10,7 @@ const EXTENSIONES: Record<string, string> = {
     'image/webp': 'webp',
 };
 
-@Injectable({ providedIn: 'root' })
+@Service()
 export class ImagenesService {
     private supabase = inject(SupabaseService).client;
 

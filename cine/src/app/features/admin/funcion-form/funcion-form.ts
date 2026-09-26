@@ -1,18 +1,22 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { form, FormField, required, validate } from '@angular/forms/signals';
-import { ConCambios } from '../../../core/guards/cambios.guard';
-import { Funcion, FuncionesService } from '../../../core/funciones.service';
-import { Pelicula, PeliculasService } from '../../../core/peliculas.service';
-import { Sala, SalasService } from '../../../core/salas.service';
+import { ConCambios } from '../../../core/guards/form-guard';
+import { FuncionesService } from '../../../core/funciones.service';
+import { Formato, FORMATOS, Idioma, IDIOMAS } from '../../../models/funcion';
+import { PeliculasService } from '../../../core/peliculas.service';
+import { Pelicula } from '../../../models/pelicula';
+import { SalasService } from '../../../core/salas.service';
+import { Sala } from '../../../models/sala';
+import { fechaLocal } from '../../../shared/fechas';
 
 interface FuncionModelo {
   peliculaId: string;   // los <select> trabajan con texto
   salaId: string;       // solo se usa en modo edición
   fecha: string;
   hora: string;
-  formato: string;
-  idioma: string;
+  formato: Formato;
+  idioma: Idioma;
 }
 
 @Component({
@@ -28,12 +32,9 @@ export class FuncionForm implements ConCambios {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
-  readonly formatos = ['2D', '3D', '4D', '5D'];
-  readonly idiomas = [
-    { valor: 'castellano', texto: 'Castellano' },
-    { valor: 'subtitulada', texto: 'Subtitulada' },
-  ];
-  readonly hoy = new Date().toISOString().slice(0, 10);
+  readonly formatos = FORMATOS;
+  readonly idiomas = IDIOMAS;
+  readonly hoy = fechaLocal();
 
   id: number | null = null;   // null = función nueva
   get esEdicion() { return this.id !== null; }
@@ -79,11 +80,12 @@ export class FuncionForm implements ConCambios {
 
       if (this.id !== null) {
         const func = await this.funcionesService.obtener(this.id);
+        const inicio = new Date(func.inicio);
         const m: FuncionModelo = {
           peliculaId: String(func.pelicula_id),
           salaId: String(func.sala_id),
-          fecha: func.inicio.slice(0, 10),
-          hora: new Date(func.inicio).toTimeString().slice(0, 5),
+          fecha: fechaLocal(inicio),   // no usar inicio.slice(0, 10): esa fecha está en UTC
+          hora: inicio.toTimeString().slice(0, 5),
           formato: func.formato,
           idioma: func.idioma,
         };
@@ -119,8 +121,8 @@ export class FuncionForm implements ConCambios {
           pelicula_id: Number(m.peliculaId),
           sala_id: Number(m.salaId),
           inicio,
-          formato: m.formato as any,
-          idioma: m.idioma as any,
+          formato: m.formato,
+          idioma: m.idioma,
         });
         this.guardado = true;
         this.router.navigate(['/admin/funciones']);
@@ -128,8 +130,8 @@ export class FuncionForm implements ConCambios {
         const funcion = await this.funcionesService.crearConAsignacionAutomatica({
           pelicula_id: Number(m.peliculaId),
           inicio,
-          formato: m.formato as any,
-          idioma: m.idioma as any,
+          formato: m.formato,
+          idioma: m.idioma,
         });
         this.exito.set(`Función creada. Se asignó la sala #${funcion.sala_id}.`);
         this.guardado = true;

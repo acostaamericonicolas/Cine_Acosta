@@ -1,28 +1,9 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { SalasService } from './salas.service';
+import { DatosFuncion, Funcion } from '../models/funcion';
 
-export type Formato = '2D' | '3D' | '4D' | '5D';
-export type Idioma = 'castellano' | 'subtitulada';
-
-export interface Funcion {
-    id: number;
-    pelicula_id: number;
-    sala_id: number;
-    inicio: string;
-    fin: string;
-    formato: Formato;
-    idioma: Idioma;
-}
-
-export interface DatosFuncion {
-    pelicula_id: number;
-    inicio: string;   // ISO, ya en UTC
-    formato: Formato;
-    idioma: Idioma;
-}
-
-@Injectable({ providedIn: 'root' })
+@Service()
 export class FuncionesService {
     private supabase = inject(SupabaseService).client;
     private salasService = inject(SalasService);

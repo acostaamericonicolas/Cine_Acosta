@@ -30,8 +30,10 @@
             <td>{{ f.fin | date: 'HH:mm' }}</td>
             <td>{{ f.formato }}</td>
             <td>{{ f.idioma === 'castellano' ? 'Castellano' : 'Subtitulada' }}</td>
-            <a [routerLink]="['/admin/funciones', f.id, 'editar']">Editar</a>
-            <td><button type="button" (click)="eliminar(f)">Eliminar</button></td>
+            <td>
+                <a [routerLink]="['/admin/funciones', f.id, 'editar']">Editar</a>
+                <button type="button" (click)="eliminar(f)">Eliminar</button>
+            </td>
         </tr>
         } @empty {
         <tr>

@@ -1,8 +1,9 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { form, FormField, required, min, max, minLength, maxLength, validate} from '@angular/forms/signals';
-import { ConCambios } from '../../../core/guards/cambios.guard';
-import {ESTADOS, EstadoPelicula, PeliculaNueva, PeliculasService} from '../../../core/peliculas.service';
+import { ConCambios } from '../../../core/guards/form-guard';
+import { PeliculasService } from '../../../core/peliculas.service';
+import { ESTADOS, EstadoPelicula, PeliculaNueva } from '../../../models/pelicula';
 import { MAX_IMAGEN_BYTES, TIPOS_IMAGEN, ImagenesService } from '../../../core/imagenes.service';
 import { GENEROS } from '../../../shared/generos';
 
@@ -153,7 +154,7 @@ export class PeliculaForm implements ConCambios {
     }));
   }
 
-  // Lo consulta cambiosGuard antes de salir de la pantalla
+  // Lo consulta formGuard antes de salir de la pantalla
   hayCambios(): boolean {
     return !this.guardado &&
       (this.archivo() !== null || JSON.stringify(this.modelo()) !== this.inicial);

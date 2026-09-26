@@ -1,16 +1,9 @@
-import { Injectable, inject } from '@angular/core';
+import { Service, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { TipoButaca } from '../shared/sala-layout';
+import { Precios, Sala } from '../models/sala';
 
-export interface Sala {
-    id: number;
-    nombre: string;
-    activa: boolean;
-}
-
-export type Precios = Record<TipoButaca, number>;
-
-@Injectable({ providedIn: 'root' })
+@Service()
 export class SalasService {
     private supabase = inject(SupabaseService).client;
 

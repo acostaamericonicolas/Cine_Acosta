@@ -1,9 +1,12 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Funcion, FuncionesService } from '../../../core/funciones.service';
-import { Pelicula, PeliculasService } from '../../../core/peliculas.service';
-import { Sala, SalasService } from '../../../core/salas.service';
+import { FuncionesService } from '../../../core/funciones.service';
+import { Funcion } from '../../../models/funcion';
+import { PeliculasService } from '../../../core/peliculas.service';
+import { Pelicula } from '../../../models/pelicula';
+import { SalasService } from '../../../core/salas.service';
+import { Sala } from '../../../models/sala';
 
 @Component({
   selector: 'app-funciones',

@@ -26,6 +26,7 @@ export class MapaButacas {
   deshabilitadas = input<string[]>([]);
   ocupadas = input<string[]>([]);
   seleccionadas = input<string[]>([]);
+  leyendaEstados = input(false);   // la compra muestra también ocupada y seleccionada
 
   private idsDeshabilitadas = computed(() => new Set(this.deshabilitadas()));
   private idsOcupadas = computed(() => new Set(this.ocupadas()));

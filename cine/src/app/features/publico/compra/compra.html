@@ -1,0 +1,56 @@
+@if (cargando()) {
+<p>Cargando...</p>
+} @else if (error()) {
+<h1>No se puede comprar</h1>
+<p class="error">{{ error() }}</p>
+<a routerLink="/">← Volver a la cartelera</a>
+} @else if (pelicula(); as p) {
+@let f = funcion()!;
+<a [routerLink]="['/pelicula', p.id]">← Volver a {{ p.nombre }}</a>
+
+<h1>{{ p.nombre }}</h1>
+<p class="meta">
+    {{ f.inicio | date: "EEEE d 'de' MMMM, HH:mm" }} · {{ f.formato }} ·
+    {{ f.idioma === 'castellano' ? 'Castellano' : 'Subtitulada' }}
+    @if (p.en_preventa) { · <strong>Preventa</strong> }
+</p>
+
+<h2>Elegí tus butacas</h2>
+<p class="ayuda">Las butacas grises las están comprando otras personas en este momento. Se actualizan solas.</p>
+
+<app-mapa-butacas [deshabilitadas]="deshabilitadas()" [ocupadas]="ocupadasPorOtros()"
+    [seleccionadas]="idsSeleccionadas()" [leyendaEstados]="true" (butacaClick)="tocar($event)" />
+
+@if (aviso()) {
+<p class="error" role="alert">{{ aviso() }}</p>
+}
+
+<section class="resumen" aria-live="polite">
+    <h2>Tu selección</h2>
+
+    @if (seleccionadas().length === 0) {
+    <p>Todavía no elegiste butacas.</p>
+    } @else {
+    @if (tiempoRestante(); as t) {
+    <p class="reloj">Te guardamos las butacas por {{ t }} min.</p>
+    }
+
+    <ul>
+        @for (l of lineas(); track l.butaca.id) {
+        <li [class.vip]="l.butaca.tipo === 'vip'">
+            <span>Butaca {{ l.butaca.id }} · {{ textoTipo[l.butaca.tipo] }}</span>
+            <span>$ {{ l.precio | number: '1.2-2' }}</span>
+        </li>
+        }
+    </ul>
+    <p class="total">Total entradas: <strong>$ {{ total() | number: '1.2-2' }}</strong></p>
+
+    @if (hayVip()) {
+    <p class="aviso">Elegiste al menos una butaca <strong>VIP</strong>, que tiene un precio más alto.</p>
+    }
+    @if (p.restriccion_edad > 0) {
+    <p class="aviso">Película para mayores de {{ p.restriccion_edad }}: debe asistir un adulto.</p>
+    }
+    }
+</section>
+}

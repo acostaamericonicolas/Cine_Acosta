@@ -37,6 +37,9 @@
         @if (puesto > 0) {
         <span class="insignia-top">🔥 Más vendida #{{ puesto }}</span>
         }
+        @if (p.en_preventa) {
+        <span class="insignia-preventa">Preventa · estreno {{ p.fecha_estreno | date: 'dd/MM' }}</span>
+        }
     </app-tarjeta-pelicula>
     }
 </div>

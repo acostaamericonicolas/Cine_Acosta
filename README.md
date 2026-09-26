@@ -33,6 +33,17 @@ La conexión a Supabase está en `cine/src/environments/environment.ts`:
 | `supabaseUrl` | `https://igzqqxtnogghgdqlqhgf.supabase.co` |
 | `supabasePublishableKey` | clave *publishable* del proyecto (es pública por diseño; lo que protege los datos son las policies RLS) |
 
+### Scripts SQL
+
+Los cambios de la base a partir de HU-21 están en [`supabase/`](supabase/), numerados. Se ejecutan **en orden** en Supabase → SQL Editor, cada uno completo:
+
+| Script | HU | Qué agrega |
+|---|---|---|
+| `01_preventa.sql` | 21 | columnas de preventa, `hoy_ar()`, `en_preventa()`, `venta_abierta()`, `precio_entrada()` |
+| `02_butacas_ocupadas.sql` | 22, 23 | tabla `butacas_ocupadas`, funciones de reserva y Realtime |
+
+Lo anterior (tablas, triggers y policies de las HU 01 a 20) se creó directamente en Supabase y está documentado en la [sección 6](#6-base-de-datos-supabase).
+
 En Supabase → Authentication, la **confirmación de mail tiene que estar desactivada**: el registro necesita una sesión activa para insertar el perfil (ver [4.4](#44-registro-en-dos-pasos)).
 
 ---
@@ -57,6 +68,9 @@ En Supabase → Authentication, la **confirmación de mail tiene que estar desac
 | 18 | Categorías y productos del candy | Hecha |
 | 19 | Combos a precio fijo | Hecha |
 | 20 | Configuración de cupones | Hecha (la aplicación en la compra se completa con HU-26) |
+| 21 | Preventa por película | Hecha (requiere `supabase/01_preventa.sql`) |
+| 22 | Mapa de butacas para elegir | Hecha (requiere `supabase/02_butacas_ocupadas.sql`) |
+| 23 | Butacas ocupadas en tiempo real | Hecha con Supabase Realtime (requiere `supabase/02_butacas_ocupadas.sql`) |
 | 05 | Perfil: puntos, crédito, cupones y datos | Hecha (historial de canjes y "Mis películas" se llenan con las HU de puntos y compra) |
 | 32, 34 | Validación, roles | Pantallas creadas, sin implementar |
 | Resto | Semanas 3 y 4 | Pendiente |
@@ -72,7 +86,7 @@ cine/src/app/
 │   └── *.service.ts
 ├── models/                interfaces y tipos de datos (sin lógica)
 ├── features/              una carpeta por área, cada una cargada con lazy loading
-│   ├── publico/           home, detalle, login, registro
+│   ├── publico/           home, detalle, compra, login, registro
 │   ├── cliente/           perfil
 │   ├── empleado/          validación
 │   └── admin/             ABMs del panel
@@ -80,7 +94,8 @@ cine/src/app/
     ├── componentes/       tarjeta-pelicula, mapa-butacas
     ├── pipes/             duracion-pipe, estrellas-pipe
     ├── sala-layout.ts     distribución fija de butacas
-    ├── fechas.ts          fecha local (ver 4.8)
+    ├── fechas.ts          fecha local, edad, sumar días (ver 4.8)
+    ├── precios.ts         precio de entrada con preventa (solo para mostrar)
     └── ...
 ```
 
@@ -198,6 +213,7 @@ El backlog proponía guardar una URL porque Storage no se vio en clase. **Se usa
 
 ### 5.2 Home, búsqueda y filtros (HU-07, HU-08)
 
+- La home muestra las películas que **hoy tienen la venta abierta**: las "en cartelera" y las "próximamente" que ya están en preventa, con la insignia "Preventa · estreno dd/MM". La consulta filtra por la columna calculada `venta_abierta` (`.eq('venta_abierta', true)`), así la regla de fechas está solo en la base. Las "próximamente" sin preventa van a ir en la sección Próximamente (HU-11).
 - La consulta ya viene ordenada por `vendidas` (de mayor a menor) y, si empatan, por nombre. Las **3 primeras con al menos una venta** llevan la insignia: si no hubo ventas, no se inventa un ranking.
 - Todo el filtrado es `computed` sobre la lista ya cargada, sin volver a consultar la base.
 - La búsqueda ignora mayúsculas y tildes ("amelie" encuentra "Amélie").
@@ -266,6 +282,40 @@ El backlog proponía guardar una URL porque Storage no se vio en clase. **Se usa
 - **Historial de canjes** y **"Mis películas"** muestran por ahora un estado vacío: las tablas de canjes y entradas todavía no existen.
 - Los datos personales son **solo de lectura**. La fecha de nacimiento no se puede cambiar porque habilita los cupones por edad; la policy de `perfiles` no permite `update` al cliente, y eso también protege `rol`, `credito` y `puntos`.
 
+### 5.9 Preventa (HU-21)
+
+- El admin activa la preventa en el formulario de la película y carga un **precio de preventa**. Es obligatorio si la preventa está activada; lo valida el formulario y también un `check` en la base.
+- La venta abre **7 días antes del estreno**. Hasta el día anterior al estreno, las butacas generales y accesibles cuestan el precio de preventa y la VIP suma su recargo de siempre. Desde el estreno vuelve al precio normal, sin que nadie tenga que cambiar nada.
+- Mientras dura, la película aparece en la home con la insignia "Preventa". El detalle muestra "La preventa abre el …" antes de que abra, y un aviso con el precio mientras dura.
+- Una película en "próximamente" sin preventa abre la venta el día del estreno.
+- La fecha la evalúa la base (`venta_abierta`, `en_preventa`) con la hora de Argentina, no el reloj de la PC del usuario. Ver [6.2.6](#626-preventa-hu-21--supabase01_preventasql).
+
+### 5.10 Compra: elegir butacas en tiempo real (HU-22, HU-23)
+
+- Ruta pública **`/comprar/:funcionId`**, a la que se llega con el botón "Comprar" del detalle. No hace falta sesión (RF-02).
+- Se reutiliza **`MapaButacas`**: la compra le pasa las butacas deshabilitadas, las **ocupadas por otros** y las **seleccionadas por mí**, y activa la leyenda de estados.
+- Tocar una butaca libre la **reserva por 10 minutos**, y todas vencen juntas. Volver a tocarla la libera. El resumen muestra un reloj con el tiempo que queda, el precio de cada butaca y el total.
+- **Tiempo real con Supabase Realtime (aprobado por el docente):** cuando otra persona reserva, compra o libera una butaca, el mapa cambia sin recargar.
+- Antes de pagar ya se ve si hay una **butaca VIP** (RF-19) y, si la película es +13 o +18, que **debe asistir un adulto** (RF-20).
+- Todo el control está en la base, que devuelve mensajes claros ("La butaca J-10 la está reservando otra persona", "Podés reservar hasta 10 butacas por compra"). Ver [6.2.7](#627-reserva-de-butacas-en-tiempo-real-hu-22-hu-23--supabase02_butacas_ocupadassql).
+- Sigue en HU-24: los anónimos ingresan su fecha de nacimiento antes de elegir butacas, y se controla la edad.
+
+### 5.11 Reglas de compra acordadas (a implementar)
+
+Surgieron de revisar las historias contra los requerimientos funcionales:
+
+| Tema | Regla | HU |
+|---|---|---|
+| Combo con entrada | Cubre 1 entrada general; si la butaca es VIP se cobra la diferencia | 19, 25 |
+| Cupones | Uno por compra (primera compra **o** por edad), combinable con crédito y pago | 26 |
+| Cancelación | Se restan los puntos que dio esa compra; el cupón usado no se devuelve | 28 |
+| Canje de puntos | Se aplica dentro de la compra: entrada o producto a $0 pagado con puntos | 31 |
+| Comprador anónimo | Pantalla "Buscar mi compra" con mail + código | 26, 27 |
+| Comprobante | Código único con QR (librería `qrcode`) | 27 |
+| Preventa | Precio fijo por película para general y accesible; la VIP suma su recargo | 21 |
+| Alerta de estreno | Avisa cuando se abre la venta (preventa, o estreno si no hay) | 11 |
+| Log de actividad | Con triggers en la base, no desde Angular | 37 |
+
 ---
 
 ## 6. Base de datos (Supabase)
@@ -275,7 +325,7 @@ El backlog proponía guardar una URL porque Storage no se vio en clase. **Se usa
 | Tabla | Contenido | Notas |
 |---|---|---|
 | `perfiles` | datos del usuario, `rol`, `credito`, `puntos` | `id` = id de Supabase Auth. `rol` por defecto `cliente`. |
-| `peliculas` | ficha de la película | `generos text[]`. `vendidas` es un contador que se usa para el ranking. |
+| `peliculas` | ficha de la película | `generos text[]`. `vendidas` es un contador que se usa para el ranking. `preventa` y `precio_preventa` (HU-21). |
 | `salas` | nombre, `activa` | nombre único |
 | `precios_butaca` | `tipo` (general / accesible / vip), `precio` | una fila por tipo |
 | `butacas_deshabilitadas` | `sala_id`, `fila`, `numero` | solo las excepciones al layout |
@@ -288,18 +338,129 @@ El backlog proponía guardar una URL porque Storage no se vio en clase. **Se usa
 | `config_cupon_primera_compra` | `porcentaje` | una sola fila (`id = 1`) |
 | `cupones_primera_compra_usuario` | cupón asignado a cada usuario | |
 | `cupones_por_edad` | `edad_minima`, `porcentaje`, vigencia, `activo` | |
+| `butacas_ocupadas` | `funcion_id`, `fila`, `numero`, `estado`, `vence`, `token_hash` | clave primaria = función + butaca. En Realtime. |
 
 Montos en `numeric(…, 2)` para no tener errores de redondeo con dinero.
 
 **`resenas.autor`:** la reseña guarda el nombre a mostrar (por ejemplo "Juan P."). Así el público puede leer las reseñas sin que la tabla `perfiles`, que tiene datos personales, sea visible para todos.
 
-### 6.2 Funciones y no solapamiento
+### 6.2 Lógica en la base y cómo se conecta con Angular
 
-- `fin` = `inicio` + duración de la película. `libre_desde` = `fin` + 30 minutos.
-- Hay un constraint de exclusión, **`sin_solapamiento_en_sala`**, que impide que en la misma sala se crucen los rangos `[inicio, libre_desde)`. Si se viola, Postgres devuelve `23P01`.
-- Si se cambia la duración de una película, se recalcula el `fin` de sus funciones. Si eso produce un solapamiento, el cambio se rechaza con el mismo error y la app lo explica.
+Las reglas que no se pueden romper están **en la base**: constraints, triggers y funciones. Angular las usa, pero no depende de sí mismo para cumplirlas. Así se respetan aunque haya dos personas usando la app a la vez o alguien llame a la API directamente desde la consola.
 
-Tener la regla en la base garantiza que se cumpla aunque haya dos admins trabajando a la vez o alguien use la API directamente.
+Resumen:
+
+| Regla | En la base | En Angular |
+|---|---|---|
+| Solo el admin modifica el catálogo | `es_admin()` + policies | guards + `.select()` después de `update`/`delete` |
+| Cupón de primera compra al registrarse | trigger `perfiles_asignar_cupon` | `AuthService.registrar()` → `Perfil` lo muestra |
+| Fin de la función y 30 min de limpieza | trigger `funciones_calcular_fin` | no lo calcula: lo lee |
+| Nunca dos funciones a la vez en una sala | constraint `sin_solapamiento_en_sala` | `FuncionesService` prueba sala por sala |
+| Cambiar la duración revalida las funciones | trigger `peliculas_duracion_cambia` | `PeliculasService.actualizar()` explica el `23P01` |
+| Preventa y venta abierta | `en_preventa()`, `venta_abierta()`, `precio_entrada()` | `obtenerConVenta()` y `shared/precios.ts` |
+| Una butaca, un solo comprador | tabla `butacas_ocupadas` + `reservar_butaca()` | `ReservasService` con `rpc()` |
+| Mapa de butacas en tiempo real | publicación `supabase_realtime` | `ReservasService.escuchar()` |
+
+#### 6.2.1 Permisos: `es_admin()` y policies
+
+- **Base:** `es_admin()` es `security definer` y devuelve `true` si el perfil del usuario logueado (`auth.uid()`) tiene `rol = 'admin'`. Todas las policies de escritura del catálogo la usan (`using (es_admin())`). Es `security definer` porque un cliente no puede leer los perfiles ajenos, y la función necesita leer el suyo sin pasar por esas policies.
+- **Angular:** `roleGuard` y `childGuard` esconden las pantallas de admin, pero **la seguridad real es la policy**. Cuando una policy bloquea un `update` o `delete`, Supabase no da error: no toca ninguna fila. Por eso los servicios terminan en `.select()` y, si vuelven 0 filas, lanzan "No tenés permiso para hacer este cambio" (ver [4.2](#42-detectar-cuando-una-policy-bloquea-un-cambio)).
+
+#### 6.2.2 Registro y cupón de primera compra
+
+- **Base:**
+  - La policy `crear mi perfil` solo deja insertar el perfil propio (`auth.uid() = id`) y **con `rol = 'cliente'`, `puntos = 0` y `credito = 0`**. Nadie puede registrarse como admin ni con saldo desde la consola.
+  - El trigger **`perfiles_asignar_cupon`** (`after insert` en `perfiles`) ejecuta `asignar_cupon_primera_compra()`. Esa función copia el porcentaje vigente de `config_cupon_primera_compra` a `cupones_primera_compra_usuario`. Es `security definer` porque el cliente no tiene permiso para insertar cupones: así no se puede regalar un cupón de 100%.
+  - `on conflict do nothing`: si el perfil se reintenta, no se duplica el cupón.
+- **Angular:** `AuthService.registrar()` hace `signUp` + `insert` en `perfiles` y nada más: el cupón aparece solo. `CuponesService.obtenerCuponPrimeraCompra()` lo lee y el perfil lo muestra (HU-05). Si el admin cambia el porcentaje en `Cupones`, solo afecta a los que se registren después, porque el valor se copia al registrarse.
+
+#### 6.2.3 Funciones: fin calculado y no solapamiento
+
+- **Base:**
+  - El trigger **`funciones_calcular_fin`** (`before insert or update`) ejecuta `calcular_fin_funcion()`: `fin = inicio + duración de la película` y `libre_desde = fin + 30 min`. Angular nunca manda `fin`; si lo mandara, se pisa.
+  - El constraint de exclusión **`sin_solapamiento_en_sala`** (`exclude using gist (sala_id with =, tstzrange(inicio, libre_desde) with &&)`) impide dos rangos que se crucen en la misma sala. Usa la extensión `btree_gist`, que es la que agrega las funciones `gbt_*` que se ven en el esquema. Si se viola, Postgres devuelve el código **`23P01`**.
+- **Angular:** `FuncionesService.crearConAsignacionAutomatica()` recorre las salas activas y hace `insert` en cada una. Si vuelve `23P01`, prueba la siguiente; si ninguna acepta, muestra "No hay ninguna sala libre en ese horario". No se consulta antes si la sala está libre: la base decide, y eso evita que dos admins asignen la misma sala al mismo tiempo. Las funciones recurrentes (HU-15) usan el mismo método para cada fecha, y al editar (HU-17) el `23P01` se traduce a un mensaje.
+
+#### 6.2.4 Cambio de duración de una película
+
+- **Base:** el trigger **`peliculas_duracion_cambia`** (`after update` en `peliculas`) ejecuta `recalcular_funciones_pelicula()`. Si la duración cambió, hace `update funciones set inicio = inicio` en las funciones **futuras** de esa película. Ese update "vacío" dispara `funciones_calcular_fin`, que recalcula `fin` y `libre_desde`. Si el nuevo horario pisa otra función, el constraint rechaza **todo el cambio**, incluida la película.
+- **Angular:** `PeliculasService.actualizar()` traduce el `23P01` a "No se puede cambiar la duración: alguna función programada quedaría a menos de 30 minutos de la siguiente en su sala".
+
+#### 6.2.5 Constraints que respaldan los formularios
+
+Los Signal Forms validan antes de enviar, para dar el mensaje al instante. Los mismos límites están como `check` en la base, por si alguien saltea el formulario:
+
+| Constraint | Formulario |
+|---|---|
+| `peliculas_duracion_min_check` (1 a 600) | `pelicula-form`: `min(1)`, `max(600)` |
+| `peliculas_restriccion_edad_check` (0, 13, 18) | select de restricción |
+| `peliculas_preventa_precio_check` | `pelicula-form`: precio obligatorio si hay preventa |
+| `perfiles_dias_vacaciones_check` (0 a 365) | `registro`: `min(0)`, `max(365)` |
+| `resenas_estrellas_check` (1 a 5), `resenas_comentario_check` (200) | reseñas (HU-10) |
+| `*_precio_check` (> 0), `*_porcentaje_check` (1 a 100) | formularios de candy, combos y cupones |
+| `cupones_mayores_50_check` (hasta ≥ desde) | `cupones`: validación de rango de fechas |
+| `butacas_deshabilitadas_fila_check` (A–T sin K) | el mapa solo ofrece butacas que existen |
+
+Los `unique` y las claves foráneas se traducen en los servicios:
+
+- **`23505`** (duplicado): "Ya existe una sala / categoría con ese nombre".
+- **`23503`** (FK): no se puede borrar un producto que está en un combo (`on delete restrict`), una categoría con productos ni una película con funciones. El mensaje sugiere desactivar u ocultar en su lugar.
+
+#### 6.2.6 Preventa (HU-21) — `supabase/01_preventa.sql`
+
+- **Base:**
+  - `hoy_ar()` devuelve la fecha de hoy en Argentina. `current_date` usa UTC y después de las 21 h daría el día siguiente; es el mismo problema que resuelve `fechaLocal()` en Angular ([4.8](#48-fechas-y-horarios)).
+  - `en_preventa(pelicula)`: `true` desde `fecha_estreno - 7` hasta el día anterior al estreno, si la película tiene `preventa` activada.
+  - `venta_abierta(pelicula)`: en cartelera siempre. Si está en "próximamente", desde el estreno o desde que abre la preventa.
+  - `precio_entrada(pelicula_id, tipo)`: en preventa, general y accesible cuestan `precio_preventa` y la VIP suma su recargo (`vip - general`). Fuera de preventa, el precio normal de `precios_butaca`. Es la que usará `confirmar_compra`.
+  - Como `en_preventa` y `venta_abierta` reciben una fila de `peliculas`, **PostgREST las expone como columnas calculadas**.
+- **Angular:**
+  - `PeliculasService.obtenerConVenta()` pide `.select('*, en_preventa, venta_abierta')`: la fecha la evalúa la base y no el reloj del navegador.
+  - El detalle y la compra muestran "Comprar" solo si `venta_abierta`.
+  - `shared/precios.ts` replica el cálculo de `precio_entrada` **solo para mostrar el precio**. El que se cobra lo calcula la base.
+
+#### 6.2.7 Reserva de butacas en tiempo real (HU-22, HU-23) — `supabase/02_butacas_ocupadas.sql`
+
+- **Base:**
+  - **`butacas_ocupadas`**: una fila por butaca tomada en una función, con estado `reservada` (con `vence`) o `vendida`. La **clave primaria `(funcion_id, fila, numero)`** hace imposible que la misma butaca la tomen dos personas: si dos tocan a la vez, la segunda recibe un error.
+  - **RLS:** todos pueden **leer** (el mapa lo ve cualquiera, sin sesión). No hay policies de escritura: solo se modifica a través de las funciones.
+  - **`reservar_butaca(funcion, fila, numero, token)`** (`security definer`) valida en orden y corta en el primer problema:
+    1. que la función exista y no haya empezado;
+    2. que la venta esté abierta (`venta_abierta`);
+    3. que la butaca exista en el layout (`tipo_butaca`) y no esté fuera de servicio (`butacas_deshabilitadas`);
+    4. que no pase de 10 butacas por compra;
+    5. que no esté vendida ni reservada por otro.
+
+    Antes de reservar borra las reservas vencidas de esa función. Todas las butacas del mismo token **vencen juntas**, a los 10 minutos de la primera, para que haya un solo reloj.
+  - **`liberar_butaca`** y **`liberar_reservas`** borran solo las reservas del mismo token.
+  - **Token:** identifica al navegador que compra, tenga sesión o no (RF-02: se puede comprar sin registrarse). La base guarda el **`sha256` del token**, no el token. Como la tabla es pública, el hash se ve, pero sin el token original nadie puede liberar la reserva de otro.
+  - **`tipo_butaca(fila, numero)`** es la misma distribución que `shared/sala-layout.ts`. Está en los dos lados porque Angular la necesita para dibujar y la base para validar y cobrar.
+  - **Realtime:** `butacas_ocupadas` está en la publicación `supabase_realtime`. Realtime respeta RLS, y como el `select` es público, los visitantes sin sesión también reciben los cambios.
+- **Angular:**
+  - `ReservasService` crea el token con `crypto.randomUUID()` y lo guarda en `sessionStorage`, así sobrevive a un F5 pero no se comparte entre pestañas. Calcula su `sha256` con `crypto.subtle` para reconocer sus propias reservas en la tabla.
+  - `reservar()`, `liberar()` y `liberarTodas()` llaman a las funciones con **`supabase.rpc()`**.
+  - `escuchar()` abre un canal de Realtime con `postgres_changes`: `INSERT` y `UPDATE` filtrados por `funcion_id`, y `DELETE` sin filtro, porque Realtime no filtra los borrados y solo manda la clave primaria. Por eso se descartan a mano los de otras funciones.
+  - La pantalla `Compra` primero se suscribe y después lee la tabla, para no perder cambios en el medio. Guarda las ocupadas en una señal (`Map` por `'J-10'`) y con `computed` separa **mis reservas** (hash igual al mío) de **las de otros**. Las reservas vencidas se ignoran con un reloj de 1 s, aunque la fila siga en la base hasta que alguien reserve y la limpie.
+  - Al salir de la pantalla se llama `liberarTodas()`; si el navegador se cierra, las reservas vencen solas.
+
+**Mensajes de error.** Las funciones lanzan `raise exception using message = '...', hint = '...'`:
+
+- `message` es el texto para el usuario y dice qué falló y dónde, por ejemplo "La butaca J-10 ya está vendida" o "La venta de entradas para "X" todavía no está abierta".
+- `hint` indica el paso: `funcion`, `butaca` o `precio`. `confirmar_compra` va a sumar `edad`, `cupon`, `credito` y `pago`.
+
+Supabase devuelve los dos en el `error` de `rpc()`: Angular muestra `error.message` tal cual y puede usar `error.hint` para marcar la parte de la pantalla que falló.
+
+#### 6.2.8 Próximamente
+
+- **`confirmar_compra`** (HU-26): va a ser una función `security definer` que en una sola transacción:
+  - revalida que las reservas sigan vigentes;
+  - controla la edad (HU-24);
+  - recalcula los precios con `precio_entrada`;
+  - aplica el cupón y el crédito;
+  - crea la compra, las entradas y el código;
+  - pasa las butacas a `vendida` y suma los puntos.
+
+  Si algo falla, no queda nada a medias, y el error dice en qué paso fue.
 
 ### 6.3 Seguridad (RLS)
 
@@ -307,9 +468,9 @@ Todas las tablas tienen RLS activado. Criterio general:
 
 | Quién | Qué puede hacer |
 |---|---|
-| Visitante sin sesión | Leer películas no ocultas, funciones, salas, precios, reseñas, candy, combos y la configuración de cupones. |
-| Usuario registrado | Además, leer y crear **solo su propio** perfil y ver sus propios cupones. |
-| Admin | Escribir (insert / update / delete) en las tablas de catálogo, salas, funciones, candy, combos y cupones. |
+| Visitante sin sesión | Leer películas no ocultas, funciones, salas, precios, reseñas, candy, combos, la configuración de cupones y las butacas ocupadas. Reservar y liberar butacas **solo a través de las funciones** de la base. |
+| Usuario registrado | Además, leer y crear **solo su propio** perfil (como cliente, sin puntos ni crédito) y ver sus propios cupones. No puede modificar su perfil. |
+| Admin | Escribir (insert / update / delete) en las tablas de catálogo, salas, funciones, candy, combos y cupones. Ver todos los perfiles y cambiar roles. |
 
 Por eso los guards de Angular alcanzan para la navegación: aunque alguien los saltee, la base no le devuelve ni le deja modificar lo que no le corresponde.
 
@@ -327,8 +488,9 @@ Tres buckets **públicos de lectura**: `posters`, `candy` y `combos`. Son públi
 | Filas J y K accesibles | Unificadas en la fila J; la K no existe | Decisión de diseño de la sala |
 | Cupón para mayores de 50 | Cupones por edad mínima configurable | Cubre el caso pedido y otros (jubilados, etc.) |
 | Contraseña en el registro | Se agregó | Supabase Auth la necesita |
-| Butacas en tiempo real | Reserva temporal + refresco periódico (pendiente, HU-23) | Supabase Realtime no se vio |
+| Butacas en tiempo real | Reserva temporal de 10 min + Supabase Realtime | Aprobado por el docente |
 | PDF de la entrada | Vista imprimible + "Guardar como PDF" (pendiente, HU-27) | No se vieron librerías de PDF |
+| QR en la entrada | Librería `qrcode` (pendiente, HU-27) | Acordado |
 | Escaneo con cámara | Campo de texto (los lectores USB escriben como teclado) | No se vio acceso a la cámara |
 | Pagos | Pago simulado con formulario validado | Fuera del alcance |
 | Alertas por mail | Avisos dentro de la app | No se vio envío de mails |

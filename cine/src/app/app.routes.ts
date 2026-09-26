@@ -32,5 +32,9 @@ export const routes: Routes = [
         path: 'pelicula/:id',
         loadComponent: () => import('./features/publico/detalle-pelicula/detalle-pelicula').then(m => m.DetallePelicula),
     },
+    {
+        path: 'comprar/:funcionId',
+        loadComponent: () => import('./features/publico/compra/compra').then(m => m.Compra),
+    },
     { path: '**', redirectTo: '' },
 ];

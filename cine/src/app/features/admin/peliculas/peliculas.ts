@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PeliculasService } from '../../../core/peliculas.service';
@@ -7,7 +7,7 @@ import { ImagenesService } from '../../../core/imagenes.service';
 
 @Component({
   selector: 'app-peliculas',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, DecimalPipe],
   templateUrl: './peliculas.html',
   styleUrl: './peliculas.css',
 })

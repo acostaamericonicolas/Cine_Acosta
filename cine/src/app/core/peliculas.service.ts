@@ -1,6 +1,6 @@
 import { Service, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { Pelicula, PeliculaNueva } from '../models/pelicula';
+import { Pelicula, PeliculaConVenta, PeliculaNueva } from '../models/pelicula';
 
 @Service()
 export class PeliculasService {
@@ -23,6 +23,17 @@ export class PeliculasService {
             .single();
         if (error) throw error;
         return data as Pelicula;
+    }
+
+    // en_preventa y venta_abierta las calcula la base con la fecha de hoy (ver 01_preventa.sql)
+    async obtenerConVenta(id: number): Promise<PeliculaConVenta> {
+        const { data, error } = await this.supabase
+            .from('peliculas')
+            .select('*, en_preventa, venta_abierta')
+            .eq('id', id)
+            .single();
+        if (error) throw error;
+        return data as PeliculaConVenta;
     }
 
     async crear(pelicula: PeliculaNueva) {
@@ -69,16 +80,18 @@ export class PeliculasService {
         }
     }
 
-    //Trae solo las películas en cartelera, ordenadas de más a menos vendidas y, si empatan, por nombre. Para quien no inició sesión ya funciona, porque la policy de select que creamos permite ver las películas visibles.
-
-    async listarCartelera(): Promise<Pelicula[]> {
+    // Cartelera de la home: las que hoy tienen la venta abierta, o sea las "en cartelera"
+    // y las "próximamente" que ya están en preventa (venta_abierta la calcula la base).
+    // Ordenadas de más a menos vendidas y, si empatan, por nombre. Funciona sin sesión
+    // porque la policy de select deja ver las películas visibles.
+    async listarCartelera(): Promise<PeliculaConVenta[]> {
         const { data, error } = await this.supabase
             .from('peliculas')
-            .select('*')
-            .eq('estado', 'cartelera')
+            .select('*, en_preventa, venta_abierta')
+            .eq('venta_abierta', true)
             .order('vendidas', { ascending: false })
             .order('nombre');
         if (error) throw error;
-        return data as Pelicula[];
+        return data as PeliculaConVenta[];
     }
 }

@@ -4,11 +4,12 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FuncionesService } from '../../../core/funciones.service';
 import { Funcion } from '../../../models/funcion';
 import { PeliculasService } from '../../../core/peliculas.service';
-import { Pelicula } from '../../../models/pelicula';
+import { PeliculaConVenta } from '../../../models/pelicula';
 import { ResenasService } from '../../../core/resenas.service';
 import { Resena } from '../../../models/resena';
 import { DuracionPipe } from '../../../shared/pipes/duracion-pipe';
 import { EstrellasPipe } from '../../../shared/pipes/estrellas-pipe';
+import { sumarDias } from '../../../shared/fechas';
 
 const RESENAS_INICIALES = 5;
 
@@ -26,7 +27,7 @@ export class DetallePelicula {
 
   readonly resenasIniciales = RESENAS_INICIALES;
 
-  pelicula = signal<Pelicula | null>(null);
+  pelicula = signal<PeliculaConVenta | null>(null);
   resenas = signal<Resena[]>([]);
   funciones = signal<Funcion[]>([]);
   cargando = signal(true);
@@ -34,6 +35,12 @@ export class DetallePelicula {
   errorResenas = signal('');
   errorFunciones = signal('');
   verTodas = signal(false);
+
+  // La preventa abre 7 días antes del estreno (misma regla que venta_abierta en la base)
+  aperturaPreventa = computed(() => {
+    const p = this.pelicula();
+    return p ? sumarDias(p.fecha_estreno, -7) : '';
+  });
 
   promedio = computed(() => {
     const r = this.resenas();
@@ -68,7 +75,7 @@ export class DetallePelicula {
 
   private async cargar(id: number) {
     try {
-      this.pelicula.set(await this.peliculasService.obtener(id));
+      this.pelicula.set(await this.peliculasService.obtenerConVenta(id));
     } catch {
       // No existe, o está oculta y la policy no deja verla
       this.noEncontrada.set(true);

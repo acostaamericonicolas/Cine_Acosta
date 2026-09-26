@@ -18,6 +18,14 @@ export interface Pelicula {
     estado: EstadoPelicula;
     fecha_estreno: string;
     vendidas: number;
+    preventa: boolean;
+    precio_preventa: number | null;
+}
+
+// Columnas calculadas por la base (funciones en_preventa y venta_abierta)
+export interface PeliculaConVenta extends Pelicula {
+    en_preventa: boolean;
+    venta_abierta: boolean;
 }
 
 export type PeliculaNueva = Omit<Pelicula, 'id' | 'vendidas'>;

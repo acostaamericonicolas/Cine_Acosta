@@ -176,3 +176,12 @@
     background: var(--color);
     vertical-align: middle;
 }
+.muestra.ocupada {
+    background: #6b7280;
+    opacity: 0.55;
+}
+
+.muestra.seleccionada {
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+}

@@ -12,3 +12,9 @@ export function edad(fechaNacimiento: string, hoy: string = fechaLocal()): numbe
     const anios = Number(hoy.slice(0, 4)) - Number(fechaNacimiento.slice(0, 4));
     return hoy.slice(5) < fechaNacimiento.slice(5) ? anios - 1 : anios;
 }
+
+// Suma días a 'AAAA-MM-DD' y devuelve el mismo formato (en horario local)
+export function sumarDias(fecha: string, dias: number): string {
+    const [a, m, d] = fecha.split('-').map(Number);
+    return fechaLocal(new Date(a, m - 1, d + dias));
+}

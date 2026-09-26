@@ -1,7 +1,7 @@
-import { NgClass } from '@angular/common';
+import { DatePipe, NgClass } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { PeliculasService } from '../../../core/peliculas.service';
-import { Pelicula } from '../../../models/pelicula';
+import { PeliculaConVenta } from '../../../models/pelicula';
 import { TarjetaPelicula } from '../../../shared/componentes/tarjeta-pelicula/tarjeta-pelicula';
 
 // Ignora mayúsculas y tildes: "amelie" encuentra "Amélie"
@@ -10,14 +10,14 @@ const normalizar = (t: string) =>
 
 @Component({
   selector: 'app-home',
-  imports: [NgClass, TarjetaPelicula],
+  imports: [DatePipe, NgClass, TarjetaPelicula],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
 export class Home {
   private service = inject(PeliculasService);
 
-  peliculas = signal<Pelicula[]>([]);
+  peliculas = signal<PeliculaConVenta[]>([]);
   busqueda = signal('');
   generosElegidos = signal<string[]>([]);
   cargando = signal(true);

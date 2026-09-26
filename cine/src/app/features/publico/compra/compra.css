@@ -1,0 +1,48 @@
+.meta,
+.ayuda {
+    color: #555;
+}
+
+.meta::first-letter {
+    text-transform: uppercase;
+}
+
+.resumen {
+    max-width: 480px;
+    margin-top: 1.5rem;
+}
+
+.resumen ul {
+    list-style: none;
+    padding: 0;
+}
+
+.resumen li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.resumen li.vip {
+    font-weight: bold;
+}
+
+.total {
+    text-align: right;
+}
+
+.reloj {
+    font-weight: bold;
+}
+
+.aviso {
+    background: #fff4d6;
+    border-left: 4px solid #e0a800;
+    padding: 0.6rem 0.8rem;
+    border-radius: 4px;
+}
+
+.error {
+    color: #c00;
+}

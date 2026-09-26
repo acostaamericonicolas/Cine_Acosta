@@ -15,6 +15,8 @@ interface PeliculaModelo {
   restriccion: string;   // '0' | '13' | '18' (los select trabajan con texto)
   estado: string;
   fechaEstreno: string;
+  preventa: boolean;
+  precioPreventa: number;
 }
 
 @Component({
@@ -47,6 +49,8 @@ export class PeliculaForm implements ConCambios {
     restriccion: '0',
     estado: 'oculta',
     fechaEstreno: '',
+    preventa: false,
+    precioPreventa: 0,
   });
 
   private inicial = JSON.stringify(this.modelo());
@@ -64,6 +68,11 @@ export class PeliculaForm implements ConCambios {
       value().length === 0 ? { kind: 'sin-generos', message: 'Elegí al menos un género' } : null
     );
     required(s.fechaEstreno, { message: 'Ingresá la fecha de estreno' });
+    validate(s.precioPreventa, ({ value, valueOf }) =>
+      valueOf(s.preventa) && !(value() > 0)
+        ? { kind: 'precio-preventa', message: 'Ingresá el precio de preventa' }
+        : null
+    );
   });
 
   // --- Póster ---
@@ -105,6 +114,8 @@ export class PeliculaForm implements ConCambios {
         restriccion: String(p.restriccion_edad),
         estado: p.estado,
         fechaEstreno: p.fecha_estreno,
+        preventa: p.preventa,
+        precioPreventa: p.precio_preventa ?? 0,
       };
       this.modelo.set(m);
       this.inicial = JSON.stringify(m);   // lo que se cargó no cuenta como "cambio"
@@ -193,6 +204,8 @@ export class PeliculaForm implements ConCambios {
         restriccion_edad: Number(m.restriccion) as 0 | 13 | 18,
         estado: m.estado as EstadoPelicula,
         fecha_estreno: m.fechaEstreno,
+        preventa: m.preventa,
+        precio_preventa: m.preventa ? m.precioPreventa : null,
       };
 
       if (this.id === null) {

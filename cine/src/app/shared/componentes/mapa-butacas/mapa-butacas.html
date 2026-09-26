@@ -42,4 +42,8 @@
     @for (t of tipos; track t) {
     <span><i class="muestra" [ngClass]="t"></i> {{ textoTipo[t] }}</span>
     }
+    @if (leyendaEstados()) {
+    <span><i class="muestra ocupada"></i> Ocupada</span>
+    <span><i class="muestra general seleccionada"></i> Tu selección</span>
+    }
 </div>

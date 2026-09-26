@@ -82,3 +82,9 @@
 .resenas p {
     margin: 0.25rem 0 0;
 }
+.preventa {
+    background: #fff4d6;
+    border-left: 4px solid #e0a800;
+    padding: 0.6rem 0.8rem;
+    border-radius: 4px;
+}

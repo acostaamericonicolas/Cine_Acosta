@@ -35,11 +35,24 @@
 <section>
     <h2>Funciones</h2>
 
-    @if (p.estado !== 'cartelera') {
-    <p>Se estrena el {{ p.fecha_estreno | date: 'dd/MM/yyyy' }}. Todavía no hay venta de entradas.</p>
+    @if (!p.venta_abierta) {
+    <p>
+        Se estrena el {{ p.fecha_estreno | date: 'dd/MM/yyyy' }}.
+        @if (p.preventa) {
+        La preventa abre el {{ aperturaPreventa() | date: 'dd/MM/yyyy' }}.
+        } @else {
+        Todavía no hay venta de entradas.
+        }
+    </p>
     } @else if (errorFunciones()) {
     <p class="error">{{ errorFunciones() }}</p>
     } @else {
+    @if (p.en_preventa) {
+    <p class="preventa">
+        <strong>¡Preventa!</strong> Entradas a $ {{ p.precio_preventa | number: '1.2-2' }} hasta el
+        estreno ({{ p.fecha_estreno | date: 'dd/MM' }}). Las butacas VIP suman su recargo.
+    </p>
+    }
     @for (dia of dias(); track dia.clave) {
     <h3 class="dia">{{ dia.fecha | date: "EEEE d 'de' MMMM" }}</h3>
     <ul class="funciones">

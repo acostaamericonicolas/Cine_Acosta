@@ -57,7 +57,8 @@ En Supabase → Authentication, la **confirmación de mail tiene que estar desac
 | 18 | Categorías y productos del candy | Hecha |
 | 19 | Combos a precio fijo | Hecha |
 | 20 | Configuración de cupones | Hecha (la aplicación en la compra se completa con HU-26) |
-| 05, 32, 34 | Perfil, validación, roles | Pantallas creadas, sin implementar |
+| 05 | Perfil: puntos, crédito, cupones y datos | Hecha (historial de canjes y "Mis películas" se llenan con las HU de puntos y compra) |
+| 32, 34 | Validación, roles | Pantallas creadas, sin implementar |
 | Resto | Semanas 3 y 4 | Pendiente |
 
 ---
@@ -256,6 +257,14 @@ El backlog proponía guardar una URL porque Storage no se vio en clase. **Se usa
 - **Primera compra:** hay un único porcentaje configurable (`config_cupon_primera_compra`, fila `id = 1`). Al registrarse, a cada usuario se le asigna un cupón **con el porcentaje vigente en ese momento** (`cupones_primera_compra_usuario`). Si después cambia el porcentaje, solo afecta a los registros siguientes.
 - **Por edad:** el pedido hablaba de mayores de 50. Se generalizó a **edad mínima configurable** (50, 60, 65…), con porcentaje, fechas de vigencia y un estado activo. La edad se va a validar con la fecha de nacimiento del perfil al momento de pagar (HU-26).
 - En el admin, cada cupón muestra su estado calculado: Vigente, Programado, Vencido o Desactivado.
+
+### 5.8 Perfil (HU-05)
+
+- Muestra lo que pide RF-05: **puntos acumulados**, **crédito disponible**, **historial de canjes** y **"Mis películas"**, más los cupones y los datos del registro.
+- Al entrar se vuelve a leer el perfil (`auth.refrescarPerfil()`), porque el crédito y los puntos cambian con compras y cancelaciones y la señal tenía el valor del login.
+- **Cupones:** el de primera compra (disponible o usado) y los cupones por edad que **hoy** le corresponden: activos, dentro de la vigencia y con la edad mínima alcanzada. La edad se calcula con `edad()` de `shared/fechas.ts`, que compara las fechas como texto para no caer en el corrimiento de UTC; la compra (HU-26) usa la misma función.
+- **Historial de canjes** y **"Mis películas"** muestran por ahora un estado vacío: las tablas de canjes y entradas todavía no existen.
+- Los datos personales son **solo de lectura**. La fecha de nacimiento no se puede cambiar porque habilita los cupones por edad; la policy de `perfiles` no permite `update` al cliente, y eso también protege `rol`, `credito` y `puntos`.
 
 ---
 

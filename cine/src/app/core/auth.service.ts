@@ -71,6 +71,12 @@ export class AuthService {
         this.perfil.set(null);
     }
 
+    // Vuelve a leer el perfil (crédito y puntos cambian con las compras)
+    async refrescarPerfil() {
+        const id = this.perfil()?.id;
+        if (id) await this.cargarPerfil(id);
+    }
+
     rutaInicial(): string {
         switch (this.rol()) {
             case 'admin': return '/admin';

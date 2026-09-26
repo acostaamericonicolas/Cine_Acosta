@@ -1,1 +1,58 @@
-<p>perfil works!</p>
+@if (perfil(); as p) {
+<h1>{{ p.nombre }} {{ p.apellido }}</h1>
+<p class="meta">{{ p.email }}</p>
+
+<section class="saldos">
+    <div>
+        <span class="valor">{{ p.puntos | number: '1.0-0' }}</span>
+        <span>puntos acumulados</span>
+    </div>
+    <div>
+        <span class="valor">$ {{ p.credito | number: '1.2-2' }}</span>
+        <span>crédito disponible</span>
+    </div>
+</section>
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else if (error()) {
+<p class="error">{{ error() }}</p>
+} @else {
+<h2>Mis cupones</h2>
+<ul class="cupones">
+    @if (cuponPrimeraCompra(); as c) {
+    <li [class.usado]="c.usado">
+        <strong>{{ c.porcentaje }}% off</strong> en tu primera compra
+        <span class="estado">{{ c.usado ? 'Usado' : 'Disponible' }}</span>
+    </li>
+    }
+    @for (c of cuponesEdadDisponibles(); track c.id) {
+    <li>
+        <strong>{{ c.porcentaje }}% off</strong> para mayores de {{ c.edad_minima }}
+        <span class="estado">Hasta el {{ c.vigente_hasta | date: 'dd/MM/yyyy' }}</span>
+    </li>
+    }
+    @if (!cuponPrimeraCompra() && cuponesEdadDisponibles().length === 0) {
+    <li>No tenés cupones por ahora.</li>
+    }
+</ul>
+}
+
+<h2>Historial de canjes</h2>
+<p class="vacio">Todavía no canjeaste puntos. Ganás 1 punto por cada peso que gastes.</p>
+
+<h2>Mis películas</h2>
+<p class="vacio">Acá vas a ver las películas que viste, con la fecha y tu calificación.</p>
+
+<h2>Mis datos</h2>
+<dl class="datos">
+    <dt>Fecha de nacimiento</dt>
+    <dd>{{ p.fecha_nacimiento | date: 'dd/MM/yyyy' : 'UTC' }} ({{ edad() }} años)</dd>
+    <dt>Tipo de sangre</dt>
+    <dd>{{ p.tipo_sangre }}</dd>
+    <dt>Color de ojos</dt>
+    <dd>{{ p.color_ojos }}</dd>
+    <dt>Días de vacaciones por año</dt>
+    <dd>{{ p.dias_vacaciones }}</dd>
+</dl>
+}

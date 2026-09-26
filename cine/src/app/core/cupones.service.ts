@@ -1,6 +1,6 @@
 import { Service, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { CuponPorEdad, CuponPorEdadNuevo } from '../models/cupon';
+import { CuponPorEdad, CuponPorEdadNuevo, CuponPrimeraCompra } from '../models/cupon';
 
 @Service()
 export class CuponesService {
@@ -15,6 +15,17 @@ export class CuponesService {
             .single();
         if (error) throw error;
         return Number((data as { porcentaje: number }).porcentaje);
+    }
+
+    // La policy solo devuelve el cupón del propio usuario
+    async obtenerCuponPrimeraCompra(usuarioId: string): Promise<CuponPrimeraCompra | null> {
+        const { data, error } = await this.supabase
+            .from('cupones_primera_compra_usuario')
+            .select('*')
+            .eq('usuario_id', usuarioId)
+            .maybeSingle();
+        if (error) throw error;
+        return data as CuponPrimeraCompra | null;
     }
 
     async actualizarPorcentajePrimeraCompra(porcentaje: number) {

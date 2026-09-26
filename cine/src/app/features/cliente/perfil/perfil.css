@@ -1,0 +1,68 @@
+.meta,
+.vacio {
+    color: #555;
+}
+
+.saldos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.saldos>div {
+    flex: 1 1 180px;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.saldos .valor {
+    font-size: 1.8rem;
+    font-weight: bold;
+}
+
+.cupones {
+    list-style: none;
+    padding: 0;
+}
+
+.cupones li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: baseline;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.cupones .estado {
+    margin-left: auto;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.cupones .usado {
+    color: #999;
+    text-decoration: line-through;
+}
+
+.datos {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.4rem 1rem;
+}
+
+.datos dt {
+    font-weight: bold;
+}
+
+.datos dd {
+    margin: 0;
+}
+
+.error {
+    color: #c00;
+}

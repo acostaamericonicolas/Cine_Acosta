@@ -8,3 +8,10 @@ export interface CuponPorEdad {
 }
 
 export type CuponPorEdadNuevo = Omit<CuponPorEdad, 'id'>;
+
+export interface CuponPrimeraCompra {
+    usuario_id: string;
+    porcentaje: number;
+    usado: boolean;
+    asignado_en: string;
+}

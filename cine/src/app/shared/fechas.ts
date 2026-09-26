@@ -5,3 +5,10 @@ export function fechaLocal(d: Date = new Date()): string {
     const dd = String(d.getDate()).padStart(2, '0');
     return `${d.getFullYear()}-${mm}-${dd}`;
 }
+
+// Edad cumplida a hoy a partir de 'AAAA-MM-DD'. Se compara como texto
+// para no pasar por Date (que la interpretaría en UTC).
+export function edad(fechaNacimiento: string, hoy: string = fechaLocal()): number {
+    const anios = Number(hoy.slice(0, 4)) - Number(fechaNacimiento.slice(0, 4));
+    return hoy.slice(5) < fechaNacimiento.slice(5) ? anios - 1 : anios;
+}

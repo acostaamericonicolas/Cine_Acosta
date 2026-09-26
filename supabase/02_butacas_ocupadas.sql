@@ -1,7 +1,7 @@
 -- =====================================================================
 -- HU-22 y HU-23: reserva temporal de butacas + Supabase Realtime
 -- Requiere 01_preventa.sql (usa venta_abierta).
--- Ejecutar completo en Supabase → SQL Editor.
+-- Ejecutar completo en Supabase → SQL Editor. Se puede volver a ejecutar sin errores.
 -- =====================================================================
 
 -- Tipo de una butaca según el layout fijo de la sala. Es el mismo que
@@ -38,11 +38,20 @@ alter table butacas_ocupadas enable row level security;
 
 -- Todos (incluso sin sesión) ven qué butacas están tomadas.
 -- No hay policies de insert/update/delete: solo se modifica con las funciones de abajo.
+drop policy if exists "ver butacas ocupadas" on butacas_ocupadas;
 create policy "ver butacas ocupadas" on butacas_ocupadas
   for select using (true);
 
 -- Realtime: el mapa de butacas escucha los cambios de esta tabla
-alter publication supabase_realtime add table butacas_ocupadas;
+-- (el if evita el error si el script se ejecuta dos veces)
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables
+                 where pubname = 'supabase_realtime' and tablename = 'butacas_ocupadas') then
+    alter publication supabase_realtime add table butacas_ocupadas;
+  end if;
+end;
+$$;
 
 -- ---------------------------------------------------------------------
 -- reservar_butaca: toma una butaca por 10 minutos para el token dado.

@@ -1,6 +1,6 @@
 import { Service, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { Combo, ComboConItems, ComboNuevo, ItemCombo } from '../models/combo';
+import { Combo, ComboConDetalle, ComboConItems, ComboNuevo, ItemCombo } from '../models/combo';
 
 @Service()
 export class CombosService {
@@ -16,6 +16,21 @@ export class CombosService {
         const { data, error } = await this.supabase.from('combos').select('*').eq('activo', true).order('nombre');
         if (error) throw error;
         return data as Combo[];
+    }
+
+    // Para la compra: combos activos con el detalle de lo que incluyen
+    async listarActivosConDetalle(): Promise<ComboConDetalle[]> {
+        const { data, error } = await this.supabase
+            .from('combos')
+            .select('*, combo_items(cantidad, productos_candy(nombre))')
+            .eq('activo', true)
+            .order('precio');
+        if (error) throw error;
+        return (data as (Combo & { combo_items: { cantidad: number; productos_candy: { nombre: string } }[] })[])
+            .map(({ combo_items, ...c }) => ({
+                ...c,
+                detalle: combo_items.map(i => `${i.cantidad} × ${i.productos_candy.nombre}`),
+            }));
     }
 
     async obtener(id: number): Promise<ComboConItems> {
@@ -60,7 +75,11 @@ export class CombosService {
 
     async eliminar(id: number) {
         const { data, error } = await this.supabase.from('combos').delete().eq('id', id).select();
-        if (error) throw error;
+        if (error) {
+            // 23503 = el combo ya se vendió (FK de compra_items)
+            if (error.code === '23503') throw new Error('No se puede eliminar: el combo ya se vendió. Desactivalo en su lugar.');
+            throw error;
+        }
         if (!data || data.length === 0) throw new Error('No tenés permiso para hacer este cambio');
     }
 }

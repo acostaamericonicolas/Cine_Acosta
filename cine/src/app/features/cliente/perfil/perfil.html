@@ -39,7 +39,19 @@
 }
 
 <h2>Historial de canjes</h2>
-<p class="vacio">Todavía no canjeaste puntos. Ganás 1 punto por cada peso que gastes.</p>
+@if (canjes().length === 0) {
+<p class="vacio">Todavía no canjeaste puntos. Ganás 1 punto por cada peso que gastes y los canjeás al pagar una compra.</p>
+} @else {
+<ul class="canjes">
+    @for (c of canjes(); track c.id) {
+    <li>
+        <span>{{ c.creado_en | date: 'dd/MM/yyyy HH:mm' }}</span>
+        <span>{{ c.cantidad }} × {{ c.descripcion }}</span>
+        <strong>− {{ c.puntos | number: '1.0-0' }} pts</strong>
+    </li>
+    }
+</ul>
+}
 
 <h2>Mis películas</h2>
 <p class="vacio">Acá vas a ver las películas que viste, con la fecha y tu calificación.</p>

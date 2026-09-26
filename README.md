@@ -35,12 +35,15 @@ La conexión a Supabase está en `cine/src/environments/environment.ts`:
 
 ### Scripts SQL
 
-Los cambios de la base a partir de HU-21 están en [`supabase/`](supabase/), numerados. Se ejecutan **en orden** en Supabase → SQL Editor, cada uno completo:
+Los cambios de la base a partir de HU-21 están en [`supabase/`](supabase/), numerados. Se ejecutan **en orden** en Supabase → SQL Editor, cada uno completo. Todos se pueden **volver a ejecutar** sin error: usan `if not exists`, `create or replace` y `drop ... if exists` antes de crear policies, constraints y triggers.
 
 | Script | HU | Qué agrega |
 |---|---|---|
 | `01_preventa.sql` | 21 | columnas de preventa, `hoy_ar()`, `en_preventa()`, `venta_abierta()`, `precio_entrada()` |
 | `02_butacas_ocupadas.sql` | 22, 23 | tabla `butacas_ocupadas`, funciones de reserva y Realtime |
+| `03_compras.sql` | 17, 24, 25, 26 | tablas `compras`, `entradas`, `compra_items`, función `confirmar_compra` y bloqueo de funciones con ventas |
+| `04_puntos.sql` | 30, 31 | tablas `recompensas` y `canjes`; redefine `confirmar_compra` para canjear puntos |
+| `05_puntos_por_precio.sql` | 30 | vista `catalogo_canjes`: cada ítem cuesta en puntos lo que vale en pesos; `recompensas` guarda solo las excepciones |
 
 Lo anterior (tablas, triggers y policies de las HU 01 a 20) se creó directamente en Supabase y está documentado en la [sección 6](#6-base-de-datos-supabase).
 
@@ -64,14 +67,20 @@ En Supabase → Authentication, la **confirmación de mail tiene que estar desac
 | 14 | Alta de función con asignación automática de sala | Hecha |
 | 15 | Funciones recurrentes con resumen | Hecha |
 | 16 | Inputs nativos de fecha y hora | Hecha |
-| 17 | Editar / eliminar funciones | Hecha (el bloqueo por entradas vendidas se completa con HU-27) |
+| 17 | Editar / eliminar funciones | Hecha (el bloqueo por entradas vendidas está en `supabase/03_compras.sql`) |
 | 18 | Categorías y productos del candy | Hecha |
 | 19 | Combos a precio fijo | Hecha |
 | 20 | Configuración de cupones | Hecha (la aplicación en la compra se completa con HU-26) |
 | 21 | Preventa por película | Hecha (requiere `supabase/01_preventa.sql`) |
 | 22 | Mapa de butacas para elegir | Hecha (requiere `supabase/02_butacas_ocupadas.sql`) |
 | 23 | Butacas ocupadas en tiempo real | Hecha con Supabase Realtime (requiere `supabase/02_butacas_ocupadas.sql`) |
-| 05 | Perfil: puntos, crédito, cupones y datos | Hecha (historial de canjes y "Mis películas" se llenan con las HU de puntos y compra) |
+| 24 | Control de edad | Hecha (requiere `supabase/03_compras.sql`) |
+| 25 | Candy y combos en la compra | Hecha (requiere `supabase/03_compras.sql`) |
+| 26 | Revisar y pagar (puntos, cupón, crédito, pago simulado) | Hecha (requiere `supabase/03_compras.sql` y `04_puntos.sql`) |
+| 29 | 1 punto por peso pagado | Hecha dentro de `confirmar_compra` (movimientos: `compras.puntos_ganados` y `canjes`) |
+| 30 | Costo en puntos de cada recompensa | Hecha: por defecto igual al precio, editable (requiere `supabase/04_puntos.sql` y `05_puntos_por_precio.sql`) |
+| 31 | Canjear puntos | Hecha, dentro de la compra (requiere `supabase/04_puntos.sql`) |
+| 05 | Perfil: puntos, crédito, cupones, historial de canjes | Hecha ("Mis películas" se llena con HU-12) |
 | 32, 34 | Validación, roles | Pantallas creadas, sin implementar |
 | Resto | Semanas 3 y 4 | Pendiente |
 
@@ -258,7 +267,7 @@ El backlog proponía guardar una URL porque Storage no se vio en clase. **Se usa
   - Las funciones se crean **una por una, en orden**, para que cada una tenga en cuenta las anteriores.
   - Al final se muestra un resumen por fecha: la sala asignada o el motivo del fallo.
 - **Edición:** el admin elige la sala a mano, y la base vuelve a validar el solapamiento.
-- **Eliminación:** por ahora se permite siempre. Cuando exista la tabla de entradas (HU-27), se va a bloquear si la función tiene entradas vendidas.
+- **Con entradas vendidas no se puede borrar ni mover** (horario, sala o película): lo impiden la FK de `compras` y el trigger `funciones_bloquear_con_ventas`. Ver [6.2.8](#628-confirmar-la-compra-hu-24-hu-25-hu-26--supabase03_comprassql).
 - En los formularios no se ofrecen las películas ocultas. El listado muestra los próximos 30 días para no traer todo el historial.
 
 ### 5.6 Candy y combos (HU-18, HU-19)
@@ -298,23 +307,60 @@ El backlog proponía guardar una URL porque Storage no se vio en clase. **Se usa
 - **Tiempo real con Supabase Realtime (aprobado por el docente):** cuando otra persona reserva, compra o libera una butaca, el mapa cambia sin recargar.
 - Antes de pagar ya se ve si hay una **butaca VIP** (RF-19) y, si la película es +13 o +18, que **debe asistir un adulto** (RF-20).
 - Todo el control está en la base, que devuelve mensajes claros ("La butaca J-10 la está reservando otra persona", "Podés reservar hasta 10 butacas por compra"). Ver [6.2.7](#627-reserva-de-butacas-en-tiempo-real-hu-22-hu-23--supabase02_butacas_ocupadassql).
-- Sigue en HU-24: los anónimos ingresan su fecha de nacimiento antes de elegir butacas, y se controla la edad.
 
-### 5.11 Reglas de compra acordadas (a implementar)
+### 5.11 Compra completa: edad, candy y pago (HU-24, HU-25, HU-26)
+
+La compra es **una sola pantalla con pasos** (cómo comprar → edad → butacas → candy → pago → confirmación). Si fueran rutas distintas, al cambiar de ruta se destruiría el componente y se liberarían las butacas. Las reservas se sueltan solo si el usuario se va sin comprar.
+
+- **Cómo comprar (RF-02):** si no hay sesión, el primer paso ofrece **Iniciar sesión**, **Crear cuenta** o **Seguir como invitado**. Login y registro reciben `?volverA=/comprar/:id`, y después de ingresar o registrarse vuelven a la misma compra; el link entre login y registro conserva ese parámetro. Solo se aceptan rutas internas (que empiecen con `/` y no con `//`), para que nadie pueda usar el link para mandar a otro sitio. Con sesión, este paso no aparece.
+- **Edad (HU-24, RF-20):**
+  - Si la película es +13 o +18, el **registrado** se controla con la fecha de su perfil: si no llega, ni siquiera ve el mapa.
+  - El **anónimo** ingresa su fecha de nacimiento **antes de elegir butacas**. Si no llega a la edad, no puede seguir.
+  - La base lo vuelve a controlar al confirmar.
+  - Toda entrada restringida muestra "debe asistir un adulto".
+  - Las películas aptas para todo público no piden la fecha.
+- **Candy (HU-25):** componente `PasoCandy` (`input()` / `output()`, sin estado propio).
+  - Los **combos van primero y destacados**, con la etiqueta "Incluye entrada" y el detalle ("2 × Pochoclo grande").
+  - Después van los productos agrupados por categoría, en el orden del admin. Cada ítem tiene botones − / + (de 0 a 20).
+  - Si hay más combos con entrada que butacas, avisa y no deja continuar.
+  - Se puede seguir sin candy.
+- **Pago (HU-26):** componente `PasoPago`.
+  - **Desglose:** cada entrada con su tipo (la VIP resaltada), el candy, lo que cubren los combos, el cupón y el crédito.
+  - **Aviso VIP** (RF-19) y aviso de adulto.
+  - **Registrado:** elige **un** cupón (primera compra o por edad, el mejor vigente) y puede usar su crédito.
+  - **Registrado:** arriba ve **cuántos puntos y cuánto crédito tiene**, y puede **canjear puntos** (ver 5.13).
+  - **Anónimo:** ingresa su mail. Los puntos, los cupones y el crédito son solo para registrados: la fecha del anónimo es declarada y no se puede verificar.
+  - **Pago simulado con tarjeta:** titular, 16 dígitos, vencimiento MM/AA no vencido y código. Se pide solo si queda algo por pagar. La tarjeta no se guarda: solo "Tarjeta terminada en 1234".
+- **Confirmación:** se muestra el **código de compra**, lo pagado y los puntos ganados. El comprobante imprimible con QR es HU-27.
+- **Errores:** cualquier falla de `confirmar_compra` se muestra con el paso donde ocurrió y el mensaje exacto de la base. Ver [6.2.8](#628-confirmar-la-compra-hu-24-hu-25-hu-26--supabase03_comprassql).
+
+### 5.12 Reglas de compra acordadas
 
 Surgieron de revisar las historias contra los requerimientos funcionales:
 
 | Tema | Regla | HU |
 |---|---|---|
-| Combo con entrada | Cubre 1 entrada general; si la butaca es VIP se cobra la diferencia | 19, 25 |
-| Cupones | Uno por compra (primera compra **o** por edad), combinable con crédito y pago | 26 |
+| Combo con entrada | Cubre 1 entrada general; si la butaca es VIP se cobra la diferencia (**hecho**) | 19, 25 |
+| Cupones | Uno por compra (primera compra **o** por edad), combinable con crédito y pago (**hecho**; solo registrados) | 26 |
 | Cancelación | Se restan los puntos que dio esa compra; el cupón usado no se devuelve | 28 |
 | Canje de puntos | Se aplica dentro de la compra: entrada o producto a $0 pagado con puntos | 31 |
 | Comprador anónimo | Pantalla "Buscar mi compra" con mail + código | 26, 27 |
 | Comprobante | Código único con QR (librería `qrcode`) | 27 |
-| Preventa | Precio fijo por película para general y accesible; la VIP suma su recargo | 21 |
+| Preventa | Precio fijo por película para general y accesible; la VIP suma su recargo (**hecho**) | 21 |
 | Alerta de estreno | Avisa cuando se abre la venta (preventa, o estreno si no hay) | 11 |
 | Log de actividad | Con triggers en la base, no desde Angular | 37 |
+
+### 5.13 Puntos y canjes (HU-29, HU-30, HU-31)
+
+- **Ganar (HU-29):** 1 punto por cada peso **efectivamente pagado**, es decir, después de cupón, crédito y canjes. Solo para registrados. Lo suma `confirmar_compra`.
+- **Configurar (HU-30):** como 1 peso pagado da 1 punto, **cada ítem cuesta en puntos lo mismo que vale en pesos**, redondeado hacia arriba. Eso vale para la **entrada general** (precio general) y para **cada producto activo del candy**. No hace falta cargar nada: un producto nuevo ya es canjeable, y si cambia el precio, el costo en puntos cambia solo.
+  - En **Admin → Puntos** aparecen todos los ítems con su precio y sus puntos. El admin puede **fijar otro costo**, **volver al precio** o **desactivar el canje** de un ítem.
+  - Solo se guardan esas excepciones. Si un ítem vuelve al precio y está activo, su fila se borra.
+- **Canjear (HU-31):** en el paso de pago, el registrado ve su saldo y suma canjes con − / +. No puede pasarse de sus puntos.
+  - **Entrada:** cubre el valor de una entrada general, como un combo con entrada. Si la butaca es VIP, se paga la diferencia. Entre combos y canjes no se pueden cubrir más entradas que butacas.
+  - **Producto:** se agrega a la compra a $0 como "Pochoclo grande (canje)" y se retira en el candy con el mismo código.
+- Los canjes se descuentan en la misma transacción que la compra y quedan en `canjes`. El perfil los muestra en **Historial de canjes**.
+- **Intransferibles (RF-29):** no existe ninguna función para mover puntos entre usuarios. El cliente no puede modificar `perfiles.puntos` (no hay policy de update), así que solo cambian a través de `confirmar_compra`.
 
 ---
 
@@ -338,7 +384,13 @@ Surgieron de revisar las historias contra los requerimientos funcionales:
 | `config_cupon_primera_compra` | `porcentaje` | una sola fila (`id = 1`) |
 | `cupones_primera_compra_usuario` | cupón asignado a cada usuario | |
 | `cupones_por_edad` | `edad_minima`, `porcentaje`, vigencia, `activo` | |
-| `butacas_ocupadas` | `funcion_id`, `fila`, `numero`, `estado`, `vence`, `token_hash` | clave primaria = función + butaca. En Realtime. |
+| `butacas_ocupadas` | `funcion_id`, `fila`, `numero`, `estado`, `vence`, `token_hash`, `compra_id` | clave primaria = función + butaca. En Realtime. |
+| `compras` | `codigo`, función, usuario o mail, importes, cupón, crédito, puntos, `estado` | código único. FK a función con `on delete restrict`. |
+| `entradas` | `compra_id`, butaca, `tipo`, `precio`, `usada_en` | una por butaca |
+| `compra_items` | `compra_id`, producto **o** combo, `nombre`, `cantidad`, `precio_unitario`, `entregado_en` | guarda nombre y precio del momento; los canjes van a $0 |
+| `recompensas` | `tipo` (entrada / producto), `producto_id`, `puntos`, `activa` | **solo excepciones**: `puntos` null = usa el precio. Una de entrada y una por producto (índices únicos parciales). |
+| vista `catalogo_canjes` | todo lo canjeable: `tipo`, `producto_id`, `nombre`, `precio`, `puntos`, `personalizado`, `activa` | la arma la base; ver 6.2.9 |
+| `canjes` | `usuario_id`, `compra_id`, `descripcion`, `cantidad`, `puntos` | historial del perfil |
 
 Montos en `numeric(…, 2)` para no tener errores de redondeo con dinero.
 
@@ -360,6 +412,9 @@ Resumen:
 | Preventa y venta abierta | `en_preventa()`, `venta_abierta()`, `precio_entrada()` | `obtenerConVenta()` y `shared/precios.ts` |
 | Una butaca, un solo comprador | tabla `butacas_ocupadas` + `reservar_butaca()` | `ReservasService` con `rpc()` |
 | Mapa de butacas en tiempo real | publicación `supabase_realtime` | `ReservasService.escuchar()` |
+| Compra atómica con errores por paso | `confirmar_compra()` | `ComprasService.confirmar()` → `PasoPago` |
+| Puntos: ganar y canjear sin pasarse del saldo | `confirmar_compra()` + tabla `canjes` | `PasoPago` (canjes) y `Perfil` (historial) |
+| Función con ventas no se borra ni se mueve | FK `compras.funcion_id` + trigger `funciones_bloquear_con_ventas` | `FuncionesService` traduce el `23503` |
 
 #### 6.2.1 Permisos: `es_admin()` y policies
 
@@ -450,17 +505,63 @@ Los `unique` y las claves foráneas se traducen en los servicios:
 
 Supabase devuelve los dos en el `error` de `rpc()`: Angular muestra `error.message` tal cual y puede usar `error.hint` para marcar la parte de la pantalla que falló.
 
-#### 6.2.8 Próximamente
+#### 6.2.8 Confirmar la compra (HU-24, HU-25, HU-26) — `supabase/03_compras.sql`
 
-- **`confirmar_compra`** (HU-26): va a ser una función `security definer` que en una sola transacción:
-  - revalida que las reservas sigan vigentes;
-  - controla la edad (HU-24);
-  - recalcula los precios con `precio_entrada`;
-  - aplica el cupón y el crédito;
-  - crea la compra, las entradas y el código;
-  - pasa las butacas a `vendida` y suma los puntos.
+- **Tablas:**
+  - `compras`: una por compra, con un **código único** de 10 caracteres, el desglose de importes y el estado (`vigente`, `usada` o `cancelada`).
+  - `entradas`: una por butaca, con el precio cobrado.
+  - `compra_items`: el candy, con el nombre y el precio del momento, para que un cambio de precio posterior no altere compras viejas.
+  - `butacas_ocupadas.compra_id` liga la butaca vendida con su compra, para poder liberarla si se cancela (HU-28).
+- **RLS:** cada uno ve sus compras y el admin ve todas. **No hay policies de insert:** solo `confirmar_compra` escribe en estas tablas.
+- **`confirmar_compra(...)`** (`security definer`) hace todo en **una sola transacción**: si cualquier paso falla, Postgres deshace todo y no queda nada a medias (ni cupón marcado, ni crédito descontado, ni butacas vendidas). Valida en este orden, y cada error lleva su `hint`:
 
-  Si algo falla, no queda nada a medias, y el error dice en qué paso fue.
+| # | Paso (`hint`) | Qué controla | Ejemplo de mensaje |
+|---|---|---|---|
+| 1 | `funcion` | que exista, que no haya empezado y que la venta esté abierta | "La función ya empezó: no se pueden vender entradas." |
+| 2 | `comprador` | registrado: mail del perfil; anónimo: mail válido | "Ingresá un mail válido: ahí te identificamos la compra." |
+| 3 | `edad` | edad contra la restricción (perfil o fecha declarada) | ""X" es para mayores de 18 años y la fecha de nacimiento indica 15 años." |
+| 4 | `reserva` | cada butaca sigue reservada por este navegador y no venció | "La reserva de la butaca J-10 venció o ya no es tuya. Volvé a elegir las butacas." |
+| 5 | — | precio de cada entrada con `precio_entrada` (incluye preventa) | — |
+| 6 | `candy` | productos y combos activos, cantidades de 1 a 20, no más combos con entrada que butacas | "Elegiste 3 combos que incluyen entrada, pero solo 2 butacas." |
+| 7 | `puntos` | solo registrados; recompensas activas; no pasarse del saldo; combos + entradas canjeadas ≤ butacas | "Querés canjear 800 puntos y tenés 500." |
+| 8 | `cupon` | uno solo; primera compra sin usar, o por edad vigente | "Ya usaste tu cupón de primera compra." |
+| 9 | `credito` | solo registrados; hasta su saldo y hasta el total | "Querés usar $ 500 de crédito pero tenés $ 200 disponibles." |
+| 10 | `pago` | si queda algo por pagar, que haya medio de pago | "Faltan los datos de pago para abonar $ 3500." |
+
+  Si pasa todo:
+  - crea la compra y las entradas;
+  - pasa las butacas a `vendida`, y Realtime lo avisa a todos los mapas abiertos;
+  - marca el cupón como usado y descuenta el crédito;
+  - suma **1 punto por peso pagado** (HU-29, solo registrados);
+  - suma las entradas a `peliculas.vendidas` para el ranking de la home.
+
+  Devuelve el código y los importes finales.
+- **Combos con entrada:** cada uno descuenta el valor de una entrada general, aplicado sobre las butacas más baratas. Si la butaca es VIP, la diferencia se sigue cobrando.
+- **Trigger nuevo `funciones_bloquear_con_ventas`** (`before update` en `funciones`): si la función tiene compras no canceladas, no deja cambiarle el horario, la sala ni la película. Borrarla ya lo impide la FK `compras.funcion_id` con `on delete restrict`. Esto completa HU-17.
+- **Angular:**
+  - `ComprasService.confirmar()` llama a `rpc('confirmar_compra', …)`. Si falla, lanza un `ErrorCompra` con `mensaje` (el `message` de la base) y `paso` (el `hint`).
+  - `PasoPago` lo muestra en un recuadro "No se pudo confirmar la compra — Cupón" con el mensaje exacto. Según el paso, ofrece un botón para volver: a las butacas si la reserva venció, o al candy si un producto se dio de baja.
+  - Los totales que se ven antes de confirmar salen de `calcularTotales()` (`shared/precios.ts`), que replica la cuenta de la base **solo para mostrar**. Lo que se cobra es lo que devuelve `confirmar_compra`, y eso es lo que muestra la pantalla final.
+  - `FuncionesService.eliminar()`, `CombosService.eliminar()` y `CandyService.eliminarProducto()` traducen el `23503` de las nuevas FK: no se borra lo que ya se vendió, se desactiva.
+
+#### 6.2.9 Puntos y recompensas (HU-30, HU-31) — `supabase/04_puntos.sql` y `05_puntos_por_precio.sql`
+
+- **Base:**
+  - **Vista `catalogo_canjes`** (script 05): une el precio general de `precios_butaca` y los productos activos del candy con sus excepciones en `recompensas` (`left join`).
+    - **Costo:** `coalesce(recompensas.puntos, ceil(precio))`, es decir, lo que fijó el admin o el precio en pesos redondeado hacia arriba.
+    - **Otras columnas:** `personalizado` indica si hay costo fijado a mano, y `activa` si el ítem se puede canjear.
+    - Es `security_invoker`, así que respeta las policies de quien consulta. Las tres tablas son de lectura pública.
+    - Como el costo se calcula al consultar, un producto nuevo o un cambio de precio se reflejan sin tocar nada.
+  - `recompensas` guarda **solo las excepciones**: `puntos` null significa "usa el precio" y `activa = false` desactiva el canje. Tiene un `check` de entrada/producto y dos **índices únicos parciales**: uno permite una sola fila de entrada y el otro una por producto.
+  - RLS: todos pueden leer las recompensas y solo el admin las escribe.
+  - `canjes`: cada usuario ve los suyos y nadie los inserta directo.
+  - `confirmar_compra` se **redefine** con un parámetro más, `p_canjes`. Primero se hace `drop` de la versión anterior: si no, Postgres tendría dos funciones con el mismo nombre y distintos parámetros, y `rpc()` podría llamar a la equivocada.
+  - El paso nuevo (`hint = 'puntos'`) valida el ítem y el saldo. Desde el script 05, el costo lo toma **de la vista `catalogo_canjes`**, la misma que ve el cliente. Después descuenta los puntos canjeados, suma los ganados en el mismo `update` y registra cada canje. `p_canjes` identifica el ítem por tipo: `{"tipo": "entrada"}` o `{"tipo": "producto", "producto_id": 3}`.
+- **Angular:**
+  - `RecompensasService.catalogo()` lee la vista `catalogo_canjes` como si fuera una tabla, y `canjeables()` se queda con las activas.
+  - `guardarExcepcion()` inserta, actualiza o borra la fila de `recompensas` según el caso.
+  - `calcularTotales()` recibe cuántas entradas se canjean, para mostrar el descuento igual que la base.
+  - La pantalla **Admin → Puntos** (`Recompensas`) lista el catálogo completo y edita las excepciones, y el **Perfil** lista `misCanjes()`.
 
 ### 6.3 Seguridad (RLS)
 
@@ -468,9 +569,9 @@ Todas las tablas tienen RLS activado. Criterio general:
 
 | Quién | Qué puede hacer |
 |---|---|
-| Visitante sin sesión | Leer películas no ocultas, funciones, salas, precios, reseñas, candy, combos, la configuración de cupones y las butacas ocupadas. Reservar y liberar butacas **solo a través de las funciones** de la base. |
-| Usuario registrado | Además, leer y crear **solo su propio** perfil (como cliente, sin puntos ni crédito) y ver sus propios cupones. No puede modificar su perfil. |
-| Admin | Escribir (insert / update / delete) en las tablas de catálogo, salas, funciones, candy, combos y cupones. Ver todos los perfiles y cambiar roles. |
+| Visitante sin sesión | Leer películas no ocultas, funciones, salas, precios, reseñas, candy, combos, recompensas, la configuración de cupones y las butacas ocupadas. Reservar, liberar y comprar **solo a través de las funciones** de la base (`reservar_butaca`, `confirmar_compra`, …). |
+| Usuario registrado | Además, leer y crear **solo su propio** perfil (como cliente, sin puntos ni crédito) y ver sus propios cupones, compras y canjes. No puede modificar su perfil (ni sus puntos ni su crédito). |
+| Admin | Escribir (insert / update / delete) en las tablas de catálogo, salas, funciones, candy, combos, cupones y recompensas. Ver todos los perfiles y cambiar roles. |
 
 Por eso los guards de Angular alcanzan para la navegación: aunque alguien los saltee, la base no le devuelve ni le deja modificar lo que no le corresponde.
 

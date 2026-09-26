@@ -81,9 +81,12 @@ export class FuncionesService {
     }
 
     async eliminar(id: number) {
-        // TODO (HU-27): bloquear si la función tiene entradas vendidas, cuando exista esa tabla.
         const { data, error } = await this.supabase.from('funciones').delete().eq('id', id).select();
-        if (error) throw error;
+        if (error) {
+            // 23503 = la FK de compras (on delete restrict) no deja borrar una función con ventas
+            if (error.code === '23503') throw new Error('No se puede eliminar: la función ya tiene entradas vendidas.');
+            throw error;
+        }
         if (!data || data.length === 0) throw new Error('No tenés permiso para hacer este cambio');
     }
 

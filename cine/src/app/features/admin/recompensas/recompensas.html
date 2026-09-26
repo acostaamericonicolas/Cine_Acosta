@@ -1,0 +1,60 @@
+<h1>Puntos y recompensas</h1>
+<p class="ayuda">
+    Los clientes registrados ganan <strong>1 punto por cada peso</strong> que pagan y los canjean al pagar una compra.
+    Por eso, <strong>cada ítem cuesta en puntos lo mismo que vale en pesos</strong> (redondeado hacia arriba) y se
+    actualiza solo si cambia el precio. Acá podés fijar otro costo, volver al precio o desactivar el canje de un ítem.
+</p>
+<p class="ayuda">La entrada canjeada cubre una entrada general: si la butaca es VIP, se paga la diferencia.</p>
+
+@if (error()) { <p class="error">{{ error() }}</p> }
+@if (mensaje()) { <p class="ok">{{ mensaje() }}</p> }
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else {
+<table>
+    <thead>
+        <tr>
+            <th>Ítem</th>
+            <th>Precio</th>
+            <th>Puntos</th>
+            <th>Canje</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (i of items(); track claveCanje(i)) {
+        @let ocupado = guardando() === claveCanje(i);
+        <tr [class.inactiva]="!i.activa">
+            <td>{{ i.nombre }}</td>
+            <td>$ {{ i.precio | number: '1.2-2' }}</td>
+            <td>
+                <input #pts type="number" min="1" step="1" [value]="puntosEditados(i)"
+                    (input)="editarPuntos(i, pts.value)" [attr.aria-label]="'Puntos de ' + i.nombre" />
+                @if (hayCambio(i)) {
+                <button type="button" [disabled]="ocupado" (click)="guardarPuntos(i)">Guardar</button>
+                }
+                <br />
+                @if (i.personalizado) {
+                <small>Fijado a mano ·
+                    <button type="button" class="link" [disabled]="ocupado" (click)="volverAlPrecio(i)">volver al precio</button>
+                </small>
+                } @else {
+                <small>Igual al precio</small>
+                }
+            </td>
+            <td>{{ i.activa ? 'Se puede canjear' : 'Desactivado' }}</td>
+            <td>
+                <button type="button" [disabled]="ocupado" (click)="alternarActiva(i)">
+                    {{ i.activa ? 'Desactivar canje' : 'Activar canje' }}
+                </button>
+            </td>
+        </tr>
+        } @empty {
+        <tr>
+            <td colspan="5">No hay productos activos en el candy ni precio de entrada cargado.</td>
+        </tr>
+        }
+    </tbody>
+</table>
+}

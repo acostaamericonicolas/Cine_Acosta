@@ -1,6 +1,6 @@
 -- =====================================================================
 -- HU-21: preventa por película
--- Ejecutar completo en Supabase → SQL Editor.
+-- Ejecutar completo en Supabase → SQL Editor. Se puede volver a ejecutar sin errores.
 -- =====================================================================
 
 -- Fecha de hoy en Argentina. current_date usa la zona del servidor (UTC):
@@ -19,6 +19,7 @@ alter table peliculas
   add column if not exists preventa boolean not null default false,
   add column if not exists precio_preventa numeric(10, 2);
 
+alter table peliculas drop constraint if exists peliculas_preventa_precio_check;
 alter table peliculas
   add constraint peliculas_preventa_precio_check
   check (not preventa or (precio_preventa is not null and precio_preventa > 0));

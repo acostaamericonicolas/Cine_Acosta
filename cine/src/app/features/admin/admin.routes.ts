@@ -57,4 +57,5 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () => import('./funcion-recurrente-form/funcion-recurrente-form').then(m => m.FuncionRecurrenteForm),
     },
     { path: 'cupones', loadComponent: () => import('./cupones/cupones').then(m => m.Cupones) },
+    { path: 'recompensas', loadComponent: () => import('./recompensas/recompensas').then(m => m.Recompensas) },
 ];

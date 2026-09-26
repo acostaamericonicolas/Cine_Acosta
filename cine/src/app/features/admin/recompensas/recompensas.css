@@ -1,0 +1,49 @@
+.ayuda {
+    color: #555;
+    max-width: 760px;
+}
+
+.error {
+    color: #c00;
+}
+
+.ok {
+    color: #1d7a3a;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 900px;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+}
+
+td input[type='number'] {
+    width: 7rem;
+}
+
+td small {
+    color: #555;
+}
+
+tr.inactiva td {
+    color: #999;
+}
+
+/* Botón con aspecto de link, para "volver al precio" */
+.link {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: #1f3864;
+    text-decoration: underline;
+    cursor: pointer;
+    font: inherit;
+}

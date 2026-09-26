@@ -36,6 +36,17 @@ export class CandyService {
         return data as ProductoCandy[];
     }
 
+    // Para la compra: solo los que están a la venta
+    async listarProductosActivos(): Promise<ProductoCandy[]> {
+        const { data, error } = await this.supabase
+            .from('productos_candy')
+            .select('*')
+            .eq('activo', true)
+            .order('nombre');
+        if (error) throw error;
+        return data as ProductoCandy[];
+    }
+
     async obtenerProducto(id: number): Promise<ProductoCandy> {
         const { data, error } = await this.supabase.from('productos_candy').select('*').eq('id', id).single();
         if (error) throw error;
@@ -56,7 +67,7 @@ export class CandyService {
     async eliminarProducto(id: number) {
         const { data, error } = await this.supabase.from('productos_candy').delete().eq('id', id).select();
         if (error) {
-            if (error.code === '23503') throw new Error('No se puede eliminar: el producto está en algún combo. Desactivalo en su lugar.');
+            if (error.code === '23503') throw new Error('No se puede eliminar: el producto está en algún combo o ya se vendió. Desactivalo en su lugar.');
             throw error;
         }
         this.verificarPermiso(data);

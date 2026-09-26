@@ -1,0 +1,70 @@
+@if (combos().length > 0) {
+<section>
+    <h3>Combos</h3>
+    <div class="grilla">
+        @for (c of combos(); track c.id) {
+        @let clave = claveCombo(c.id);
+        <article class="item destacado">
+            @if (c.imagen_url) {
+            <img [src]="c.imagen_url" [alt]="c.nombre" />
+            }
+            <div class="info">
+                <strong>{{ c.nombre }}</strong>
+                @if (c.incluye_entrada) {
+                <span class="etiqueta">Incluye entrada</span>
+                }
+                <small>{{ c.detalle.join(' + ') }}</small>
+                <span class="precio">$ {{ c.precio | number: '1.2-2' }}</span>
+            </div>
+            <div class="cantidad">
+                <button type="button" [disabled]="cantidad(clave) === 0" (click)="sumar(clave, -1)"
+                    [attr.aria-label]="'Quitar ' + c.nombre">−</button>
+                <span aria-live="polite">{{ cantidad(clave) }}</span>
+                <button type="button" [disabled]="cantidad(clave) === max" (click)="sumar(clave, 1)"
+                    [attr.aria-label]="'Agregar ' + c.nombre">+</button>
+            </div>
+        </article>
+        }
+    </div>
+
+    @if (combosConEntradaElegidos() > cantidadButacas()) {
+    <p class="error">
+        Elegiste {{ combosConEntradaElegidos() }} combos con entrada y tenés {{ cantidadButacas() }}
+        {{ cantidadButacas() === 1 ? 'butaca' : 'butacas' }}. Cada combo con entrada cubre una butaca.
+    </p>
+    } @else {
+    <p class="ayuda">Cada combo con entrada cubre el valor de una entrada general; si la butaca es VIP, pagás la diferencia.</p>
+    }
+</section>
+}
+
+@for (g of grupos(); track g.categoria.id) {
+<section>
+    <h3>{{ g.categoria.nombre }}</h3>
+    <div class="grilla">
+        @for (p of g.productos; track p.id) {
+        @let clave = claveProducto(p.id);
+        <article class="item">
+            @if (p.imagen_url) {
+            <img [src]="p.imagen_url" [alt]="p.nombre" />
+            }
+            <div class="info">
+                <strong>{{ p.nombre }}</strong>
+                <span class="precio">$ {{ p.precio | number: '1.2-2' }}</span>
+            </div>
+            <div class="cantidad">
+                <button type="button" [disabled]="cantidad(clave) === 0" (click)="sumar(clave, -1)"
+                    [attr.aria-label]="'Quitar ' + p.nombre">−</button>
+                <span aria-live="polite">{{ cantidad(clave) }}</span>
+                <button type="button" [disabled]="cantidad(clave) === max" (click)="sumar(clave, 1)"
+                    [attr.aria-label]="'Agregar ' + p.nombre">+</button>
+            </div>
+        </article>
+        }
+    </div>
+</section>
+} @empty {
+@if (combos().length === 0) {
+<p>Por el momento no hay productos del candy a la venta.</p>
+}
+}

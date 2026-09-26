@@ -18,3 +18,8 @@ export interface ComboConItems extends Combo {
 }
 
 export type ComboNuevo = Omit<Combo, 'id'>;
+
+// Combo listo para mostrar en la compra: "2 × Pochoclo grande"
+export interface ComboConDetalle extends Combo {
+    detalle: string[];
+}

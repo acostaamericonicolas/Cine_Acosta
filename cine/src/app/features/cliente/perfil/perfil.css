@@ -66,3 +66,20 @@
 .error {
     color: #c00;
 }
+
+.canjes {
+    list-style: none;
+    padding: 0;
+}
+
+.canjes li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.canjes li strong {
+    margin-left: auto;
+}

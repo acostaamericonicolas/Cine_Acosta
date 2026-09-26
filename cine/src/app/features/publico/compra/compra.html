@@ -6,7 +6,10 @@
 <a routerLink="/">← Volver a la cartelera</a>
 } @else if (pelicula(); as p) {
 @let f = funcion()!;
+
+@if (paso() !== 'listo') {
 <a [routerLink]="['/pelicula', p.id]">← Volver a {{ p.nombre }}</a>
+}
 
 <h1>{{ p.nombre }}</h1>
 <p class="meta">
@@ -15,6 +18,71 @@
     @if (p.en_preventa) { · <strong>Preventa</strong> }
 </p>
 
+@if (paso() !== 'listo') {
+<ol class="pasos">
+    @if (!registrado()) {
+    <li [class.actual]="paso() === 'acceso'">Cómo comprar</li>
+    }
+    @if (p.restriccion_edad > 0 && !registrado()) {
+    <li [class.actual]="paso() === 'edad'">Edad</li>
+    }
+    <li [class.actual]="paso() === 'butacas'">Butacas</li>
+    <li [class.actual]="paso() === 'candy'">Candy</li>
+    <li [class.actual]="paso() === 'pago'">Pago</li>
+</ol>
+}
+
+<!-- Reloj de la reserva: visible en todos los pasos después de elegir butacas -->
+@if (paso() === 'candy' || paso() === 'pago') {
+@if (tiempoRestante(); as t) {
+<p class="reloj">Te guardamos las butacas {{ idsSeleccionadas().join(', ') }} por {{ t }} min.</p>
+} @else {
+<div class="error-compra" role="alert">
+    <p>Se venció el tiempo de reserva y las butacas quedaron libres.</p>
+    <button type="button" (click)="volverA('butacas')">Volver a elegir butacas</button>
+</div>
+}
+}
+
+@switch (paso()) {
+
+@case ('acceso') {
+<h2>¿Cómo querés comprar?</h2>
+<div class="opciones">
+    <a class="opcion" routerLink="/login" [queryParams]="{ volverA: volverAca() }">
+        <strong>Iniciar sesión</strong>
+        <span>Usá tus cupones, tu crédito y tus puntos, y sumá puntos con esta compra.</span>
+    </a>
+    <a class="opcion" routerLink="/registro" [queryParams]="{ volverA: volverAca() }">
+        <strong>Crear cuenta</strong>
+        <span>Te regalamos un cupón para tu primera compra.</span>
+    </a>
+    <button type="button" class="opcion" (click)="seguirComoInvitado()">
+        <strong>Seguir como invitado</strong>
+        <span>Solo te pedimos un mail. Sin cupones, crédito ni puntos.</span>
+    </button>
+</div>
+}
+
+@case ('edad') {
+<h2>¿Cuál es tu fecha de nacimiento?</h2>
+<p>"{{ p.nombre }}" es para mayores de {{ p.restriccion_edad }} años. Toda entrada indica que debe asistir un adulto.</p>
+<form class="edad" (submit)="continuarDesdeEdad($event)">
+    <label>Fecha de nacimiento
+        <input type="date" [formField]="fEdad.fechaNacimiento" />
+    </label>
+    @if (fEdad.fechaNacimiento().touched() && fEdad.fechaNacimiento().invalid()) {
+    <p class="error">{{ fEdad.fechaNacimiento().errors()[0].message }}</p>
+    }
+    @if (avisoEdad()) {
+    <p class="error" role="alert">{{ avisoEdad() }}</p>
+    }
+    <button type="submit" class="continuar" [disabled]="fEdad().invalid()">Continuar</button>
+</form>
+<p class="ayuda">¿Tenés cuenta? <a routerLink="/login" [queryParams]="{ volverA: volverAca() }">Iniciá sesión</a> y usamos la fecha de tu perfil.</p>
+}
+
+@case ('butacas') {
 <h2>Elegí tus butacas</h2>
 <p class="ayuda">Las butacas grises las están comprando otras personas en este momento. Se actualizan solas.</p>
 
@@ -43,7 +111,7 @@
         </li>
         }
     </ul>
-    <p class="total">Total entradas: <strong>$ {{ total() | number: '1.2-2' }}</strong></p>
+    <p class="total">Total entradas: <strong>$ {{ totalEntradas() | number: '1.2-2' }}</strong></p>
 
     @if (hayVip()) {
     <p class="aviso">Elegiste al menos una butaca <strong>VIP</strong>, que tiene un precio más alto.</p>
@@ -51,6 +119,80 @@
     @if (p.restriccion_edad > 0) {
     <p class="aviso">Película para mayores de {{ p.restriccion_edad }}: debe asistir un adulto.</p>
     }
+
+    <button type="button" class="continuar" (click)="irACandy()">Continuar</button>
     }
 </section>
+}
+
+@case ('candy') {
+<h2>¿Querés sumar algo del candy?</h2>
+@if (errorCandy()) {
+<p class="error">{{ errorCandy() }}</p>
+} @else {
+<app-paso-candy [categorias]="categorias()" [productos]="productos()" [combos]="combos()"
+    [cantidades]="cantidades()" [cantidadButacas]="seleccionadas().length" (cambiar)="cambiarCantidad($event)" />
+}
+<div class="acciones">
+    <button type="button" (click)="paso.set('butacas')">← Butacas</button>
+    <button type="button" class="continuar" [disabled]="!candyValido()" (click)="irAPago()">
+        {{ carrito().length === 0 ? 'Seguir sin candy' : 'Continuar' }}
+    </button>
+</div>
+}
+
+@case ('pago') {
+<h2>Revisá y pagá</h2>
+<app-paso-pago [entradas]="lineas()" [items]="carrito()" [precioGeneral]="precioGeneral()"
+    [registrado]="registrado()" [cuponPrimeraCompra]="cuponPrimeraCompra()" [cuponEdad]="cuponEdad()"
+    [creditoDisponible]="creditoDisponible()" [puntosDisponibles]="puntosDisponibles()"
+    [recompensas]="recompensas()" [restriccionEdad]="p.restriccion_edad" [enviando]="enviando()"
+    [error]="errorCompra()" (confirmar)="confirmar($event)" (volverA)="volverA($event)" />
+<div class="acciones">
+    <button type="button" (click)="irACandy()">← Candy</button>
+</div>
+}
+
+@case ('listo') {
+@if (resultado(); as r) {
+<section class="listo">
+    <h2>¡Compra confirmada!</h2>
+    <p>Tu código de compra es</p>
+    <p class="codigo">{{ r.codigo }}</p>
+    <p>Presentalo en la entrada del cine y en el candy. Lo asociamos a <strong>{{ r.email }}</strong>.</p>
+
+    <ul>
+        <li><span>Entradas</span><span>$ {{ r.subtotal_entradas | number: '1.2-2' }}</span></li>
+        @if (r.subtotal_candy > 0) {
+        <li><span>Candy</span><span>$ {{ r.subtotal_candy | number: '1.2-2' }}</span></li>
+        }
+        @if (r.descuento_combos > 0) {
+        <li><span>Entradas incluidas en combos</span><span>− $ {{ r.descuento_combos | number: '1.2-2' }}</span></li>
+        }
+        @if (r.descuento_canjes > 0) {
+        <li><span>Entradas canjeadas con puntos</span><span>− $ {{ r.descuento_canjes | number: '1.2-2' }}</span></li>
+        }
+        @if (r.descuento_cupon > 0) {
+        <li><span>Cupón</span><span>− $ {{ r.descuento_cupon | number: '1.2-2' }}</span></li>
+        }
+        @if (r.credito_usado > 0) {
+        <li><span>Crédito</span><span>− $ {{ r.credito_usado | number: '1.2-2' }}</span></li>
+        }
+        <li class="total"><span>Pagaste</span><strong>$ {{ r.total_pagado | number: '1.2-2' }}</strong></li>
+    </ul>
+
+    @if (r.puntos_canjeados > 0) {
+    <p>Canjeaste <strong>{{ r.puntos_canjeados }} puntos</strong>.</p>
+    }
+    @if (r.puntos_ganados > 0) {
+    <p>Sumaste <strong>{{ r.puntos_ganados }} puntos</strong>.</p>
+    }
+    @if (p.restriccion_edad > 0) {
+    <p class="aviso">Película para mayores de {{ p.restriccion_edad }}: debe asistir un adulto.</p>
+    }
+    <a routerLink="/">Volver a la cartelera</a>
+</section>
+}
+}
+}
 }

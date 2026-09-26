@@ -76,4 +76,4 @@
     </button>
 </form>
 
-<p>¿Ya tenés cuenta? <a routerLink="/login">Ingresá</a></p>
+<p>¿Ya tenés cuenta? <a routerLink="/login" [queryParams]="destino ? { volverA: destino } : {}">Ingresá</a></p>

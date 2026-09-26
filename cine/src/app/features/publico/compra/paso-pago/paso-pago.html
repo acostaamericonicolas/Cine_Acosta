@@ -1,0 +1,173 @@
+@let t = totales();
+
+@if (registrado()) {
+<p class="saldo">
+    Tenés <strong>{{ puntosDisponibles() | number: '1.0-0' }} puntos</strong>
+    y <strong>$ {{ creditoDisponible() | number: '1.2-2' }}</strong> de crédito.
+</p>
+}
+
+<section class="desglose">
+    <h3>Resumen</h3>
+    <ul>
+        @for (e of entradas(); track e.butaca.id) {
+        <li [class.vip]="e.butaca.tipo === 'vip'">
+            <span>Entrada {{ e.butaca.id }} · {{ textoTipo[e.butaca.tipo] }}</span>
+            <span>$ {{ e.precio | number: '1.2-2' }}</span>
+        </li>
+        }
+        @for (i of items(); track i.tipo + i.id) {
+        <li>
+            <span>{{ i.cantidad }} × {{ i.nombre }}</span>
+            <span>$ {{ i.precio * i.cantidad | number: '1.2-2' }}</span>
+        </li>
+        }
+        @for (c of productosCanjeados(); track c.nombre) {
+        <li class="descuento">
+            <span>{{ c.cantidad }} × {{ c.nombre }} (canje, {{ c.puntos }} pts)</span>
+            <span>$ 0,00</span>
+        </li>
+        }
+        @if (t.descuentoCombos > 0) {
+        <li class="descuento">
+            <span>Entradas incluidas en combos ({{ t.combosConEntrada }})</span>
+            <span>− $ {{ t.descuentoCombos | number: '1.2-2' }}</span>
+        </li>
+        }
+        @if (t.descuentoCanjes > 0) {
+        <li class="descuento">
+            <span>Entradas canjeadas con puntos ({{ entradasCanjeadas() }})</span>
+            <span>− $ {{ t.descuentoCanjes | number: '1.2-2' }}</span>
+        </li>
+        }
+        @if (t.descuentoCupon > 0) {
+        <li class="descuento">
+            <span>Cupón</span>
+            <span>− $ {{ t.descuentoCupon | number: '1.2-2' }}</span>
+        </li>
+        }
+        @if (t.credito > 0) {
+        <li class="descuento">
+            <span>Crédito de tu cuenta</span>
+            <span>− $ {{ t.credito | number: '1.2-2' }}</span>
+        </li>
+        }
+    </ul>
+    <p class="total">Total a pagar: <strong>$ {{ t.total | number: '1.2-2' }}</strong></p>
+
+    @if (hayVip()) {
+    <p class="aviso">Tu compra incluye al menos una butaca <strong>VIP</strong>, que tiene un precio más alto.</p>
+    }
+    @if (restriccionEdad() > 0) {
+    <p class="aviso">Película para mayores de {{ restriccionEdad() }}: debe asistir un adulto.</p>
+    }
+</section>
+
+<form (submit)="enviar($event)">
+    @if (registrado()) {
+    @if (recompensas().length > 0) {
+    <fieldset class="canjes">
+        <legend>Canjear puntos (te quedan {{ puntosRestantes() | number: '1.0-0' }})</legend>
+        @for (r of recompensas(); track claveCanje(r)) {
+        <div class="canje">
+            <span>
+                {{ r.nombre }} · <strong>{{ r.puntos }} pts</strong>
+                @if (r.tipo === 'entrada') { <small>(cubre una entrada general; la VIP paga la diferencia)</small> }
+            </span>
+            <span class="cantidad">
+                <button type="button" [disabled]="cantidadCanje(r) === 0" (click)="cambiarCanje(r, -1)"
+                    [attr.aria-label]="'Quitar canje de ' + r.nombre">−</button>
+                <span aria-live="polite">{{ cantidadCanje(r) }}</span>
+                <button type="button" [disabled]="!puedeSumarCanje(r)" (click)="cambiarCanje(r, 1)"
+                    [attr.aria-label]="'Canjear ' + r.nombre">+</button>
+            </span>
+        </div>
+        }
+    </fieldset>
+    }
+
+    @if (hayCupones()) {
+    <label>Cupón (uno por compra)
+        <select [formField]="f.cupon">
+            <option value="">Sin cupón</option>
+            @if (cuponPrimeraCompra(); as pct) {
+            <option value="primera_compra">Primera compra: {{ pct }}% off</option>
+            }
+            @if (cuponEdad(); as c) {
+            <option value="edad">Mayores de {{ c.edadMinima }}: {{ c.porcentaje }}% off</option>
+            }
+        </select>
+    </label>
+    }
+
+    @if (creditoDisponible() > 0) {
+    <label class="en-linea">
+        <input type="checkbox" [formField]="f.usarCredito" />
+        Usar mi crédito (tenés $ {{ creditoDisponible() | number: '1.2-2' }})
+    </label>
+    }
+    } @else {
+    <label>Mail
+        <input type="email" [formField]="f.email" autocomplete="email" />
+    </label>
+    <small>Con este mail y el código de compra vas a poder buscar tu comprobante.</small>
+    @if (f.email().touched() && f.email().invalid()) {
+    <p class="error">{{ f.email().errors()[0].message }}</p>
+    }
+    <p class="ayuda">¿Tenés cuenta? Iniciá sesión para usar cupones, crédito y sumar puntos.</p>
+    }
+
+    @if (hayQuePagar()) {
+    <fieldset>
+        <legend>Tarjeta (pago simulado)</legend>
+
+        <label>Titular
+            <input type="text" [formField]="f.titular" autocomplete="cc-name" />
+        </label>
+        @if (f.titular().touched() && f.titular().invalid()) {
+        <p class="error">{{ f.titular().errors()[0].message }}</p>
+        }
+
+        <label>Número
+            <input type="text" inputmode="numeric" [formField]="f.numero" autocomplete="cc-number"
+                placeholder="0000 0000 0000 0000" />
+        </label>
+        @if (f.numero().touched() && f.numero().invalid()) {
+        <p class="error">{{ f.numero().errors()[0].message }}</p>
+        }
+
+        <div class="fila">
+            <label>Vencimiento
+                <input type="text" [formField]="f.vencimiento" autocomplete="cc-exp" placeholder="MM/AA" />
+            </label>
+            <label>Código
+                <input type="text" inputmode="numeric" [formField]="f.cvv" autocomplete="cc-csc" />
+            </label>
+        </div>
+        @if (f.vencimiento().touched() && f.vencimiento().invalid()) {
+        <p class="error">{{ f.vencimiento().errors()[0].message }}</p>
+        }
+        @if (f.cvv().touched() && f.cvv().invalid()) {
+        <p class="error">{{ f.cvv().errors()[0].message }}</p>
+        }
+    </fieldset>
+    } @else {
+    <p class="ayuda">Con los descuentos no queda nada por pagar.</p>
+    }
+
+    @if (error(); as e) {
+    <div class="error-compra" role="alert">
+        <strong>No se pudo confirmar la compra{{ e.paso ? ' — ' + tituloPaso[e.paso] : '' }}</strong>
+        <p>{{ e.mensaje }}</p>
+        @if (e.paso === 'reserva' || e.paso === 'butaca') {
+        <button type="button" (click)="volverA.emit('butacas')">Volver a elegir butacas</button>
+        } @else if (e.paso === 'candy') {
+        <button type="button" (click)="volverA.emit('candy')">Volver al candy</button>
+        }
+    </div>
+    }
+
+    <button type="submit" class="confirmar" [disabled]="f().invalid() || enviando()">
+        {{ enviando() ? 'Confirmando...' : 'Confirmar compra por $ ' + (t.total | number: '1.2-2') }}
+    </button>
+</form>

@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { form, FormField, required, email, minLength, min, max, validate } from '@angular/forms/signals';
 import { AuthService } from '../../../core/auth.service';
 import { DatosRegistro } from '../../../models/perfil';
@@ -15,6 +15,11 @@ import { fechaLocal } from '../../../shared/fechas';
 export class Registro implements ConCambios {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  // Si viene de una compra, vuelve a ella después de registrarse (solo rutas internas)
+  private volverA = this.route.snapshot.queryParamMap.get('volverA');
+  destino = this.volverA && this.volverA.startsWith('/') && !this.volverA.startsWith('//') ? this.volverA : null;
   private guardado = false;
 
   hayCambios(): boolean {
@@ -65,7 +70,7 @@ export class Registro implements ConCambios {
     try {
       await this.auth.registrar(this.modelo());
       this.guardado = true;
-      this.router.navigate(['/']);
+      this.router.navigateByUrl(this.destino ?? '/');
     } catch (e) {
       this.error.set((e as { message?: string }).message ?? 'No se pudo completar el registro');
     } finally {

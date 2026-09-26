@@ -7,17 +7,48 @@
     text-transform: uppercase;
 }
 
-.resumen {
+/* Indicador de pasos */
+.pasos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    counter-reset: paso;
+}
+
+.pasos li {
+    counter-increment: paso;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: #eef1f7;
+    color: #555;
+}
+
+.pasos li::before {
+    content: counter(paso) '. ';
+}
+
+.pasos li.actual {
+    background: #1f3864;
+    color: #fff;
+    font-weight: bold;
+}
+
+.resumen,
+.listo {
     max-width: 480px;
     margin-top: 1.5rem;
 }
 
-.resumen ul {
+.resumen ul,
+.listo ul {
     list-style: none;
     padding: 0;
 }
 
-.resumen li {
+.resumen li,
+.listo li {
     display: flex;
     justify-content: space-between;
     padding: 0.4rem 0;
@@ -43,6 +74,80 @@
     border-radius: 4px;
 }
 
+.edad {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 320px;
+}
+
+.acciones {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.continuar {
+    padding: 0.5rem 1.25rem;
+    background: #1f3864;
+    color: #fff;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.continuar:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.error-compra {
+    border: 1px solid #c00;
+    border-left-width: 4px;
+    background: #fdecec;
+    padding: 0.6rem 0.8rem;
+    border-radius: 4px;
+}
+
+.codigo {
+    font-family: monospace;
+    font-size: 2rem;
+    font-weight: bold;
+    letter-spacing: 0.15em;
+}
+
 .error {
     color: #c00;
+}
+
+.opciones {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+    max-width: 760px;
+}
+
+.opcion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #fff;
+    color: inherit;
+    text-align: left;
+    text-decoration: none;
+    font: inherit;
+    cursor: pointer;
+}
+
+.opcion:hover,
+.opcion:focus-visible {
+    border-color: #1f3864;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.opcion span {
+    color: #555;
 }

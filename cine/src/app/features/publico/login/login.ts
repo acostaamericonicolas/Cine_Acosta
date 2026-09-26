@@ -14,6 +14,9 @@ export class Login {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
+  // Se conserva al pasar a /registro (por ejemplo, desde una compra)
+  volverA = this.route.snapshot.queryParamMap.get('volverA');
+
   modelo = signal({ email: '', password: '' });
 
   f = form(this.modelo, (s) => {

@@ -1,0 +1,71 @@
+.grilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.75rem;
+}
+
+.item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+/* Los combos se destacan (HU-19) */
+.item.destacado {
+    border: 2px solid #e0a800;
+    background: #fffbea;
+}
+
+.item img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    flex: 1;
+}
+
+.info small {
+    color: #555;
+}
+
+.precio {
+    font-weight: bold;
+}
+
+.etiqueta {
+    align-self: flex-start;
+    background: #1f3864;
+    color: #fff;
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.8rem;
+}
+
+.cantidad {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.cantidad button {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1.1rem;
+}
+
+.ayuda {
+    color: #555;
+}
+
+.error {
+    color: #c00;
+}

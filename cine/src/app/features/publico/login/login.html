@@ -24,4 +24,4 @@
     </button>
 </form>
 
-<p>¿No tenés cuenta? <a routerLink="/registro">Registrate</a></p>
+<p>¿No tenés cuenta? <a routerLink="/registro" [queryParams]="volverA ? { volverA } : {}">Registrate</a></p>

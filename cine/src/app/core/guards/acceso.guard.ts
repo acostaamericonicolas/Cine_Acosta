@@ -6,9 +6,8 @@ import { AuthService, Rol } from '../auth.service';
 
 // Verifica que el rol del usuario esté permitido. Espera a que se restaure la sesión.
 async function verificarRol(roles: Rol[]): Promise<boolean | UrlTree> {
-    const auth = inject(AuthService);   // los inject van ANTES del primer await
+    const auth = inject(AuthService);   
     const router = inject(Router);
-
     await auth.inicializada;
 
     const rol = auth.rol();

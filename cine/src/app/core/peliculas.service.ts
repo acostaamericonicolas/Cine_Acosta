@@ -23,42 +23,13 @@ export interface Pelicula {
     vendidas: number;
 }
 
-export const TIPOS_IMAGEN = ['image/jpeg', 'image/png', 'image/webp'];
-export const MAX_IMAGEN_BYTES = 2 * 1024 * 1024; // 2 MB
-
-const EXTENSIONES: Record<string, string> = {
-    'image/jpeg': 'jpg',
-    'image/png': 'png',
-    'image/webp': 'webp',
-};
-
 export type PeliculaNueva = Omit<Pelicula, 'id' | 'vendidas'>;
 
 @Injectable({ providedIn: 'root' })
 export class PeliculasService {
     private supabase = inject(SupabaseService).client;
 
-    async subirPoster(archivo: File): Promise<{ path: string; url: string }> {
-        const ext = EXTENSIONES[archivo.type];
-        if (!ext) throw new Error('Formato no permitido. Usá JPG, PNG o WebP.');
 
-        // Nombre único: evita pisar archivos y problemas con caracteres raros
-        const path = `${crypto.randomUUID()}.${ext}`;
-
-        const { error } = await this.supabase.storage
-            .from('posters')
-            .upload(path, archivo, { contentType: archivo.type });
-        if (error) throw error;
-
-        // Supabase arma la URL pública a partir del nombre del archivo
-        const { data } = this.supabase.storage.from('posters').getPublicUrl(path);
-        return { path, url: data.publicUrl };
-    }
-
-    async eliminarPoster(path: string) {
-        const { error } = await this.supabase.storage.from('posters').remove([path]);
-        if (error) throw error;
-    }
 
     async listar(): Promise<Pelicula[]> {
         const { data, error } = await this.supabase

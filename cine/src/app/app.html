@@ -18,6 +18,8 @@
       <a routerLink="/admin/combos">Combos</a>
       <a routerLink="/admin/cupones">Cupones</a>
       <a routerLink="/admin/recompensas">Puntos</a>
+      <a routerLink="/admin/reportes">Reportes</a>
+      <a routerLink="/admin/actividad">Actividad</a>
     }
     <span>Hola, {{ auth.perfil()?.nombre }}</span>
     <button (click)="salir()">Salir</button>
@@ -27,5 +29,17 @@
   <a routerLink="/registro">Registrarme</a>
   }
 </nav>
+
+@if (avisos().length > 0) {
+<ul class="avisos" role="status">
+  @for (a of avisos(); track a.pelicula_id) {
+  <li>
+    <span>🔔 ¡Ya está a la venta <strong>{{ a.nombre }}</strong>{{ a.en_preventa ? ' en preventa' : '' }}!</span>
+    <a [routerLink]="['/pelicula', a.pelicula_id]" (click)="cerrarAviso(a.pelicula_id)">Ver funciones</a>
+    <button type="button" aria-label="Cerrar aviso" (click)="cerrarAviso(a.pelicula_id)">✕</button>
+  </li>
+  }
+</ul>
+}
 
 <router-outlet />

@@ -56,3 +56,43 @@
     font-size: 0.8rem;
     font-weight: bold;
 }
+
+/* ----- HU-11: Próximamente ----- */
+.proximamente {
+    margin-top: 2.5rem;
+}
+
+.ayuda {
+    color: #555;
+}
+
+.insignia-estreno {
+    align-self: flex-start;
+    background: #eef1f7;
+    color: #1f3864;
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.alerta {
+    align-self: flex-start;
+    font-size: 0.85rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #1f3864;
+    border-radius: 4px;
+    background: #fff;
+    color: #1f3864;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.alerta.activa {
+    background: #1f3864;
+    color: #fff;
+}
+
+.error {
+    color: #c00;
+}

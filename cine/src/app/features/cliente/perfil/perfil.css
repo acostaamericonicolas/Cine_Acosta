@@ -88,3 +88,38 @@
     color: #1d7a3a;
     font-weight: normal;
 }
+
+/* HU-12: grilla de películas vistas */
+.vistas {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.75rem;
+}
+
+.vista {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    color: inherit;
+    text-decoration: none;
+}
+
+.vista img {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.vista small {
+    color: #555;
+}
+
+.vista .estrellas {
+    color: #e0a800;
+}
+
+.vista .calificar {
+    color: #1f3864;
+    font-size: 0.9rem;
+}

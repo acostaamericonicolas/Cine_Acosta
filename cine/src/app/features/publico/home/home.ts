@@ -1,5 +1,8 @@
 import { DatePipe, NgClass } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { AlertasService } from '../../../core/alertas.service';
+import { AuthService } from '../../../core/auth.service';
 import { PeliculasService } from '../../../core/peliculas.service';
 import { PeliculaConVenta } from '../../../models/pelicula';
 import { TarjetaPelicula } from '../../../shared/componentes/tarjeta-pelicula/tarjeta-pelicula';
@@ -10,12 +13,14 @@ const normalizar = (t: string) =>
 
 @Component({
   selector: 'app-home',
-  imports: [DatePipe, NgClass, TarjetaPelicula],
+  imports: [DatePipe, NgClass, RouterLink, TarjetaPelicula],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
 export class Home {
   private service = inject(PeliculasService);
+  private alertasService = inject(AlertasService);
+  private auth = inject(AuthService);
 
   peliculas = signal<PeliculaConVenta[]>([]);
   busqueda = signal('');
@@ -42,6 +47,14 @@ export class Home {
     );
   });
 
+  // ----- HU-11: Próximamente -----
+  proximas = signal<PeliculaConVenta[]>([]);
+  alertas = signal<Set<number>>(new Set());   // películas con alerta activa del cliente
+  alertaEnCurso = signal<number | null>(null);
+  errorAlerta = signal('');
+  esCliente = computed(() => this.auth.rol() === 'cliente');
+  logueado = this.auth.logueado;
+
   hayFiltros = computed(() => this.busqueda().trim() !== '' || this.generosElegidos().length > 0);
 
   constructor() {
@@ -55,6 +68,33 @@ export class Home {
       this.error.set((e as { message?: string }).message ?? 'No se pudo cargar la cartelera');
     } finally {
       this.cargando.set(false);
+    }
+
+    // Próximamente es secundario: si falla, la cartelera se ve igual
+    try {
+      this.proximas.set(await this.service.listarProximamente());
+      await this.auth.inicializada;
+      if (this.esCliente()) this.alertas.set(new Set(await this.alertasService.misAlertas()));
+    } catch {
+      /* sin sección Próximamente */
+    }
+  }
+
+  async alternarAlerta(peliculaId: number) {
+    this.errorAlerta.set('');
+    this.alertaEnCurso.set(peliculaId);
+    try {
+      if (this.alertas().has(peliculaId)) {
+        await this.alertasService.desactivar(peliculaId);
+        this.alertas.update(s => { const n = new Set(s); n.delete(peliculaId); return n; });
+      } else {
+        await this.alertasService.activar(peliculaId);
+        this.alertas.update(s => new Set(s).add(peliculaId));
+      }
+    } catch (e) {
+      this.errorAlerta.set((e as { message?: string }).message ?? 'No se pudo cambiar la alerta');
+    } finally {
+      this.alertaEnCurso.set(null);
     }
   }
 

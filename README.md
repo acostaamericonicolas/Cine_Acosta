@@ -49,6 +49,10 @@ Los cambios de la base a partir de HU-21 están en [`supabase/`](supabase/), num
 | `08_cancelar_compra.sql` | 28 | función `cancelar_compra`: crédito, puntos y butacas liberadas |
 | `09_validacion.sql` | 32, 33 | `es_empleado()`, `validar_entrada` y `entregar_candy` |
 | `10_personal.sql` | 34 | `alta_personal`; nadie cambia roles; cupón solo para clientes; el personal no compra |
+| `11_actividad.sql` | 37 | tabla `actividad` y triggers que registran las acciones |
+| `12_resenas_alertas.sql` | 10, 11 | policies y trigger de reseñas; tabla `alertas_venta` y `avisos_venta_abierta` |
+| `13_reportes.sql` | 35, 36 | `reporte_ventas`, `ranking_peliculas`, `ranking_candy` |
+| `14_resenas_compradores.sql` | 10, 11 | solo califica quien compró, después de su función y una vez; `peliculas` en Realtime para los avisos |
 
 Lo anterior (tablas, triggers y policies de las HU 01 a 20) se creó directamente en Supabase y está documentado en la [sección 6](#6-base-de-datos-supabase).
 
@@ -91,7 +95,14 @@ En Supabase → Authentication, la **confirmación de mail tiene que estar desac
 | 32 | Validar la entrada con el código / QR | Hecha (requiere `supabase/09_validacion.sql`) |
 | 33 | Entregar el candy con el mismo código | Hecha (requiere `supabase/09_validacion.sql`) |
 | 34 | Alta de personal (empleado u otro admin) | Hecha **con un cambio pedido**: el admin crea cuentas nuevas, no convierte clientes (requiere `supabase/10_personal.sql`) |
-| Resto | Semanas 3 y 4 | Pendiente |
+| 10 | Reseñas: calificar y comentar | Hecha **con cambio pedido**: solo quien compró, después de su función y una sola vez (requiere `12` y `14`) |
+| 11 | Próximamente con alerta de apertura de venta | Hecha: el aviso llega sin recargar (requiere `12` y `14`) |
+| 12 | Mis películas | Hecha (en el perfil) |
+| 35 | Reporte de facturación diaria, CSV y PDF | Hecha (requiere `supabase/13_reportes.sql`) |
+| 36 | Gráficos: más vistas por semana / mes y candy más vendido | Hecha (requiere `supabase/13_reportes.sql`) |
+| 37 | Log de actividad | Hecha con triggers (requiere `supabase/11_actividad.sql`) |
+| 38 | Interfaces simples y claras | Transversal: aplicada en todas las pantallas |
+| 39 | PWA instalable, carga rápida, comprobantes sin conexión | Hecha |
 
 ---
 
@@ -107,7 +118,7 @@ cine/src/app/
 │   ├── publico/           home, detalle, compra, comprobante, buscar-compra, login, registro
 │   ├── cliente/           perfil, mis-compras
 │   ├── empleado/          validación
-│   └── admin/             ABMs del panel
+│   └── admin/             ABMs del panel, personal, puntos, reportes, actividad
 └── shared/                lo que usan varias áreas
     ├── componentes/       tarjeta-pelicula, mapa-butacas, codigo-qr
     ├── pipes/             duracion-pipe, estrellas-pipe
@@ -447,6 +458,59 @@ Surgieron de revisar las historias contra los requerimientos funcionales:
   - **Base:** `confirmar_compra` rechaza las cuentas que no son de cliente. Si no, el personal acumularía puntos.
 - **Datos del personal:** los datos del registro de cliente (sangre, ojos, vacaciones) no aplican al personal y se guardan como "Prefiero no responder" o 0. El personal **no recibe cupón** de primera compra.
 
+### 5.18 Reseñas (HU-10)
+
+- En el detalle de la película, el cliente califica con **1 a 5 estrellas** (se eligen tocando las estrellas) y un **comentario opcional de hasta 200 caracteres**, con contador.
+- **Cambio pedido: quién y cuándo puede calificar.** Solo califica quien **compró una entrada** para esa película (compra no cancelada), **después de que terminó su función**, y **una sola vez**: una vez publicada no se edita ni se borra. Antes de publicar se pide confirmación.
+- Si todavía no puede, ve el motivo exacto:
+  - "Solo pueden calificar quienes compraron una entrada para esta película";
+  - "Vas a poder calificarla cuando termine tu función (27/09 20:15)";
+  - "Ya calificaste esta película".
+- Al publicar, la lista y el **promedio se recalculan** en el momento.
+- El visitante ve "Iniciá sesión para calificar", que lo trae de vuelta a la película. El personal no califica.
+- El **nombre que se muestra** ("Juan P.") lo pone la base con un trigger: nadie puede publicar a nombre de otro. Solo el admin puede borrar una reseña, como moderación.
+
+### 5.19 Próximamente y alertas (HU-11)
+
+- En la home, debajo de la cartelera, aparece la sección **Próximamente**: películas "próximamente" cuya venta todavía **no** abrió, ordenadas por estreno. Las que ya están en preventa están en la cartelera.
+- El cliente activa o desactiva **"Avisame cuando abra la venta"** en cada una.
+- **Sin mails:** si alguna película con alerta abre la venta (preventa, o estreno si no hay), aparece un **aviso arriba de todo**, con link a las funciones. **Se muestra una sola vez**: la base lo marca como avisado.
+- **Llega sin recargar la página.** Mientras el cliente está logueado, la app revisa los avisos:
+  - al iniciar sesión;
+  - **al instante** cuando cambia una película, con **Supabase Realtime** (el admin abrió la venta, activó la preventa o la pasó a cartelera);
+  - **cada minuto** y **al volver a la pestaña**, porque la preventa también abre sola cuando llega la fecha, y eso no genera ningún cambio en la tabla.
+
+  Antes solo se revisaba al iniciar sesión y había que recargar.
+
+### 5.20 Mis películas (HU-12)
+
+- En el perfil: **grilla** con el **póster**, la **fecha de la función** y **mi calificación** de cada película que vi. Solo funciones **ya terminadas** (se usa el fin de la función, la misma regla que habilita calificar) y compras no canceladas.
+- Si todavía no la califiqué, dice "Calificar →" y lleva al detalle.
+
+### 5.21 Reportes y gráficos (HU-35, HU-36)
+
+- **Admin → Reportes**, en dos partes:
+  - **Facturación diaria:** rango de fechas (por defecto, los últimos 7 días). Una fila por día, **incluso los días sin ventas**, con compras, entradas vendidas, unidades de candy, facturado y crédito usado, más una fila de **totales**. **Exportar a Excel (CSV)** genera el archivo con `;` y coma decimal, que es lo que espera el Excel en castellano, y con BOM para las tildes. **Imprimir / PDF** usa la impresión del navegador sin los filtros.
+  - **Gráficos:** **por semana** (lunes a domingo) o **por mes**, con flechas para ver períodos anteriores. Uno muestra las **películas más vistas** (entradas de funciones del período) y el otro el **candy más vendido** (unidades, canjes incluidos), con el **producto top** destacado. Son barras hechas con **CSS y `ngStyle`**: el ancho es el porcentaje respecto del máximo, sin librerías de gráficos.
+- **Facturado** es lo cobrado en pesos. Las compras canceladas no cuentan. Los días se agrupan en horario de Argentina.
+
+### 5.22 Log de actividad (HU-37)
+
+- **Admin → Actividad:** fecha y hora, quién (nombre y rol en ese momento), acción y detalle. Filtra por rango de fechas y tiene un buscador.
+- Se registra: alta, modificación y baja de **películas, funciones, salas, butacas, candy, combos, cupones y recompensas**; **cambios de precio** (con el valor anterior y el nuevo); **alta de personal** y registro de clientes; **compras, cancelaciones, validaciones de entradas y entregas de candy**.
+- Lo escriben **triggers en la base**: queda registrado aunque el cambio se haga fuera de esta app.
+
+### 5.23 PWA (HU-39)
+
+- La app es **instalable**: manifest con nombre, colores del cine e íconos.
+- **Service worker** (`ngsw-config.json`), activo solo en el build de producción:
+  - **app y assets con `prefetch`**: todo el código, incluidas las pantallas lazy, y las imágenes propias se descargan al instalar, así la navegación es instantánea;
+  - **cartelera con estrategia `freshness`** (películas, funciones, reseñas y precios): primero intenta la red y, si tarda más de 4 s o no hay conexión, usa la última respuesta guardada;
+  - **pósters e imágenes de Storage con `performance`**: se sirven desde la caché hasta 7 días.
+- **Comprobantes sin conexión:** el service worker no guarda las llamadas `rpc()`, porque son POST. Por eso cada comprobante abierto se guarda en el dispositivo (los últimos 20). Sin conexión se muestra esa copia, con el aviso de que puede no estar al día.
+- **Cómo probarlo:** `ng build`, servir la carpeta `dist/cine/browser` con un servidor estático (por ejemplo `npx http-server dist/cine/browser`), abrir la app, y en DevTools → Application ver el service worker y probar "Offline". Con `ng serve` no se registra a propósito.
+- **Presupuesto del bundle inicial:** el aviso se subió de 500 kB a **600 kB**. El inicial pesa ~510 kB (~127 kB transferidos). Casi todo es Angular, el router y `supabase-js`, que se necesitan desde la primera pantalla; todas las pantallas son lazy. El límite de error sigue en 1 MB.
+
 ---
 
 ## 6. Base de datos (Supabase)
@@ -475,7 +539,9 @@ Surgieron de revisar las historias contra los requerimientos funcionales:
 | `compra_items` | `compra_id`, producto **o** combo, `nombre`, `cantidad`, `precio_unitario`, `entregado_en` | guarda nombre y precio del momento; los canjes van a $0 |
 | `recompensas` | `tipo` (entrada / producto), `producto_id`, `puntos`, `activa` | **solo excepciones**: `puntos` null = usa el precio. Una de entrada y una por producto (índices únicos parciales). |
 | vista `catalogo_canjes` | todo lo canjeable: `tipo`, `producto_id`, `nombre`, `precio`, `puntos`, `personalizado`, `activa` | la arma la base; ver 6.2.9 |
-| `canjes` | `usuario_id`, `compra_id`, `descripcion`, `cantidad`, `puntos` | historial del perfil |
+| `canjes` | `usuario_id`, `compra_id`, `descripcion`, `cantidad`, `puntos`, `devuelto` | historial del perfil |
+| `alertas_venta` | `usuario_id`, `pelicula_id`, `avisado_en` | una por cliente y película (HU-11) |
+| `actividad` | `creado_en`, `usuario_id`, `usuario`, `accion`, `detalle`, `tabla` | la escriben los triggers; solo el admin la lee (HU-37) |
 
 Montos en `numeric(…, 2)` para no tener errores de redondeo con dinero.
 
@@ -502,6 +568,10 @@ Resumen:
 | Cancelar con crédito, puntos y butacas en una transacción | `cancelar_compra()` | `ComprasService.cancelar()` → `MisCompras` |
 | Cada código sirve una vez para entrar y una vez para el candy | `validar_entrada()`, `entregar_candy()` | `ValidacionService` → `Validacion` |
 | Alta de personal sin convertir cuentas; nadie cambia roles | `alta_personal()` + sin policy de update en `perfiles` | `PersonalService.alta()` → `Usuarios` |
+| Log de actividad automático | trigger `log_actividad` en 13 tablas | `ActividadService` → `Actividad` (solo lectura) |
+| Reseña firmada por la base, una por cliente | trigger `resenas_completar` + policies + `unique` | `ResenasService` → `MiResena` |
+| Aviso de venta abierta, una sola vez | `alertas_venta` + `avisos_venta_abierta()` | `AlertasService` → `App` (aviso) y `Home` |
+| Reportes solo para el admin | `reporte_ventas()`, `ranking_peliculas()`, `ranking_candy()` | `ReportesService` → `Reportes` |
 | Puntos: ganar y canjear sin pasarse del saldo | `confirmar_compra()` + tabla `canjes` | `PasoPago` (canjes) y `Perfil` (historial) |
 | Función con ventas no se borra ni se mueve | FK `compras.funcion_id` + trigger `funciones_bloquear_con_ventas` | `FuncionesService` traduce el `23503` |
 
@@ -719,6 +789,39 @@ Supabase devuelve los dos en el `error` de `rpc()`: Angular muestra `error.messa
   - Si una alta anterior quedó a mitad (cuenta creada sin perfil), repetirla la completa: el `signUp` avisa que el mail existe y `alta_personal` crea el perfil que faltaba.
   - La pantalla `Usuarios` (Admin → Personal) tiene `canDeactivate` con `formGuard`, como el resto de los formularios del admin.
 
+#### 6.2.14 Log de actividad (HU-37) — `supabase/11_actividad.sql`
+
+- **Base:**
+  - **Un solo trigger**, `log_actividad()`, en 13 tablas (`after insert or update or delete`). Lee la fila con `to_jsonb(new)` / `to_jsonb(old)`, así sirve para cualquier tabla, y arma la acción y el detalle según `tg_table_name`.
+  - **Quién:** `auth.uid()` de la sesión que hizo el cambio, más `actor_actual()` ("Ana Pérez (admin)"). Se guarda el texto porque si después cambia el nombre, el log no se altera.
+  - **Ruido filtrado:** el `update` de `peliculas.vendidas` que hacen `confirmar_compra` y `cancelar_compra` y el `update … set inicio = inicio` del recálculo de funciones no se registran, porque no son acciones de una persona.
+  - `actividad` tiene RLS con **solo lectura para el admin** y ninguna policy de escritura: solo escriben los triggers (`security definer`). Nadie puede borrar o falsear el log desde la API.
+- **Angular:** `ActividadService.listar()` hace un `select` por rango de fechas, que se convierten de horario local a UTC, con límite de 300. El buscador es un `computed` sobre lo cargado.
+
+#### 6.2.15 Reseñas y alertas (HU-10, HU-11) — `supabase/12_resenas_alertas.sql`
+
+- **Reseñas** (con el cambio del script 14):
+  - **`puede_resenar(pelicula)`** devuelve `{ puede, motivo }`. Controla que haya sesión y sea cliente, que no haya calificado ya, que tenga una compra no cancelada de una función de esa película, y que esa función ya haya **terminado** (`funciones.fin <= now()`). Si no puede, devuelve el motivo con la hora de fin de su función.
+  - El trigger **`resenas_completar`** (`before insert`) llama a `puede_resenar` y, si no puede, **corta con ese mismo mensaje**. Después pone `usuario_id = auth.uid()` y el `autor` ("Juan P.") desde el perfil.
+  - Policies: insertar solo si `puede_resenar` lo permite. **No hay policy de `update`**: nadie edita. Borrar, solo el admin. Ya existían el `unique (pelicula_id, usuario_id)` y los `check` de estrellas y largo.
+  - Angular: `MiResena` pide `puede_resenar` para decidir si muestra el formulario o el motivo, y `ResenasService.publicar()` solo hace `insert`. La regla la decide la base aunque alguien use la API directo.
+- **Alertas:**
+  - Tabla `alertas_venta`, con clave primaria (usuario, película) y `usuario_id` por defecto `auth.uid()`. Policies: cada cliente ve, crea y borra las suyas.
+  - **`avisos_venta_abierta()`** devuelve las películas con alerta cuya **venta ya abrió** (usa `venta_abierta`, la misma regla de la preventa) y en la **misma consulta** las marca con `avisado_en` (un `update` dentro de un `with`). Así el aviso aparece una sola vez.
+  - `peliculas` está en la publicación **`supabase_realtime`** (script 14). `App`, con un `effect`, mientras el perfil sea de cliente:
+    - escucha los cambios de `peliculas` con `AlertasService.escucharPeliculas()`, agrupando los cambios seguidos en 1,5 s porque cada compra también actualiza la película;
+    - revisa con un `setInterval` de 1 minuto y con `visibilitychange`.
+
+    Al cerrar sesión deja de escuchar. Los avisos nuevos se suman a los que ya se muestran.
+
+#### 6.2.16 Reportes (HU-35, HU-36) — `supabase/13_reportes.sql`
+
+- Las tres funciones son `security definer`, arrancan con `exigir_admin()` y excluyen las compras canceladas. Agrupan por día de Argentina con `dia_ar()`.
+- **`reporte_ventas(desde, hasta)`** usa `generate_series` para que **aparezcan todos los días**, aunque no tengan ventas. Valida el rango: "hasta" no puede ser anterior a "desde", y como máximo un año.
+- **`ranking_peliculas`** cuenta entradas de funciones del período y **`ranking_candy`** suma unidades vendidas. Los canjes cuentan como el mismo producto. Las dos devuelven el top 10.
+- `#variable_conflict use_column`: las columnas de salida se llaman como tablas (`compras`, `entradas`), y con esta directiva Postgres no las confunde.
+- **Angular:** `ReportesService` llama las tres con `rpc()`. `Reportes` calcula los totales con `computed`, arma el CSV en el navegador (`Blob` y un link de descarga) y dibuja las barras con `ngStyle`.
+
 ### 6.3 Seguridad (RLS)
 
 Todas las tablas tienen RLS activado. Criterio general:
@@ -726,8 +829,8 @@ Todas las tablas tienen RLS activado. Criterio general:
 | Quién | Qué puede hacer |
 |---|---|
 | Visitante sin sesión | Leer películas no ocultas, funciones, salas, precios, reseñas, candy, combos, recompensas, la configuración de cupones y las butacas ocupadas. Reservar, liberar y comprar **solo a través de las funciones** de la base (`reservar_butaca`, `confirmar_compra`, …). |
-| Usuario registrado | Además, leer y crear **solo su propio** perfil (como cliente, sin puntos ni crédito) y ver sus propios cupones, compras y canjes. No puede modificar su perfil (ni sus puntos ni su crédito): solo cambian a través de `confirmar_compra` y `cancelar_compra`. |
-| Admin | Escribir (insert / update / delete) en las tablas de catálogo, salas, funciones, candy, combos, cupones y recompensas. Ver todos los perfiles y dar de alta personal (con `alta_personal`). **Nadie cambia roles.** |
+| Usuario registrado | Además, leer y crear **solo su propio** perfil (como cliente, sin puntos ni crédito) y ver sus propios cupones, compras, canjes y alertas. Escribir **una** reseña por película, solo si compró y ya terminó su función, sin editarla; activar alertas. No puede modificar su perfil (ni sus puntos ni su crédito): solo cambian a través de `confirmar_compra` y `cancelar_compra`. |
+| Admin | Escribir (insert / update / delete) en las tablas de catálogo, salas, funciones, candy, combos, cupones y recompensas. Ver todos los perfiles, el log de actividad y los reportes, y dar de alta personal (con `alta_personal`). **Nadie cambia roles.** |
 
 Por eso los guards de Angular alcanzan para la navegación: aunque alguien los saltee, la base no le devuelve ni le deja modificar lo que no le corresponde.
 
@@ -750,7 +853,7 @@ Tres buckets **públicos de lectura**: `posters`, `candy` y `combos`. Son públi
 | QR en la entrada | Librería `qrcode`; el QR contiene el código de compra | Aprobado |
 | Escaneo con cámara | Campo de texto (los lectores USB escriben como teclado) | No se vio acceso a la cámara |
 | Pagos | Pago simulado con formulario validado | Fuera del alcance |
-| Alertas por mail | Avisos dentro de la app | No se vio envío de mails |
-| Exportar a Excel | CSV | Excel lo abre directo |
+| Alertas por mail | Aviso dentro de la app al iniciar sesión, una sola vez | No se vio envío de mails |
+| Exportar a Excel | CSV con `;` y coma decimal (lo abre directo el Excel en castellano) | No se vieron librerías de Excel |
 | Gráficos | Barras con CSS y `ngStyle` | No se vieron librerías de gráficos |
 | Alta de empleados | El admin crea cuentas nuevas de empleado o admin con una contraseña inicial; no convierte clientes | Pedido del cliente: cada rol separado y con solo sus funciones (RF-30, RF-33) |

@@ -6,6 +6,12 @@
     <button type="button" class="imprimir" (click)="imprimir()">Imprimir / Guardar como PDF</button>
 </div>
 
+@if (c.sin_conexion) {
+<p class="sin-conexion no-imprimir" role="status">
+    Sin conexión: estás viendo la copia guardada en este dispositivo. El estado de las entradas puede no estar al día.
+</p>
+}
+
 <article class="comprobante">
     <header>
         <div>

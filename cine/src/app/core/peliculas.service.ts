@@ -94,4 +94,16 @@ export class PeliculasService {
         if (error) throw error;
         return data as PeliculaConVenta[];
     }
+
+    // HU-11 "Próximamente": las que todavía no tienen la venta abierta, por fecha de estreno
+    async listarProximamente(): Promise<PeliculaConVenta[]> {
+        const { data, error } = await this.supabase
+            .from('peliculas')
+            .select('*, en_preventa, venta_abierta')
+            .eq('estado', 'proximamente')
+            .eq('venta_abierta', false)
+            .order('fecha_estreno');
+        if (error) throw error;
+        return data as PeliculaConVenta[];
+    }
 }

@@ -1,6 +1,7 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/auth.service';
 import { FuncionesService } from '../../../core/funciones.service';
 import { Funcion } from '../../../models/funcion';
 import { PeliculasService } from '../../../core/peliculas.service';
@@ -10,12 +11,13 @@ import { Resena } from '../../../models/resena';
 import { DuracionPipe } from '../../../shared/pipes/duracion-pipe';
 import { EstrellasPipe } from '../../../shared/pipes/estrellas-pipe';
 import { sumarDias } from '../../../shared/fechas';
+import { MiResena } from './mi-resena/mi-resena';
 
 const RESENAS_INICIALES = 5;
 
 @Component({
   selector: 'app-detalle-pelicula',
-  imports: [DatePipe, DecimalPipe, RouterLink, DuracionPipe, EstrellasPipe],
+  imports: [DatePipe, DecimalPipe, RouterLink, DuracionPipe, EstrellasPipe, MiResena],
   templateUrl: './detalle-pelicula.html',
   styleUrl: './detalle-pelicula.css',
 })
@@ -24,6 +26,11 @@ export class DetallePelicula {
   private peliculasService = inject(PeliculasService);
   private resenasService = inject(ResenasService);
   private funcionesService = inject(FuncionesService);
+  private auth = inject(AuthService);
+
+  // HU-10: solo los clientes califican; el visitante ve una invitación a ingresar
+  esCliente = computed(() => this.auth.rol() === 'cliente');
+  logueado = this.auth.logueado;
 
   readonly resenasIniciales = RESENAS_INICIALES;
 
@@ -93,5 +100,17 @@ export class DetallePelicula {
     else this.errorResenas.set('No se pudieron cargar las reseñas.');
     if (f.status === 'fulfilled') this.funciones.set(f.value);
     else this.errorFunciones.set('No se pudieron cargar las funciones.');
+  }
+
+  // Después de publicar, editar o borrar la reseña propia: la lista y el promedio se recalculan
+  async recargarResenas() {
+    const p = this.pelicula();
+    if (!p) return;
+    try {
+      this.resenas.set(await this.resenasService.listarPorPelicula(p.id));
+      this.errorResenas.set('');
+    } catch {
+      this.errorResenas.set('No se pudieron cargar las reseñas.');
+    }
   }
 }

@@ -84,6 +84,7 @@ export interface Comprobante {
     sala: string;
     entradas: { fila: string; numero: number; tipo: TipoButaca; precio: number; usada_en: string | null }[];
     items: { nombre: string; cantidad: number; precio_unitario: number; entregado_en: string | null }[];
+    sin_conexion?: boolean;   // HU-39: es la copia guardada en el dispositivo, no la de la base
 }
 
 // Una fila de "Mis compras" (HU-28)
@@ -108,4 +109,13 @@ export interface ResultadoCancelacion {
     credito_acreditado: number;
     puntos_devueltos: number;
     puntos_descontados: number;
+}
+
+// HU-12: una película que el cliente ya vio
+export interface PeliculaVista {
+    codigo: string;
+    inicio: string;
+    pelicula_id: number;
+    nombre: string;
+    imagen_url: string;
 }

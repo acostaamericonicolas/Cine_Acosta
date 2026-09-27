@@ -1,0 +1,119 @@
+<h1>Reportes</h1>
+
+<section class="facturacion">
+    <h2>Facturación diaria y entradas vendidas</h2>
+
+    <div class="filtros no-imprimir">
+        <label>Desde
+            <input #d type="date" [value]="desde()" (change)="desde.set(d.value)" />
+        </label>
+        <label>Hasta
+            <input #h type="date" [value]="hasta()" (change)="hasta.set(h.value)" />
+        </label>
+        <button type="button" (click)="cargarVentas()">Ver</button>
+        <button type="button" [disabled]="ventas().length === 0" (click)="exportarCsv()">Exportar a Excel (CSV)</button>
+        <button type="button" [disabled]="ventas().length === 0" (click)="imprimir()">Imprimir / PDF</button>
+    </div>
+    <p class="solo-imprimir">Del {{ desde() | date: 'dd/MM/yyyy' }} al {{ hasta() | date: 'dd/MM/yyyy' }}</p>
+
+    @if (errorVentas()) { <p class="error" role="alert">{{ errorVentas() }}</p> }
+
+    @if (cargandoVentas()) {
+    <p>Cargando...</p>
+    } @else if (ventas().length > 0) {
+    @let t = totales();
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Compras</th>
+                <th>Entradas</th>
+                <th>Candy (u.)</th>
+                <th>Facturado</th>
+                <th>Crédito usado</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (v of ventas(); track v.fecha) {
+            <tr [class.sin-ventas]="v.compras === 0">
+                <td>{{ v.fecha | date: 'EEE dd/MM' }}</td>
+                <td>{{ v.compras }}</td>
+                <td>{{ v.entradas }}</td>
+                <td>{{ v.unidades_candy }}</td>
+                <td>$ {{ v.facturado | number: '1.2-2' }}</td>
+                <td>$ {{ v.credito_usado | number: '1.2-2' }}</td>
+            </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <th>Total</th>
+                <th>{{ t.compras }}</th>
+                <th>{{ t.entradas }}</th>
+                <th>{{ t.unidades_candy }}</th>
+                <th>$ {{ t.facturado | number: '1.2-2' }}</th>
+                <th>$ {{ t.credito_usado | number: '1.2-2' }}</th>
+            </tr>
+        </tfoot>
+    </table>
+    <p class="meta">Facturado = lo cobrado en pesos. No incluye compras canceladas; lo pagado con crédito o puntos se
+        informa aparte.</p>
+    }
+</section>
+
+<section class="graficos">
+    <h2>Lo más visto y lo más vendido</h2>
+
+    <div class="filtros no-imprimir">
+        <div class="modos" role="tablist">
+            <button type="button" role="tab" [class.activo]="periodo() === 'semana'"
+                [attr.aria-selected]="periodo() === 'semana'" (click)="cambiarPeriodo('semana')">Por semana</button>
+            <button type="button" role="tab" [class.activo]="periodo() === 'mes'"
+                [attr.aria-selected]="periodo() === 'mes'" (click)="cambiarPeriodo('mes')">Por mes</button>
+        </div>
+        <button type="button" (click)="mover(-1)" aria-label="Período anterior">←</button>
+        <strong>{{ rango().desde | date: 'dd/MM' }} al {{ rango().hasta | date: 'dd/MM/yyyy' }}</strong>
+        <button type="button" [disabled]="desplazamiento() === 0" (click)="mover(1)" aria-label="Período siguiente">→</button>
+    </div>
+
+    @if (errorGraficos()) { <p class="error" role="alert">{{ errorGraficos() }}</p> }
+
+    @if (cargandoGraficos()) {
+    <p>Cargando...</p>
+    } @else {
+    <div class="dos-columnas">
+        <div>
+            <h3>Películas más vistas (entradas)</h3>
+            @for (b of peliculas(); track b.nombre; let i = $index) {
+            <div class="barra">
+                <span class="etiqueta">{{ b.nombre }}</span>
+                <div class="pista">
+                    <div class="relleno" [class.primero]="i === 0" [ngStyle]="ancho(b.valor, maxPeliculas())"></div>
+                </div>
+                <span class="valor">{{ b.valor }}</span>
+            </div>
+            } @empty {
+            <p class="meta">Sin entradas vendidas en este período.</p>
+            }
+        </div>
+
+        <div>
+            <h3>Candy más vendido (unidades)</h3>
+            @if (candy().length > 0) {
+            <p class="top">🏆 <strong>{{ candy()[0].nombre }}</strong> · {{ candy()[0].valor }} unidades</p>
+            }
+            @for (b of candy(); track b.nombre; let i = $index) {
+            <div class="barra">
+                <span class="etiqueta">{{ b.nombre }}</span>
+                <div class="pista">
+                    <div class="relleno candy" [class.primero]="i === 0" [ngStyle]="ancho(b.valor, maxCandy())"></div>
+                </div>
+                <span class="valor">{{ b.valor }}</span>
+            </div>
+            } @empty {
+            <p class="meta">Sin ventas de candy en este período.</p>
+            }
+        </div>
+    </div>
+    }
+</section>

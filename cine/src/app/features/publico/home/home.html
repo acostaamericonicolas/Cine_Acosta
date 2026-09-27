@@ -45,3 +45,28 @@
 </div>
 }
 }
+
+@if (proximas().length > 0) {
+<section class="proximamente">
+    <h2>Próximamente</h2>
+    <p class="ayuda">Estrenos de las próximas semanas. Activá la alerta y te avisamos acá cuando se abra la venta.</p>
+    @if (errorAlerta()) { <p class="error" role="alert">{{ errorAlerta() }}</p> }
+
+    <div class="grilla">
+        @for (p of proximas(); track p.id) {
+        <app-tarjeta-pelicula [pelicula]="p">
+            <span class="insignia-estreno">Estreno {{ p.fecha_estreno | date: 'dd/MM' }}</span>
+            @if (esCliente()) {
+            <button type="button" class="alerta" [class.activa]="alertas().has(p.id)"
+                [disabled]="alertaEnCurso() === p.id" [attr.aria-pressed]="alertas().has(p.id)"
+                (click)="alternarAlerta(p.id)">
+                {{ alertas().has(p.id) ? '🔔 Alerta activada' : '🔕 Avisame cuando abra la venta' }}
+            </button>
+            } @else if (!logueado()) {
+            <a class="alerta" routerLink="/login" [queryParams]="{ volverA: '/' }">Ingresá para activar la alerta</a>
+            }
+        </app-tarjeta-pelicula>
+        }
+    </div>
+</section>
+}

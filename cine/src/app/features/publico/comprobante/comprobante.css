@@ -118,6 +118,14 @@ footer {
     color: #c00;
 }
 
+.sin-conexion {
+    max-width: 720px;
+    background: #fff4d6;
+    border-left: 4px solid #e0a800;
+    padding: 0.6rem 0.8rem;
+    border-radius: 4px;
+}
+
 /* Al imprimir o guardar como PDF: solo el comprobante, sin bordes de pantalla */
 @media print {
     .no-imprimir {

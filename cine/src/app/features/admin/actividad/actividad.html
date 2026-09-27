@@ -1,0 +1,50 @@
+<h1>Actividad</h1>
+<p class="ayuda">
+    Quién hizo qué y cuándo: funciones, precios, películas, candy, cupones, personal, compras, validaciones y
+    entregas. Lo registra la base automáticamente, aunque el cambio no se haga desde esta app.
+</p>
+
+<div class="filtros">
+    <label>Desde
+        <input #d type="date" [value]="desde()" (change)="desde.set(d.value)" />
+    </label>
+    <label>Hasta
+        <input #h type="date" [value]="hasta()" (change)="hasta.set(h.value)" />
+    </label>
+    <button type="button" (click)="cargar()">Ver</button>
+    <input #q type="search" placeholder="Buscar (usuario, acción, código...)" aria-label="Buscar en la actividad"
+        [value]="busqueda()" (input)="busqueda.set(q.value)" />
+</div>
+
+@if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else {
+<p class="meta">{{ filtradas().length }} {{ filtradas().length === 1 ? 'registro' : 'registros' }}
+    @if (filas().length === 300) { (se muestran los 300 más recientes: acotá el rango) }</p>
+<table>
+    <thead>
+        <tr>
+            <th>Fecha y hora</th>
+            <th>Quién</th>
+            <th>Acción</th>
+            <th>Detalle</th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (f of filtradas(); track f.id) {
+        <tr>
+            <td class="fecha">{{ f.creado_en | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
+            <td>{{ f.usuario }}</td>
+            <td><strong>{{ f.accion }}</strong></td>
+            <td>{{ f.detalle }}</td>
+        </tr>
+        } @empty {
+        <tr>
+            <td colspan="4">No hay actividad en ese rango.</td>
+        </tr>
+        }
+    </tbody>
+</table>
+}

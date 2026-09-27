@@ -2,10 +2,16 @@ import { Service, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { ReservasService } from './reservas.service';
 import {
-    CompraResumen, Comprobante, DatosPago, ErrorCompra, EstadoCompra, ItemCarrito, PasoError, ResultadoCancelacion, ResultadoCompra,
+    CompraResumen, Comprobante, PeliculaVista, DatosPago, ErrorCompra, EstadoCompra, ItemCarrito, PasoError, ResultadoCancelacion, ResultadoCompra,
 } from '../models/compra';
 
 const CLAVE_MAIL = 'mail-compra-';
+const CLAVE_COPIA = 'comprobante-';
+const CLAVE_INDICE = 'comprobantes-guardados';
+const MAX_COPIAS = 20;
+
+// Sin conexión, supabase-js devuelve un error de fetch en lugar de uno de la base
+const esErrorDeRed = (mensaje: string) => !navigator.onLine || /fetch|network/i.test(mensaje);
 
 @Service()
 export class ComprasService {
@@ -51,14 +57,42 @@ export class ComprasService {
             p_codigo: codigo,
             p_email: email,
         });
-        if (error) throw new Error(error.message);
+        if (error) {
+            // HU-39: sin conexión se muestra la última copia guardada en el dispositivo
+            const copia = this.copiaGuardada(codigo);
+            if (copia && esErrorDeRed(error.message)) return { ...copia, sin_conexion: true };
+            throw new Error(error.message);
+        }
         const c = data as Comprobante;
         // numeric llega como número o texto según el caso: se normaliza para los pipes
-        return {
+        const comprobante: Comprobante = {
             ...c,
             entradas: c.entradas.map(e => ({ ...e, precio: Number(e.precio) })),
             items: c.items.map(i => ({ ...i, precio_unitario: Number(i.precio_unitario) })),
         };
+        this.guardarCopia(comprobante);
+        return comprobante;
+    }
+
+    // HU-39: los últimos comprobantes abiertos quedan en el dispositivo para verlos sin conexión.
+    // (El service worker no cachea las llamadas rpc() porque son POST.)
+    private guardarCopia(c: Comprobante) {
+        try {
+            localStorage.setItem(CLAVE_COPIA + c.codigo, JSON.stringify(c));
+            const indice: string[] = JSON.parse(localStorage.getItem(CLAVE_INDICE) ?? '[]');
+            const nuevo = [c.codigo, ...indice.filter(x => x !== c.codigo)];
+            for (const viejo of nuevo.slice(MAX_COPIAS)) localStorage.removeItem(CLAVE_COPIA + viejo);
+            localStorage.setItem(CLAVE_INDICE, JSON.stringify(nuevo.slice(0, MAX_COPIAS)));
+        } catch { /* sin localStorage no hay copia offline, el resto funciona igual */ }
+    }
+
+    private copiaGuardada(codigo: string): Comprobante | null {
+        try {
+            const texto = localStorage.getItem(CLAVE_COPIA + codigo.trim().toUpperCase());
+            return texto ? JSON.parse(texto) as Comprobante : null;
+        } catch {
+            return null;
+        }
     }
 
     // El invitado no tiene sesión: el mail de su compra se recuerda en la pestaña para abrir el comprobante
@@ -112,5 +146,32 @@ export class ComprasService {
         const { data, error } = await this.supabase.rpc('cancelar_compra', { p_codigo: codigo });
         if (error) throw new Error(error.message);
         return data as ResultadoCancelacion;
+    }
+
+    // HU-12 "Mis películas": funciones ya terminadas de compras no canceladas, más nuevas primero.
+    // Se usa el fin de la función, la misma regla que habilita la calificación (puede_resenar).
+    async misPeliculas(usuarioId: string): Promise<PeliculaVista[]> {
+        const { data, error } = await this.supabase
+            .from('compras')
+            .select('codigo, funciones(inicio, fin, peliculas(id, nombre, imagen_url))')
+            .eq('usuario_id', usuarioId)
+            .neq('estado', 'cancelada');
+        if (error) throw error;
+
+        type Fila = {
+            codigo: string;
+            funciones: { inicio: string; fin: string; peliculas: { id: number; nombre: string; imagen_url: string } | null };
+        };
+        const ahora = Date.now();
+        return (data as unknown as Fila[])
+            .filter(f => f.funciones.peliculas && Date.parse(f.funciones.fin) <= ahora)
+            .map(f => ({
+                codigo: f.codigo,
+                inicio: f.funciones.inicio,
+                pelicula_id: f.funciones.peliculas!.id,
+                nombre: f.funciones.peliculas!.nombre,
+                imagen_url: f.funciones.peliculas!.imagen_url,
+            }))
+            .sort((a, b) => Date.parse(b.inicio) - Date.parse(a.inicio));
     }
 }

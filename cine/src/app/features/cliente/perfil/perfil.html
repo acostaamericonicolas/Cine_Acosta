@@ -60,7 +60,25 @@
 }
 
 <h2>Mis películas</h2>
+@if (misPeliculas().length === 0) {
 <p class="vacio">Acá vas a ver las películas que viste, con la fecha y tu calificación.</p>
+} @else {
+<div class="vistas">
+    @for (v of misPeliculas(); track v.codigo) {
+    @let estrellas = calificaciones().get(v.pelicula_id);
+    <a class="vista" [routerLink]="['/pelicula', v.pelicula_id]">
+        <img [src]="v.imagen_url" [alt]="'Póster de ' + v.nombre" />
+        <strong>{{ v.nombre }}</strong>
+        <small>{{ v.inicio | date: 'dd/MM/yyyy HH:mm' }}</small>
+        @if (estrellas) {
+        <span class="estrellas" [attr.aria-label]="estrellas + ' de 5 estrellas'">{{ estrellas | estrellas }}</span>
+        } @else {
+        <span class="calificar">Calificar →</span>
+        }
+    </a>
+    }
+</div>
+}
 
 <h2>Mis datos</h2>
 <dl class="datos">

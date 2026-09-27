@@ -74,6 +74,13 @@
 <section>
     <h2>Reseñas</h2>
 
+    @if (esCliente()) {
+    <app-mi-resena [peliculaId]="p.id" (cambio)="recargarResenas()" />
+    } @else if (!logueado()) {
+    <p class="ayuda"><a routerLink="/login" [queryParams]="{ volverA: '/pelicula/' + p.id }">Iniciá sesión</a> para calificar
+        esta película.</p>
+    }
+
     @if (errorResenas()) {
     <p class="error">{{ errorResenas() }}</p>
     } @else if (resenas().length === 0) {

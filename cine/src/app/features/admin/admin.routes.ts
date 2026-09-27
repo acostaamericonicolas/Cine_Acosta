@@ -62,4 +62,6 @@ export const ADMIN_ROUTES: Routes = [
     },
     { path: 'cupones', loadComponent: () => import('./cupones/cupones').then(m => m.Cupones) },
     { path: 'recompensas', loadComponent: () => import('./recompensas/recompensas').then(m => m.Recompensas) },
+    { path: 'reportes', loadComponent: () => import('./reportes/reportes').then(m => m.Reportes) },
+    { path: 'actividad', loadComponent: () => import('./actividad/actividad').then(m => m.Actividad) },
 ];

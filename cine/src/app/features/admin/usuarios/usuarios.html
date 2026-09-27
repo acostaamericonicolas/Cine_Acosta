@@ -1,1 +1,87 @@
-<p>usuarios works!</p>
+<h1>Personal</h1>
+<p class="ayuda">
+    Acá se crean las cuentas del personal del cine. Cada persona tiene su propio usuario (RF-30).
+    Los clientes no se convierten en personal: para un empleado nuevo usá un mail que no esté registrado.
+</p>
+
+@if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+@if (mensaje()) { <p class="ok" role="status">{{ mensaje() }}</p> }
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else {
+<table>
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Mail</th>
+            <th>Rol</th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (p of personal(); track p.id) {
+        <tr>
+            <td>{{ p.apellido }}, {{ p.nombre }}</td>
+            <td>{{ p.email }}</td>
+            <td><span [class]="'rol ' + p.rol">{{ p.rol === 'admin' ? 'Administrador' : 'Empleado' }}</span></td>
+        </tr>
+        } @empty {
+        <tr>
+            <td colspan="3">Todavía no hay personal cargado.</td>
+        </tr>
+        }
+    </tbody>
+</table>
+}
+
+<section>
+    <h2>Nueva cuenta de personal</h2>
+    <form (submit)="darDeAlta($event)">
+        <label>Rol
+            <select [formField]="f.rol">
+                @for (r of roles; track r.valor) {
+                <option [value]="r.valor">{{ r.texto }}</option>
+                }
+            </select>
+        </label>
+
+        <label>Nombre
+            <input type="text" [formField]="f.nombre" />
+        </label>
+        @if (f.nombre().touched() && f.nombre().invalid()) {
+        <p class="error">{{ f.nombre().errors()[0].message }}</p>
+        }
+
+        <label>Apellido
+            <input type="text" [formField]="f.apellido" />
+        </label>
+        @if (f.apellido().touched() && f.apellido().invalid()) {
+        <p class="error">{{ f.apellido().errors()[0].message }}</p>
+        }
+
+        <label>Fecha de nacimiento
+            <input type="date" [formField]="f.fechaNacimiento" />
+        </label>
+        @if (f.fechaNacimiento().touched() && f.fechaNacimiento().invalid()) {
+        <p class="error">{{ f.fechaNacimiento().errors()[0].message }}</p>
+        }
+
+        <label>Mail (el que usará para ingresar)
+            <input type="email" [formField]="f.email" autocomplete="off" />
+        </label>
+        @if (f.email().touched() && f.email().invalid()) {
+        <p class="error">{{ f.email().errors()[0].message }}</p>
+        }
+
+        <label>Contraseña inicial
+            <input type="password" [formField]="f.password" autocomplete="new-password" />
+        </label>
+        @if (f.password().touched() && f.password().invalid()) {
+        <p class="error">{{ f.password().errors()[0].message }}</p>
+        }
+
+        <button type="submit" [disabled]="f().invalid() || guardando()">
+            {{ guardando() ? 'Creando cuenta...' : 'Crear cuenta' }}
+        </button>
+    </form>
+</section>

@@ -17,3 +17,5 @@ export async function verificarRol(roles: Rol[]): Promise<boolean | UrlTree> {
 // canMatch: si devuelve un UrlTree, Angular redirige sin cargar el módulo lazy
 export const adminGuard: CanMatchFn = () => verificarRol(['admin']);
 export const empleadoGuard: CanMatchFn = () => verificarRol(['empleado', 'admin']);
+// El área de cliente (perfil, compras, puntos) es solo para clientes: el personal no compra (RF-30/33)
+export const clienteGuard: CanMatchFn = () => verificarRol(['cliente']);

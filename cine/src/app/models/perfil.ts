@@ -24,3 +24,15 @@ export interface DatosRegistro {
     colorOjos: string;
     diasVacaciones: number;
 }
+
+// Alta de personal por el admin (HU-34): solo empleado u otro admin
+export type RolPersonal = 'empleado' | 'admin';
+
+export interface DatosAltaPersonal {
+    email: string;
+    password: string;
+    nombre: string;
+    apellido: string;
+    fechaNacimiento: string;
+    rol: RolPersonal;
+}

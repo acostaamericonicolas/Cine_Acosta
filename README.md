@@ -48,6 +48,7 @@ Los cambios de la base a partir de HU-21 están en [`supabase/`](supabase/), num
 | `07_comprobante.sql` | 27 | función `obtener_comprobante` (dueño, admin, o invitado con código + mail) |
 | `08_cancelar_compra.sql` | 28 | función `cancelar_compra`: crédito, puntos y butacas liberadas |
 | `09_validacion.sql` | 32, 33 | `es_empleado()`, `validar_entrada` y `entregar_candy` |
+| `10_personal.sql` | 34 | `alta_personal`; nadie cambia roles; cupón solo para clientes; el personal no compra |
 
 Lo anterior (tablas, triggers y policies de las HU 01 a 20) se creó directamente en Supabase y está documentado en la [sección 6](#6-base-de-datos-supabase).
 
@@ -89,7 +90,7 @@ En Supabase → Authentication, la **confirmación de mail tiene que estar desac
 | 27 | Comprobante con código único y QR, imprimible / PDF | Hecha (requiere `supabase/07_comprobante.sql`). Incluye "Buscar mi compra" para invitados. |
 | 32 | Validar la entrada con el código / QR | Hecha (requiere `supabase/09_validacion.sql`) |
 | 33 | Entregar el candy con el mismo código | Hecha (requiere `supabase/09_validacion.sql`) |
-| 34 | Asignar el rol de empleado | Pantalla creada, sin implementar (mientras tanto el admin puede validar) |
+| 34 | Alta de personal (empleado u otro admin) | Hecha **con un cambio pedido**: el admin crea cuentas nuevas, no convierte clientes (requiere `supabase/10_personal.sql`) |
 | Resto | Semanas 3 y 4 | Pendiente |
 
 ---
@@ -135,6 +136,8 @@ cine/src/app/
 
 **Una diferencia a propósito con el ejemplo:** en `ejemploSupabase` cada servicio crea su propio cliente con `createClient`. Acá hay **un único `SupabaseService`** y el resto de los servicios le piden el cliente. HU-01 lo pide así y, además, varios clientes en el mismo navegador compiten por la misma sesión guardada.
 
+**Única excepción:** `SupabaseService.crearClienteSinSesion()` crea un cliente aparte, con `persistSession: false` y su propio `storageKey`. Lo usa solo el alta de personal (HU-34): con el cliente principal, `signUp` reemplazaría la sesión del admin por la de la cuenta nueva.
+
 ---
 
 ## 4. Decisiones técnicas
@@ -166,6 +169,7 @@ Si una policy RLS no permite un `update` o `delete`, Supabase **no devuelve erro
 |---|---|---|---|
 | `authGuard` | `canActivate` | `/cliente` | Solo pide sesión. Si no hay, manda al login con `?volverA=` para volver después. |
 | `adminGuard`, `empleadoGuard` | `canMatch` | `/admin`, `/empleado` | Si no corresponde, **no se descarga el código lazy** del área. El admin también puede entrar a `/empleado`. |
+| `clienteGuard` | `canMatch` | `/cliente` | Perfil, compras y puntos son **solo para clientes**. El personal no compra (HU-34). |
 | `adminChildGuard` | `canActivateChild` | hijos de `/admin` | Se vuelve a verificar en cada navegación interna del panel (por ejemplo, si la sesión se cerró en otra pestaña). |
 | `formGuard` | `canDeactivate` | formularios de admin y registro | Pregunta antes de salir si hay cambios sin guardar. |
 
@@ -424,6 +428,25 @@ Surgieron de revisar las historias contra los requerimientos funcionales:
 - El resultado se muestra **grande, verde o rojo**, para verlo de un vistazo. Abajo quedan las **últimas 10 validaciones**.
 - Una vez validada la entrada o entregado el candy, la compra no se puede cancelar (HU-28).
 
+### 5.17 Personal y roles (HU-34, con cambio)
+
+- **Cambio pedido respecto del backlog:** el backlog decía "el admin asigna el rol de empleado a un usuario registrado". Se cambió por **el admin da de alta cuentas nuevas** de **empleado** o de **otro admin**, en **Admin → Personal**, con nombre, apellido, fecha de nacimiento, mail y contraseña inicial.
+- **Nunca se convierte a un cliente en personal**, ni al revés. Si el mail ya pertenece a alguien, el alta se rechaza: "El mail x ya pertenece a un cliente. El personal se crea con un mail nuevo…". En la base **nadie puede cambiar roles**: se quitó la policy que permitía modificar perfiles.
+- **Cada rol tiene solo lo que dicen los RF:**
+
+| Rol | Puede | No puede |
+|---|---|---|
+| Cliente | Comprar, perfil, mis compras, puntos, cupones, cancelar | Validar, panel de admin |
+| Empleado (RF-30 a RF-32) | **Solo validar entradas y entregar candy** | Comprar, perfil de cliente, panel de admin |
+| Admin (RF-33) | **Control total** del panel; también puede validar | Comprar con su cuenta |
+
+- **Cómo se controla:**
+  - **Menú:** muestra solo lo del rol.
+  - **Guards:** `clienteGuard` en `/cliente`, `empleadoGuard` en `/empleado` y `adminGuard` en `/admin`.
+  - **Compra:** si entra alguien del personal, se le avisa que cierre sesión o compre con una cuenta de cliente.
+  - **Base:** `confirmar_compra` rechaza las cuentas que no son de cliente. Si no, el personal acumularía puntos.
+- **Datos del personal:** los datos del registro de cliente (sangre, ojos, vacaciones) no aplican al personal y se guardan como "Prefiero no responder" o 0. El personal **no recibe cupón** de primera compra.
+
 ---
 
 ## 6. Base de datos (Supabase)
@@ -478,6 +501,7 @@ Resumen:
 | Comprobante para dueño, admin o invitado (código + mail) | `obtener_comprobante()` | `ComprasService.obtenerComprobante()` → `Comprobante` |
 | Cancelar con crédito, puntos y butacas en una transacción | `cancelar_compra()` | `ComprasService.cancelar()` → `MisCompras` |
 | Cada código sirve una vez para entrar y una vez para el candy | `validar_entrada()`, `entregar_candy()` | `ValidacionService` → `Validacion` |
+| Alta de personal sin convertir cuentas; nadie cambia roles | `alta_personal()` + sin policy de update en `perfiles` | `PersonalService.alta()` → `Usuarios` |
 | Puntos: ganar y canjear sin pasarse del saldo | `confirmar_compra()` + tabla `canjes` | `PasoPago` (canjes) y `Perfil` (historial) |
 | Función con ventas no se borra ni se mueve | FK `compras.funcion_id` + trigger `funciones_bloquear_con_ventas` | `FuncionesService` traduce el `23503` |
 
@@ -676,6 +700,25 @@ Supabase devuelve los dos en el `error` de `rpc()`: Angular muestra `error.messa
   - `FuncionesService.listarDeHoy()` trae las funciones de hoy con película y sala embebidas, para el selector.
   - `Validacion` usa `viewChild()` para devolverle el foco al campo después de cada escaneo.
 
+#### 6.2.13 Personal (HU-34) — `supabase/10_personal.sql`
+
+- **Base:**
+  - **Se borra la policy `admin cambia roles`**. Ya no hay ninguna policy de `update` en `perfiles`: rol, puntos y crédito solo cambian desde funciones de la base.
+  - **`alta_personal(email, nombre, apellido, fecha, rol)`** (`security definer`) controla, en orden:
+    - que sea el admin;
+    - que el rol sea `empleado` o `admin`;
+    - los datos;
+    - que la cuenta de Auth exista (busca en `auth.users` por mail);
+    - que **no tenga perfil**: si lo tiene, es un cliente u otro miembro del personal y se rechaza.
+
+    Si pasa todo, crea el perfil con el rol. Errores con `hint = 'personal'`.
+  - `asignar_cupon_primera_compra` (el trigger del registro) ahora solo da el cupón si el perfil es de **cliente**.
+  - `confirmar_compra` se redefine (igual que en el script 06) con un control más en el paso "comprador": si la cuenta no es de cliente, rechaza la compra.
+- **Angular:**
+  - `PersonalService.alta()` crea la cuenta de Auth con `signUp` **desde un cliente sin sesión** (`crearClienteSinSesion()`), así la sesión del admin sigue intacta. Después llama a `alta_personal` con la sesión del admin.
+  - Si una alta anterior quedó a mitad (cuenta creada sin perfil), repetirla la completa: el `signUp` avisa que el mail existe y `alta_personal` crea el perfil que faltaba.
+  - La pantalla `Usuarios` (Admin → Personal) tiene `canDeactivate` con `formGuard`, como el resto de los formularios del admin.
+
 ### 6.3 Seguridad (RLS)
 
 Todas las tablas tienen RLS activado. Criterio general:
@@ -684,7 +727,7 @@ Todas las tablas tienen RLS activado. Criterio general:
 |---|---|
 | Visitante sin sesión | Leer películas no ocultas, funciones, salas, precios, reseñas, candy, combos, recompensas, la configuración de cupones y las butacas ocupadas. Reservar, liberar y comprar **solo a través de las funciones** de la base (`reservar_butaca`, `confirmar_compra`, …). |
 | Usuario registrado | Además, leer y crear **solo su propio** perfil (como cliente, sin puntos ni crédito) y ver sus propios cupones, compras y canjes. No puede modificar su perfil (ni sus puntos ni su crédito): solo cambian a través de `confirmar_compra` y `cancelar_compra`. |
-| Admin | Escribir (insert / update / delete) en las tablas de catálogo, salas, funciones, candy, combos, cupones y recompensas. Ver todos los perfiles y cambiar roles. |
+| Admin | Escribir (insert / update / delete) en las tablas de catálogo, salas, funciones, candy, combos, cupones y recompensas. Ver todos los perfiles y dar de alta personal (con `alta_personal`). **Nadie cambia roles.** |
 
 Por eso los guards de Angular alcanzan para la navegación: aunque alguien los saltee, la base no le devuelve ni le deja modificar lo que no le corresponde.
 
@@ -710,4 +753,4 @@ Tres buckets **públicos de lectura**: `posters`, `candy` y `combos`. Son públi
 | Alertas por mail | Avisos dentro de la app | No se vio envío de mails |
 | Exportar a Excel | CSV | Excel lo abre directo |
 | Gráficos | Barras con CSS y `ngStyle` | No se vieron librerías de gráficos |
-| Alta de empleados | El admin asigna el rol a un usuario registrado | Evita manejar contraseñas de terceros |
+| Alta de empleados | El admin crea cuentas nuevas de empleado o admin con una contraseña inicial; no convierte clientes | Pedido del cliente: cada rol separado y con solo sus funciones (RF-30, RF-33) |

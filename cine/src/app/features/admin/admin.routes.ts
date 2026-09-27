@@ -3,7 +3,11 @@ import { formGuard } from '../../core/guards/form-guard';
 
 export const ADMIN_ROUTES: Routes = [
     { path: '', pathMatch: 'full', redirectTo: 'peliculas' },
-    { path: 'usuarios', loadComponent: () => import('./usuarios/usuarios').then(m => m.Usuarios) },
+    {
+        path: 'usuarios',
+        canDeactivate: [formGuard],
+        loadComponent: () => import('./usuarios/usuarios').then(m => m.Usuarios),
+    },
     { path: 'peliculas', loadComponent: () => import('./peliculas/peliculas').then(m => m.Peliculas) },
     {
         path: 'peliculas/nueva',

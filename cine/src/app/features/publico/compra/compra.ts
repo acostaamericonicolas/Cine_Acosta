@@ -236,6 +236,10 @@ export class Compra {
   private pasoInicial(p: PeliculaConVenta) {
     const perfil = this.auth.perfil();
     if (!perfil) return this.paso.set('acceso');
+    // RF-30/33: las cuentas del personal no compran (la base también lo rechaza)
+    if (perfil.rol !== 'cliente') {
+      throw new Error('Estás con una cuenta del personal. Para comprar, cerrá sesión y comprá como invitado o con una cuenta de cliente.');
+    }
     if (p.restriccion_edad === 0) return this.paso.set('butacas');
 
     const anios = edad(perfil.fecha_nacimiento, this.hoy);

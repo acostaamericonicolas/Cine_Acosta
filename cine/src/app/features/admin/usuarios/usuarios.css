@@ -1,0 +1,52 @@
+.ayuda {
+    color: #555;
+    max-width: 720px;
+}
+
+.error {
+    color: #c00;
+    margin: 0;
+}
+
+.ok {
+    color: #1d7a3a;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 720px;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid #eee;
+}
+
+.rol {
+    border-radius: 999px;
+    padding: 0.1rem 0.6rem;
+    font-size: 0.85rem;
+    font-weight: bold;
+    background: #eef1f7;
+}
+
+.rol.admin {
+    background: #1f3864;
+    color: #fff;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 360px;
+}
+
+label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}

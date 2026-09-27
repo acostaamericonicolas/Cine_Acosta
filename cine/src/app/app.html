@@ -1,14 +1,17 @@
 <nav>
   <a routerLink="/">Cine</a>
     @if (auth.logueado()) {
+    <!-- Cada rol ve solo lo suyo: el cliente compra, el personal trabaja (RF-30/33) -->
+    @if (auth.rol() === 'cliente') {
     <a routerLink="/cliente">Mi perfil</a>
     <a routerLink="/cliente/compras">Mis compras</a>
+    }
     @if (auth.rol() === 'empleado' || auth.rol() === 'admin') {
     <a routerLink="/empleado">Validar</a>
     }
     @if (auth.rol() === 'admin') {
       <a routerLink="/admin/peliculas">Películas</a>
-      <a routerLink="/admin/usuarios">Usuarios</a>
+      <a routerLink="/admin/usuarios">Personal</a>
       <a routerLink="/admin/salas">Salas</a>
       <a routerLink="/admin/funciones">Funciones</a>
       <a routerLink="/admin/candy/productos">Candy</a>

@@ -2,6 +2,7 @@ import { Service, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { SalasService } from './salas.service';
 import { DatosFuncion, Funcion } from '../models/funcion';
+import { FuncionDelDia } from '../models/validacion';
 
 @Service()
 export class FuncionesService {
@@ -29,6 +30,27 @@ export class FuncionesService {
             .order('inicio');
         if (error) throw error;
         return data as Funcion[];
+    }
+
+    // Funciones que empiezan hoy (horario local), con película y sala: para el empleado (HU-32)
+    async listarDeHoy(): Promise<FuncionDelDia[]> {
+        const hoy = new Date();
+        const desde = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+        const hasta = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + 1);
+        const { data, error } = await this.supabase
+            .from('funciones')
+            .select('id, inicio, peliculas(nombre), salas(nombre)')
+            .gte('inicio', desde.toISOString())
+            .lt('inicio', hasta.toISOString())
+            .order('inicio');
+        if (error) throw error;
+        type Fila = { id: number; inicio: string; peliculas: { nombre: string } | null; salas: { nombre: string } | null };
+        return (data as unknown as Fila[]).map(f => ({
+            id: f.id,
+            inicio: f.inicio,
+            pelicula: f.peliculas?.nombre ?? 'Película',
+            sala: f.salas?.nombre ?? '',
+        }));
     }
 
     /**

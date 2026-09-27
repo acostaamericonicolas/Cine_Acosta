@@ -1,0 +1,47 @@
+<h1>Mis compras</h1>
+<p class="ayuda">
+    Podés cancelar una compra hasta <strong>2 horas antes</strong> de la función. No se devuelve dinero:
+    lo que pagaste vuelve como crédito para tu próxima compra.
+</p>
+
+@if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+@if (mensaje()) { <p class="ok" role="status">{{ mensaje() }}</p> }
+
+@if (cargando()) {
+<p>Cargando...</p>
+} @else {
+<ul class="compras">
+    @for (c of lista(); track c.codigo) {
+    @let s = situacion(c);
+    <li [class.apagada]="s !== 'vigente'">
+        @if (c.imagen_url) {
+        <img [src]="c.imagen_url" [alt]="'Póster de ' + c.pelicula" />
+        }
+        <div class="info">
+            <strong>{{ c.pelicula }}</strong>
+            <span class="funcion">{{ c.inicio | date: "EEEE d 'de' MMMM, HH:mm" }} · {{ c.sala }}</span>
+            <span>
+                {{ c.cantidad_entradas }} {{ c.cantidad_entradas === 1 ? 'entrada' : 'entradas' }} ·
+                $ {{ c.total_pagado | number: '1.2-2' }} · código <code>{{ c.codigo }}</code>
+            </span>
+            @if (c.estado === 'cancelada' && c.credito_devuelto !== null) {
+            <small>Se acreditaron $ {{ c.credito_devuelto | number: '1.2-2' }} a tu crédito.</small>
+            }
+        </div>
+        <div class="acciones">
+            <span [class]="'estado ' + s">{{ textoSituacion[s] }}</span>
+            <a [routerLink]="['/comprobante', c.codigo]">Ver comprobante</a>
+            @if (puedeCancelar(c)) {
+            <button type="button" [disabled]="cancelando() !== null" (click)="cancelar(c)">
+                {{ cancelando() === c.codigo ? 'Cancelando...' : 'Cancelar compra' }}
+            </button>
+            } @else if (fueraDePlazo(c)) {
+            <small>Ya no se puede cancelar (faltan menos de 2 horas).</small>
+            }
+        </div>
+    </li>
+    } @empty {
+    <li class="vacia">Todavía no hiciste compras. <a routerLink="/">Ver la cartelera</a></li>
+    }
+</ul>
+}

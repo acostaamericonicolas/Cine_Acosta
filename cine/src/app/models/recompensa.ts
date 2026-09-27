@@ -19,5 +19,6 @@ export interface Canje {
     descripcion: string;
     cantidad: number;
     puntos: number;
+    devuelto: boolean;    // la compra se canceló y los puntos volvieron
     creado_en: string;
 }

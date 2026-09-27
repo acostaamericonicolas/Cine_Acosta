@@ -70,7 +70,7 @@ export class RecompensasService {
     async misCanjes(usuarioId: string): Promise<Canje[]> {
         const { data, error } = await this.supabase
             .from('canjes')
-            .select('id, compra_id, descripcion, cantidad, puntos, creado_en')
+            .select('id, compra_id, descripcion, cantidad, puntos, devuelto, creado_en')
             .eq('usuario_id', usuarioId)
             .order('creado_en', { ascending: false });
         if (error) throw error;

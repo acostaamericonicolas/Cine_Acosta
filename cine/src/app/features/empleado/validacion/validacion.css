@@ -1,0 +1,120 @@
+:host {
+    display: block;
+    max-width: 640px;
+}
+
+.modos {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.modos button {
+    flex: 1;
+    padding: 0.6rem;
+    font-size: 1.05rem;
+    border: 2px solid #1f3864;
+    border-radius: 6px;
+    background: #fff;
+    color: #1f3864;
+    cursor: pointer;
+}
+
+.modos button.activo {
+    background: #1f3864;
+    color: #fff;
+    font-weight: bold;
+}
+
+.funcion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.ayuda {
+    color: #555;
+}
+
+form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+
+form label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1 1 260px;
+}
+
+form input {
+    font-size: 1.3rem;
+    padding: 0.5rem 0.75rem;
+    font-family: monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+form button {
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+}
+
+/* Resultado grande y con color: el empleado lo ve de un vistazo */
+.resultado {
+    padding: 1rem 1.25rem;
+    border-radius: 10px;
+    border: 3px solid;
+}
+
+.resultado.ok {
+    background: #e3f6ea;
+    border-color: #1d7a3a;
+}
+
+.resultado.rechazo {
+    background: #fdecec;
+    border-color: #c00;
+}
+
+.titulo {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin: 0 0 0.25rem;
+}
+
+.codigo {
+    font-family: monospace;
+    color: #555;
+    margin: 0 0 0.5rem;
+}
+
+.aviso,
+.pendiente {
+    background: #fff4d6;
+    border-left: 4px solid #e0a800;
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+}
+
+.historial {
+    list-style: none;
+    padding: 0;
+}
+
+.historial li {
+    display: grid;
+    grid-template-columns: 5rem 4rem 7rem 1fr;
+    gap: 0.5rem;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9rem;
+}
+
+.historial li.rechazo {
+    color: #c00;
+}

@@ -2,6 +2,7 @@
   <a routerLink="/">Cine</a>
     @if (auth.logueado()) {
     <a routerLink="/cliente">Mi perfil</a>
+    <a routerLink="/cliente/compras">Mis compras</a>
     @if (auth.rol() === 'empleado' || auth.rol() === 'admin') {
     <a routerLink="/empleado">Validar</a>
     }

@@ -46,6 +46,8 @@ Los cambios de la base a partir de HU-21 están en [`supabase/`](supabase/), num
 | `05_puntos_por_precio.sql` | 30 | vista `catalogo_canjes`: cada ítem cuesta en puntos lo que vale en pesos; `recompensas` guarda solo las excepciones |
 | `06_canje_descuenta.sql` | 31 | canjear un producto del carrito descuenta sus pesos (antes lo agregaba gratis) |
 | `07_comprobante.sql` | 27 | función `obtener_comprobante` (dueño, admin, o invitado con código + mail) |
+| `08_cancelar_compra.sql` | 28 | función `cancelar_compra`: crédito, puntos y butacas liberadas |
+| `09_validacion.sql` | 32, 33 | `es_empleado()`, `validar_entrada` y `entregar_candy` |
 
 Lo anterior (tablas, triggers y policies de las HU 01 a 20) se creó directamente en Supabase y está documentado en la [sección 6](#6-base-de-datos-supabase).
 
@@ -83,8 +85,11 @@ En Supabase → Authentication, la **confirmación de mail tiene que estar desac
 | 30 | Costo en puntos de cada recompensa | Hecha: por defecto igual al precio, editable (requiere `supabase/04_puntos.sql` y `05_puntos_por_precio.sql`) |
 | 31 | Canjear puntos | Hecha, dentro de la compra (requiere `supabase/04_puntos.sql`) |
 | 05 | Perfil: puntos, crédito, cupones, historial de canjes | Hecha ("Mis películas" se llena con HU-12) |
+| 28 | Mis compras y cancelación hasta 2 h antes | Hecha (requiere `supabase/08_cancelar_compra.sql`) |
 | 27 | Comprobante con código único y QR, imprimible / PDF | Hecha (requiere `supabase/07_comprobante.sql`). Incluye "Buscar mi compra" para invitados. |
-| 32, 34 | Validación, roles | Pantallas creadas, sin implementar |
+| 32 | Validar la entrada con el código / QR | Hecha (requiere `supabase/09_validacion.sql`) |
+| 33 | Entregar el candy con el mismo código | Hecha (requiere `supabase/09_validacion.sql`) |
+| 34 | Asignar el rol de empleado | Pantalla creada, sin implementar (mientras tanto el admin puede validar) |
 | Resto | Semanas 3 y 4 | Pendiente |
 
 ---
@@ -99,7 +104,7 @@ cine/src/app/
 ├── models/                interfaces y tipos de datos (sin lógica)
 ├── features/              una carpeta por área, cada una cargada con lazy loading
 │   ├── publico/           home, detalle, compra, comprobante, buscar-compra, login, registro
-│   ├── cliente/           perfil
+│   ├── cliente/           perfil, mis-compras
 │   ├── empleado/          validación
 │   └── admin/             ABMs del panel
 └── shared/                lo que usan varias áreas
@@ -345,7 +350,7 @@ Surgieron de revisar las historias contra los requerimientos funcionales:
 |---|---|---|
 | Combo con entrada | Cubre 1 entrada general; si la butaca es VIP se cobra la diferencia (**hecho**) | 19, 25 |
 | Cupones | Uno por compra (primera compra **o** por edad), combinable con crédito y pago (**hecho**; solo registrados) | 26 |
-| Cancelación | Se restan los puntos que dio esa compra; el cupón usado no se devuelve | 28 |
+| Cancelación | Se restan los puntos que dio esa compra y se devuelven los canjeados; el cupón usado no se devuelve (**hecho**) | 28 |
 | Canje de puntos | Se aplica dentro de la compra: entrada o producto a $0 pagado con puntos | 31 |
 | Comprador anónimo | Pantalla "Buscar mi compra" con mail + código | 26, 27 |
 | Comprobante | Código único con QR (librería `qrcode`) | 27 |
@@ -384,6 +389,40 @@ Surgieron de revisar las historias contra los requerimientos funcionales:
   - **invitado:** con **código + mail**. Justo después de comprar no se le pide: el mail queda recordado en la pestaña (`sessionStorage`);
   - **admin:** cualquiera.
 - **"Buscar mi compra"** (`/mi-compra`, en el menú cuando no hay sesión): el invitado ingresa código y mail y va al comprobante. Si no coinciden, el mensaje es el mismo que si el código no existiera. Así nadie puede probar códigos para averiguar cuáles son válidos.
+
+### 5.15 Mis compras y cancelación (HU-28)
+
+- **"Mis compras"** (`/cliente/compras`, en el menú y desde el perfil): lista de compras con póster, función, sala, cantidad de entradas, total, código y estado. Los estados son **Vigente**, **Función pasada**, **Usada** y **Cancelada**. Cada compra tiene un link a su comprobante.
+- **Cancelar:** el botón aparece solo en compras vigentes con **más de 2 horas** por delante. Dentro de las 2 horas se avisa que ya no se puede.
+  - Antes de confirmar, se muestra cuánto crédito vuelve y qué pasa con los puntos.
+  - **No se devuelve dinero (RF-26):** vuelve como **crédito** lo pagado más el crédito que se había usado.
+  - **Puntos:** se **restan los ganados** con esa compra y se **devuelven los canjeados**. En el historial del perfil, el canje figura como "devuelto".
+  - **Cupón:** si se usó uno, **no se devuelve** (punto c acordado).
+  - **Butacas:** quedan libres. Los mapas abiertos lo ven al instante por Realtime.
+  - **Código:** deja de valer. El comprobante muestra "Compra cancelada".
+  - Las entradas dejan de contar en el ranking de la home.
+- **Regla agregada:** si el cliente **ya gastó los puntos** que le dio la compra, no puede cancelarla. Si no, podría comprar, canjear esos puntos en otra compra y cancelar la primera, quedándose con puntos gratis.
+- Solo el cliente registrado dueño de la compra puede cancelar (el backlog lo pide para registrados). El invitado no tiene crédito donde recibir el monto.
+
+### 5.16 Validación en la puerta y entrega del candy (HU-32, HU-33)
+
+- Pantalla **Validar** (`/empleado`), para empleados y también para el admin. Tiene dos modos: **Entrada** y **Candy**.
+- **Un solo campo de texto** para el código. Sirve para tipearlo a mano (RF-31) y para los **lectores de QR USB**, que "escriben" el código y mandan Enter como un teclado. Por eso no hace falta acceso a la cámara. Después de cada validación, el campo se vacía y **recupera el foco**, así el empleado puede escanear el siguiente sin tocar nada.
+- **Entrada (HU-32):**
+  - Opcionalmente, el empleado elige **la función que controla** (lista de las funciones de hoy). Si el código es de otra función, se rechaza y el mensaje dice cuál es la correcta.
+  - Si es válida, muestra la película, la función, la sala, las **butacas** (cuántas personas entran), el aviso de adulto y si tiene candy pendiente.
+  - Marca **todas las entradas de la compra** como usadas, porque el grupo entra junto, y la compra pasa a "Usada". El código **ya no sirve para entrar** (RF-32).
+- **Candy (HU-33):** es **independiente de la entrada**: se puede retirar antes o después de entrar, pero una sola vez. Muestra la lista de lo que hay que entregar (incluidos los canjes) y lo marca como entregado.
+- **Mensajes claros** (vienen de la base):
+  - "No existe ninguna compra con el código X";
+  - "La compra X fue cancelada";
+  - "Estas entradas ya se usaron: ingresaron el 27/09 17:42";
+  - "Esta entrada es para otra función: …";
+  - "La función ya terminó";
+  - "El candy de esta compra ya se entregó el …";
+  - "La compra no tiene candy".
+- El resultado se muestra **grande, verde o rojo**, para verlo de un vistazo. Abajo quedan las **últimas 10 validaciones**.
+- Una vez validada la entrada o entregado el candy, la compra no se puede cancelar (HU-28).
 
 ---
 
@@ -437,6 +476,8 @@ Resumen:
 | Mapa de butacas en tiempo real | publicación `supabase_realtime` | `ReservasService.escuchar()` |
 | Compra atómica con errores por paso | `confirmar_compra()` | `ComprasService.confirmar()` → `PasoPago` |
 | Comprobante para dueño, admin o invitado (código + mail) | `obtener_comprobante()` | `ComprasService.obtenerComprobante()` → `Comprobante` |
+| Cancelar con crédito, puntos y butacas en una transacción | `cancelar_compra()` | `ComprasService.cancelar()` → `MisCompras` |
+| Cada código sirve una vez para entrar y una vez para el candy | `validar_entrada()`, `entregar_candy()` | `ValidacionService` → `Validacion` |
 | Puntos: ganar y canjear sin pasarse del saldo | `confirmar_compra()` + tabla `canjes` | `PasoPago` (canjes) y `Perfil` (historial) |
 | Función con ventas no se borra ni se mueve | FK `compras.funcion_id` + trigger `funciones_bloquear_con_ventas` | `FuncionesService` traduce el `23503` |
 
@@ -600,6 +641,41 @@ Supabase devuelve los dos en el `error` de `rpc()`: Angular muestra `error.messa
   - `recordarMail()` y `mailRecordado()` guardan el mail del invitado en `sessionStorage`, por código.
   - La pantalla `Comprobante` primero intenta sin mail (sirve para el registrado) y, si no hay sesión, lo pide.
 
+#### 6.2.11 Cancelar una compra (HU-28) — `supabase/08_cancelar_compra.sql`
+
+- **Base:** `cancelar_compra(codigo)` (`security definer`) valida en orden y corta en el primer problema. Todos los errores llevan `hint = 'cancelacion'`:
+  1. hay sesión y la compra es del usuario ("No encontramos esa compra entre las tuyas");
+  2. no está ya cancelada;
+  3. no se usó ninguna entrada ni se entregó candy;
+  4. faltan más de 2 horas ("Solo se puede cancelar hasta 2 horas antes de la función (hasta el 27/09 16:00 hs)"; la hora se muestra en horario de Argentina);
+  5. el saldo de puntos alcanza para restar los ganados menos los canjeados.
+
+  Si pasa todo, en **una transacción**:
+  - suma el crédito y ajusta los puntos del perfil;
+  - marca la compra como `cancelada` (con `cancelada_en` y `credito_devuelto`) y sus canjes como `devuelto`;
+  - **borra sus filas de `butacas_ocupadas`**, y Realtime manda el `DELETE` a los mapas abiertos;
+  - descuenta las entradas de `peliculas.vendidas`.
+
+  Las filas de `entradas` y `compra_items` **no se borran**: quedan como historial y para los reportes.
+- `funciones_bloquear_con_ventas` ignora las compras canceladas: si todas las compras de una función se cancelan, se puede volver a mover.
+- **Angular:**
+  - `ComprasService.misCompras()` trae en **una sola consulta** la compra con la función, la película y la sala embebidas, más la cantidad de entradas (`entradas(count)`). Si la película se ocultó, la compra se muestra igual, como "Película no disponible".
+  - `MisCompras` muestra u oculta el botón con la misma regla de 2 horas, pero **quien decide es la base**. Si algo no se cumple, se muestra su mensaje tal cual.
+
+#### 6.2.12 Validación y entrega (HU-32, HU-33) — `supabase/09_validacion.sql`
+
+- **Base:**
+  - `es_empleado()` es igual que `es_admin()`, pero acepta los roles `empleado` y `admin`.
+  - `validar_entrada(codigo, funcion_id)` y `entregar_candy(codigo)` son `security definer` y empiezan controlando `es_empleado()`. Un cliente que las llame desde la consola recibe "Solo un empleado puede validar entradas".
+  - Las dos bloquean la compra con `for update`: si dos empleados escanean el mismo código a la vez, el segundo espera y después ve "ya se usaron". **Un código no puede entrar dos veces.**
+  - La entrada marca `entradas.usada_en` y `compras.estado = 'usada'`; el candy marca `compra_items.entregado_en`. Son marcas separadas, por eso son independientes.
+  - `hora_ar()` formatea las horas de los mensajes en horario de Argentina.
+  - `datos_para_empleado()` arma la respuesta con película, función, sala, butacas y candy, y la usan las dos funciones.
+- **Angular:**
+  - `ValidacionService` llama a las dos funciones con `rpc()` y convierte el error en un `Error` con el mensaje de la base.
+  - `FuncionesService.listarDeHoy()` trae las funciones de hoy con película y sala embebidas, para el selector.
+  - `Validacion` usa `viewChild()` para devolverle el foco al campo después de cada escaneo.
+
 ### 6.3 Seguridad (RLS)
 
 Todas las tablas tienen RLS activado. Criterio general:
@@ -607,7 +683,7 @@ Todas las tablas tienen RLS activado. Criterio general:
 | Quién | Qué puede hacer |
 |---|---|
 | Visitante sin sesión | Leer películas no ocultas, funciones, salas, precios, reseñas, candy, combos, recompensas, la configuración de cupones y las butacas ocupadas. Reservar, liberar y comprar **solo a través de las funciones** de la base (`reservar_butaca`, `confirmar_compra`, …). |
-| Usuario registrado | Además, leer y crear **solo su propio** perfil (como cliente, sin puntos ni crédito) y ver sus propios cupones, compras y canjes. No puede modificar su perfil (ni sus puntos ni su crédito). |
+| Usuario registrado | Además, leer y crear **solo su propio** perfil (como cliente, sin puntos ni crédito) y ver sus propios cupones, compras y canjes. No puede modificar su perfil (ni sus puntos ni su crédito): solo cambian a través de `confirmar_compra` y `cancelar_compra`. |
 | Admin | Escribir (insert / update / delete) en las tablas de catálogo, salas, funciones, candy, combos, cupones y recompensas. Ver todos los perfiles y cambiar roles. |
 
 Por eso los guards de Angular alcanzan para la navegación: aunque alguien los saltee, la base no le devuelve ni le deja modificar lo que no le corresponde.

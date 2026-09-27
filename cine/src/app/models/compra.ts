@@ -85,3 +85,27 @@ export interface Comprobante {
     entradas: { fila: string; numero: number; tipo: TipoButaca; precio: number; usada_en: string | null }[];
     items: { nombre: string; cantidad: number; precio_unitario: number; entregado_en: string | null }[];
 }
+
+// Una fila de "Mis compras" (HU-28)
+export interface CompraResumen {
+    codigo: string;
+    estado: EstadoCompra;
+    creado_en: string;
+    total_pagado: number;
+    credito_usado: number;
+    puntos_ganados: number;
+    puntos_canjeados: number;
+    credito_devuelto: number | null;
+    pelicula: string;
+    imagen_url: string | null;
+    inicio: string;
+    sala: string;
+    cantidad_entradas: number;
+}
+
+export interface ResultadoCancelacion {
+    codigo: string;
+    credito_acreditado: number;
+    puntos_devueltos: number;
+    puntos_descontados: number;
+}

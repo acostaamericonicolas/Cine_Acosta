@@ -18,6 +18,8 @@
 } @else if (error()) {
 <p class="error">{{ error() }}</p>
 } @else {
+<p><a routerLink="/cliente/compras">Ver mis compras</a> (comprobantes y cancelaciones)</p>
+
 <h2>Mis cupones</h2>
 <ul class="cupones">
     @if (cuponPrimeraCompra(); as c) {
@@ -47,7 +49,11 @@
     <li>
         <span>{{ c.creado_en | date: 'dd/MM/yyyy HH:mm' }}</span>
         <span>{{ c.cantidad }} × {{ c.descripcion }}</span>
+        @if (c.devuelto) {
+        <strong class="devuelto">{{ c.puntos | number: '1.0-0' }} pts devueltos (compra cancelada)</strong>
+        } @else {
         <strong>− {{ c.puntos | number: '1.0-0' }} pts</strong>
+        }
     </li>
     }
 </ul>

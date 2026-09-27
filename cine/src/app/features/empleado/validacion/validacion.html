@@ -1,1 +1,77 @@
-<p>validacion works!</p>
+<h1>Validación</h1>
+
+<div class="modos" role="tablist">
+    <button type="button" role="tab" [class.activo]="modo() === 'entrada'" [attr.aria-selected]="modo() === 'entrada'"
+        (click)="cambiarModo('entrada')">Entrada</button>
+    <button type="button" role="tab" [class.activo]="modo() === 'candy'" [attr.aria-selected]="modo() === 'candy'"
+        (click)="cambiarModo('candy')">Candy</button>
+</div>
+
+@if (modo() === 'entrada') {
+<label class="funcion">Función que controlás
+    <select #sel [value]="funcionElegida()" (change)="funcionElegida.set(sel.value)">
+        <option value="">Cualquier función</option>
+        @for (fn of funcionesDeHoy(); track fn.id) {
+        <option [value]="fn.id">{{ fn.inicio | date: 'HH:mm' }} · {{ fn.pelicula }} · {{ fn.sala }}</option>
+        }
+    </select>
+</label>
+<p class="ayuda">Si elegís una función, se rechazan las entradas de otras funciones.</p>
+} @else {
+<p class="ayuda">El candy se entrega una sola vez por compra, antes o después de entrar a la sala.</p>
+}
+
+<form (submit)="enviar($event)">
+    <label>Código de compra
+        <input #campo type="text" [formField]="f.codigo" autocomplete="off" autofocus
+            placeholder="Escaneá el QR o escribí el código" />
+    </label>
+    <button type="submit" [disabled]="f().invalid() || procesando()">
+        {{ procesando() ? 'Validando...' : (modo() === 'entrada' ? 'Validar entrada' : 'Entregar candy') }}
+    </button>
+</form>
+
+@if (ultimo(); as r) {
+<section class="resultado" [class.ok]="r.ok" [class.rechazo]="!r.ok" role="alert">
+    <p class="titulo">{{ r.ok ? '✔' : '✖' }} {{ r.mensaje }}</p>
+    <p class="codigo">Código {{ r.codigo }}</p>
+
+    @if (r.datos; as d) {
+    <p>
+        <strong>{{ d.pelicula }}</strong> · {{ d.inicio | date: 'dd/MM HH:mm' }} · {{ d.sala }} · {{ d.formato }}
+    </p>
+    @if (r.modo === 'entrada') {
+    <p>Butacas: <strong>{{ d.butacas.join(', ') }}</strong> ({{ d.butacas.length }}
+        {{ d.butacas.length === 1 ? 'persona' : 'personas' }})</p>
+    @if (d.restriccion_edad > 0) {
+    <p class="aviso">Película +{{ d.restriccion_edad }}: debe asistir un adulto.</p>
+    }
+    @if (d.items.length > 0) {
+    <p class="pendiente">Esta compra tiene candy: se retira en el mostrador con el mismo código.</p>
+    }
+    } @else {
+    <ul>
+        @for (i of d.items; track $index) {
+        <li><strong>{{ i.cantidad }} ×</strong> {{ i.nombre }}</li>
+        }
+    </ul>
+    }
+    }
+</section>
+}
+
+@if (historial().length > 0) {
+<section>
+    <h2>Últimas validaciones</h2>
+    <ul class="historial">
+        @for (h of historial(); track $index) {
+        <li [class.rechazo]="!h.ok">
+            <span>{{ h.hora | date: 'HH:mm:ss' }}</span>
+            <span>{{ h.modo === 'entrada' ? 'Entrada' : 'Candy' }}</span>
+            <code>{{ h.codigo }}</code>
+            <span>{{ h.ok ? 'OK' : h.mensaje }}</span>
+        </li>
+        }
+    </ul>
+</section>
+}

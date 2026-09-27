@@ -1,5 +1,6 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { CuponesService } from '../../../core/cupones.service';
 import { RecompensasService } from '../../../core/recompensas.service';
@@ -8,7 +9,7 @@ import { Canje } from '../../../models/recompensa';
 import { edad, fechaLocal } from '../../../shared/fechas';
 
 @Component({
-  imports: [DatePipe, DecimalPipe],
+  imports: [DatePipe, DecimalPipe, RouterLink],
   selector: 'app-perfil',
   styleUrl: './perfil.css',
   templateUrl: './perfil.html',

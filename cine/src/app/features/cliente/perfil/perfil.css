@@ -83,3 +83,8 @@
 .canjes li strong {
     margin-left: auto;
 }
+
+.canjes .devuelto {
+    color: #1d7a3a;
+    font-weight: normal;
+}

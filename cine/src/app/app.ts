@@ -1,8 +1,9 @@
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
-import { RealtimeChannel } from '@supabase/supabase-js';
 import { AlertasService } from './core/alertas.service';
 import { AuthService } from './core/auth.service';
+import { CatalogoVivoService } from './core/catalogo-vivo.service';
+import { alCambiar } from './shared/al-cambiar';
 import { AvisoVenta } from './models/alerta';
 
 const CADA_UN_MINUTO = 60_000;
@@ -17,18 +18,18 @@ export class App {
   auth = inject(AuthService);
   private router = inject(Router);
   private alertas = inject(AlertasService);
+  private vivo = inject(CatalogoVivoService);
 
   /**
    * HU-11: películas con alerta cuya venta abrió. Sin mails, el aviso aparece acá.
    * Mientras hay un cliente logueado se revisa:
    *  - al iniciar sesión;
-   *  - al instante, cuando cambia una película (Realtime: el admin abrió la venta o la preventa);
+   *  - al instante, cuando cambia una película (catálogo en vivo: el admin abrió la venta o la preventa);
    *  - cada minuto y al volver a la pestaña (la preventa también abre sola al llegar la fecha).
    */
   avisos = signal<AvisoVenta[]>([]);
-  private canal: RealtimeChannel | null = null;
+  private escuchando = false;
   private reloj: ReturnType<typeof setInterval> | null = null;
-  private demora: ReturnType<typeof setTimeout> | null = null;
   private alVolver = () => { if (document.visibilityState === 'visible') this.revisarAvisos(); };
 
   constructor() {
@@ -38,28 +39,22 @@ export class App {
       else this.detenerAvisos();
     });
     inject(DestroyRef).onDestroy(() => this.detenerAvisos());
+    alCambiar(() => this.vivo.peliculas(), () => { if (this.escuchando) this.revisarAvisos(); });
   }
 
   private empezarAvisos() {
-    if (this.canal) return;   // ya está escuchando
+    if (this.escuchando) return;
+    this.escuchando = true;
     this.revisarAvisos();
-    // Cada compra también actualiza la película (ventas): se agrupan los cambios seguidos en una sola consulta
-    this.canal = this.alertas.escucharPeliculas(() => {
-      if (this.demora) clearTimeout(this.demora);
-      this.demora = setTimeout(() => this.revisarAvisos(), 1500);
-    });
     this.reloj = setInterval(() => this.revisarAvisos(), CADA_UN_MINUTO);
     document.addEventListener('visibilitychange', this.alVolver);
   }
 
   private detenerAvisos() {
-    if (this.canal) this.alertas.dejarDeEscuchar(this.canal);
     if (this.reloj) clearInterval(this.reloj);
-    if (this.demora) clearTimeout(this.demora);
     document.removeEventListener('visibilitychange', this.alVolver);
-    this.canal = null;
+    this.escuchando = false;
     this.reloj = null;
-    this.demora = null;
     this.avisos.set([]);
   }
 

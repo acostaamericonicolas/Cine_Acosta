@@ -4,6 +4,9 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { form, FormField, required, validate } from '@angular/forms/signals';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { AuthService } from '../../../core/auth.service';
+import { CatalogoVivoService } from '../../../core/catalogo-vivo.service';
+import { alCambiar } from '../../../shared/al-cambiar';
+
 import { CandyService } from '../../../core/candy.service';
 import { CombosService } from '../../../core/combos.service';
 import { ComprasService } from '../../../core/compras.service';
@@ -51,6 +54,7 @@ export class Compra {
   private comprasService = inject(ComprasService);
   private recompensasService = inject(RecompensasService);
   private reservas = inject(ReservasService);
+  private vivo = inject(CatalogoVivoService);
   private hoy = fechaLocal();
 
   readonly textoTipo = TEXTO_TIPO;
@@ -189,6 +193,11 @@ export class Compra {
     });
 
     this.cargar();
+
+    // Catálogo en vivo: si el admin cambia algo mientras se compra, la pantalla se entera
+    alCambiar(() => this.vivo.peliculas(), () => this.revisarPelicula());
+    alCambiar(() => this.vivo.candy(), () => this.recargarCandy());
+    alCambiar(() => this.vivo.precios(), () => this.recargarPrecios());
   }
 
   private async cargar() {
@@ -377,6 +386,55 @@ export class Compra {
       this.errorCompra.set(e as ErrorCompra);
     } finally {
       this.enviando.set(false);
+    }
+  }
+
+  // ----- Catálogo en vivo -----
+
+  // Si la película se ocultó o se cerró la venta mientras se compraba, se avisa y se sueltan las butacas
+  private async revisarPelicula() {
+    const funcion = this.funcion();
+    if (!funcion || this.paso() === 'listo') return;
+    let motivo = '';
+    try {
+      const p = await this.peliculasService.obtenerConVenta(funcion.pelicula_id);
+      this.pelicula.set(p);
+      if (!p.venta_abierta) motivo = `Se cerró la venta de entradas para "${p.nombre}" mientras comprabas.`;
+    } catch {
+      motivo = 'La película ya no está disponible.';
+    }
+    if (motivo) {
+      this.error.set(motivo);
+      if (this.idsSeleccionadas().length > 0) this.reservas.liberarTodas(this.funcionId).catch(() => { });
+    }
+  }
+
+  // Combo o producto dado de baja / de alta, o cambio de precio: se recarga el catálogo del candy.
+  // Lo que ya no está activo desaparece solo del carrito (carrito es un computed sobre estas listas).
+  private async recargarCandy() {
+    if (this.categorias().length === 0 && this.combos().length === 0) return;   // todavía no abrió el candy
+    try {
+      const [categorias, productos, combos] = await Promise.all([
+        this.candyService.listarCategorias(),
+        this.candyService.listarProductosActivos(),
+        this.combosService.listarActivosConDetalle(),
+      ]);
+      this.categorias.set(categorias);
+      this.productos.set(productos);
+      this.combos.set(combos);
+      if (this.paso() === 'pago' && this.registrado()) {
+        this.recompensas.set(await this.recompensasService.canjeables());
+      }
+    } catch {
+      /* se sigue viendo lo anterior; la base valida todo al confirmar */
+    }
+  }
+
+  private async recargarPrecios() {
+    try {
+      this.precios.set(await this.salasService.precios());
+    } catch {
+      /* se siguen viendo los anteriores; el precio real lo calcula la base */
     }
   }
 }

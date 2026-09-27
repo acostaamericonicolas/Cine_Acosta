@@ -1,5 +1,4 @@
 import { Service, inject } from '@angular/core';
-import { RealtimeChannel } from '@supabase/supabase-js';
 import { SupabaseService } from './supabase.service';
 import { AvisoVenta } from '../models/alerta';
 
@@ -30,20 +29,5 @@ export class AlertasService {
         const { data, error } = await this.supabase.rpc('avisos_venta_abierta');
         if (error) throw error;
         return data as AvisoVenta[];
-    }
-
-    /**
-     * Avisa cuando cambia una película (Realtime, 14_resenas_compradores.sql): el admin abrió la venta,
-     * activó la preventa o pasó a cartelera. Así el aviso llega sin recargar la página.
-     */
-    escucharPeliculas(alCambiar: () => void): RealtimeChannel {
-        return this.supabase
-            .channel('peliculas-avisos')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'peliculas' }, () => alCambiar())
-            .subscribe();
-    }
-
-    dejarDeEscuchar(canal: RealtimeChannel) {
-        this.supabase.removeChannel(canal);
     }
 }

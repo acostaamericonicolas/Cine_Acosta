@@ -52,7 +52,8 @@ Los cambios de la base a partir de HU-21 están en [`supabase/`](supabase/), num
 | `11_actividad.sql` | 37 | tabla `actividad` y triggers que registran las acciones |
 | `12_resenas_alertas.sql` | 10, 11 | policies y trigger de reseñas; tabla `alertas_venta` y `avisos_venta_abierta` |
 | `13_reportes.sql` | 35, 36 | `reporte_ventas`, `ranking_peliculas`, `ranking_candy` |
-| `14_resenas_compradores.sql` | 10, 11 | solo califica quien compró, después de su función y una vez; `peliculas` en Realtime para los avisos |
+| `14_resenas_compradores.sql` | 10, 11 | solo califica quien compró, después de su función y una vez |
+| `15_catalogo_en_vivo.sql` | 11, 38 | tabla `catalogo_version` en Realtime: las pantallas se actualizan solas cuando el admin cambia películas, funciones, combos, productos o precios |
 
 Lo anterior (tablas, triggers y policies de las HU 01 a 20) se creó directamente en Supabase y está documentado en la [sección 6](#6-base-de-datos-supabase).
 
@@ -124,6 +125,7 @@ cine/src/app/
     ├── pipes/             duracion-pipe, estrellas-pipe
     ├── sala-layout.ts     distribución fija de butacas
     ├── fechas.ts          fecha local, edad, sumar días (ver 4.8)
+    ├── al-cambiar.ts      effect que reacciona a una señal salvo la primera vez (catálogo en vivo)
     ├── precios.ts         precio de entrada con preventa (solo para mostrar)
     └── ...
 ```
@@ -477,7 +479,7 @@ Surgieron de revisar las historias contra los requerimientos funcionales:
 - **Sin mails:** si alguna película con alerta abre la venta (preventa, o estreno si no hay), aparece un **aviso arriba de todo**, con link a las funciones. **Se muestra una sola vez**: la base lo marca como avisado.
 - **Llega sin recargar la página.** Mientras el cliente está logueado, la app revisa los avisos:
   - al iniciar sesión;
-  - **al instante** cuando cambia una película, con **Supabase Realtime** (el admin abrió la venta, activó la preventa o la pasó a cartelera);
+  - **al instante** cuando cambia una película, con el **catálogo en vivo** (5.24): el admin abrió la venta, activó la preventa o la pasó a cartelera;
   - **cada minuto** y **al volver a la pestaña**, porque la preventa también abre sola cuando llega la fecha, y eso no genera ningún cambio en la tabla.
 
   Antes solo se revisaba al iniciar sesión y había que recargar.
@@ -511,6 +513,24 @@ Surgieron de revisar las historias contra los requerimientos funcionales:
 - **Cómo probarlo:** `ng build`, servir la carpeta `dist/cine/browser` con un servidor estático (por ejemplo `npx http-server dist/cine/browser`), abrir la app, y en DevTools → Application ver el service worker y probar "Offline". Con `ng serve` no se registra a propósito.
 - **Presupuesto del bundle inicial:** el aviso se subió de 500 kB a **600 kB**. El inicial pesa ~510 kB (~127 kB transferidos). Casi todo es Angular, el router y `supabase-js`, que se necesitan desde la primera pantalla; todas las pantallas son lazy. El límite de error sigue en 1 MB.
 
+### 5.24 Catálogo en vivo: las pantallas se actualizan solas
+
+- Si el admin cambia algo del catálogo, **las pantallas abiertas se actualizan sin recargar**:
+
+| Cambio del admin | Qué se actualiza solo |
+|---|---|
+| Película: estado (**cartelera ↔ próximamente ↔ oculta**), preventa, datos | Home (cartelera y Próximamente), detalle. Si se oculta, el detalle muestra "No encontramos la película". |
+| Funciones: alta, edición, baja | Lista de funciones del detalle |
+| Combos y productos: **activar / desactivar**, precio, contenido | Paso del candy en la compra. Lo que se desactiva **desaparece del carrito** solo. |
+| Precios de butacas | Precios del mapa y del resumen en la compra |
+
+- **Durante una compra:** si la película se oculta o se cierra su venta, se avisa ("Se cerró la venta de entradas para X mientras comprabas") y se liberan las butacas reservadas. Igual, `confirmar_compra` lo rechazaría.
+- **Cómo funciona (señales):**
+  - `CatalogoVivoService` escucha con Realtime la tabla `catalogo_version` y guarda las versiones en una **`signal`**, con un **`computed`** por área: `peliculas()`, `funciones()`, `candy()` y `precios()`.
+  - Cada pantalla usa `alCambiar(señal, acción)` (`shared/al-cambiar.ts`): un `effect` que ignora la primera ejecución, porque la pantalla ya hizo su carga inicial, y después corre la acción con `untracked`.
+  - La recarga **no muestra "Cargando..."**: la pantalla cambia sin parpadear.
+- Los **avisos de venta abierta** (5.19) usan la misma señal `peliculas()`.
+
 ---
 
 ## 6. Base de datos (Supabase)
@@ -541,6 +561,7 @@ Surgieron de revisar las historias contra los requerimientos funcionales:
 | vista `catalogo_canjes` | todo lo canjeable: `tipo`, `producto_id`, `nombre`, `precio`, `puntos`, `personalizado`, `activa` | la arma la base; ver 6.2.9 |
 | `canjes` | `usuario_id`, `compra_id`, `descripcion`, `cantidad`, `puntos`, `devuelto` | historial del perfil |
 | `alertas_venta` | `usuario_id`, `pelicula_id`, `avisado_en` | una por cliente y película (HU-11) |
+| `catalogo_version` | `tabla`, `version`, `cambiado_en` | una fila por tabla del catálogo; en Realtime (5.24) |
 | `actividad` | `creado_en`, `usuario_id`, `usuario`, `accion`, `detalle`, `tabla` | la escriben los triggers; solo el admin la lee (HU-37) |
 
 Montos en `numeric(…, 2)` para no tener errores de redondeo con dinero.
@@ -572,6 +593,7 @@ Resumen:
 | Reseña firmada por la base, una por cliente | trigger `resenas_completar` + policies + `unique` | `ResenasService` → `MiResena` |
 | Aviso de venta abierta, una sola vez | `alertas_venta` + `avisos_venta_abierta()` | `AlertasService` → `App` (aviso) y `Home` |
 | Reportes solo para el admin | `reporte_ventas()`, `ranking_peliculas()`, `ranking_candy()` | `ReportesService` → `Reportes` |
+| Pantallas actualizadas cuando cambia el catálogo | `catalogo_version` + trigger `subir_version_catalogo` + Realtime | `CatalogoVivoService` (señales) + `alCambiar()` |
 | Puntos: ganar y canjear sin pasarse del saldo | `confirmar_compra()` + tabla `canjes` | `PasoPago` (canjes) y `Perfil` (historial) |
 | Función con ventas no se borra ni se mueve | FK `compras.funcion_id` + trigger `funciones_bloquear_con_ventas` | `FuncionesService` traduce el `23503` |
 
@@ -808,11 +830,12 @@ Supabase devuelve los dos en el `error` de `rpc()`: Angular muestra `error.messa
 - **Alertas:**
   - Tabla `alertas_venta`, con clave primaria (usuario, película) y `usuario_id` por defecto `auth.uid()`. Policies: cada cliente ve, crea y borra las suyas.
   - **`avisos_venta_abierta()`** devuelve las películas con alerta cuya **venta ya abrió** (usa `venta_abierta`, la misma regla de la preventa) y en la **misma consulta** las marca con `avisado_en` (un `update` dentro de un `with`). Así el aviso aparece una sola vez.
-  - `peliculas` está en la publicación **`supabase_realtime`** (script 14). `App`, con un `effect`, mientras el perfil sea de cliente:
-    - escucha los cambios de `peliculas` con `AlertasService.escucharPeliculas()`, agrupando los cambios seguidos en 1,5 s porque cada compra también actualiza la película;
-    - revisa con un `setInterval` de 1 minuto y con `visibilitychange`.
+  - `App`, mientras el perfil sea de cliente, revisa los avisos:
+    - cuando cambia la señal `peliculas()` del catálogo en vivo (6.2.17);
+    - con un `setInterval` de 1 minuto y con `visibilitychange`.
 
-    Al cerrar sesión deja de escuchar. Los avisos nuevos se suman a los que ya se muestran.
+    Al cerrar sesión deja de revisar. Los avisos nuevos se suman a los que ya se muestran.
+  - En el script 14, `peliculas` se había agregado a Realtime. El script 15 la saca: se reemplazó por `catalogo_version` (ver por qué en 6.2.17), y así cada compra (que actualiza `vendidas`) no genera tráfico.
 
 #### 6.2.16 Reportes (HU-35, HU-36) — `supabase/13_reportes.sql`
 
@@ -822,13 +845,24 @@ Supabase devuelve los dos en el `error` de `rpc()`: Angular muestra `error.messa
 - `#variable_conflict use_column`: las columnas de salida se llaman como tablas (`compras`, `entradas`), y con esta directiva Postgres no las confunde.
 - **Angular:** `ReportesService` llama las tres con `rpc()`. `Reportes` calcula los totales con `computed`, arma el CSV en el navegador (`Blob` y un link de descarga) y dibuja las barras con `ngStyle`.
 
+#### 6.2.17 Catálogo en vivo — `supabase/15_catalogo_en_vivo.sql`
+
+- **Problema:** Realtime **respeta RLS**. Si el admin pasa una película a **oculta**, el público ya no puede leerla, y por eso Supabase **no le envía ese cambio**. Escuchando `peliculas` directamente, la cartelera nunca se enteraría de que tiene que sacarla.
+- **Solución:** tabla pública **`catalogo_version`** (`tabla`, `version`), con una fila por tabla del catálogo. Solo se lee; nadie la escribe desde la API.
+  - El trigger **`subir_version_catalogo`** (`after insert or update or delete`) está en `peliculas`, `funciones`, `combos`, `combo_items`, `productos_candy` y `precios_butaca`, y hace `version + 1` con un `insert … on conflict do update`.
+  - No cuenta el `update` de `peliculas.vendidas` (cada compra) ni el recálculo de `fin` de funciones, porque no son cambios del catálogo.
+  - `catalogo_version` está en la publicación `supabase_realtime`. Todos reciben "cambió peliculas" y **vuelven a consultar con sus propios permisos**: si la película pasó a oculta, simplemente ya no viene.
+- **Angular:**
+  - `CatalogoVivoService` se suscribe una sola vez para toda la app y expone las versiones como señales.
+  - `alCambiar()` reacciona a los cambios desde el constructor de cada pantalla: `Home`, `DetallePelicula`, `Compra` y `App`.
+
 ### 6.3 Seguridad (RLS)
 
 Todas las tablas tienen RLS activado. Criterio general:
 
 | Quién | Qué puede hacer |
 |---|---|
-| Visitante sin sesión | Leer películas no ocultas, funciones, salas, precios, reseñas, candy, combos, recompensas, la configuración de cupones y las butacas ocupadas. Reservar, liberar y comprar **solo a través de las funciones** de la base (`reservar_butaca`, `confirmar_compra`, …). |
+| Visitante sin sesión | Leer películas no ocultas, funciones, salas, precios, reseñas, candy, combos, recompensas, la configuración de cupones, las butacas ocupadas y las versiones del catálogo. Reservar, liberar y comprar **solo a través de las funciones** de la base (`reservar_butaca`, `confirmar_compra`, …). |
 | Usuario registrado | Además, leer y crear **solo su propio** perfil (como cliente, sin puntos ni crédito) y ver sus propios cupones, compras, canjes y alertas. Escribir **una** reseña por película, solo si compró y ya terminó su función, sin editarla; activar alertas. No puede modificar su perfil (ni sus puntos ni su crédito): solo cambian a través de `confirmar_compra` y `cancelar_compra`. |
 | Admin | Escribir (insert / update / delete) en las tablas de catálogo, salas, funciones, candy, combos, cupones y recompensas. Ver todos los perfiles, el log de actividad y los reportes, y dar de alta personal (con `alta_personal`). **Nadie cambia roles.** |
 

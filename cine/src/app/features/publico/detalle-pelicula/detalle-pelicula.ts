@@ -2,6 +2,9 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
+import { CatalogoVivoService } from '../../../core/catalogo-vivo.service';
+import { alCambiar } from '../../../shared/al-cambiar';
+
 import { FuncionesService } from '../../../core/funciones.service';
 import { Funcion } from '../../../models/funcion';
 import { PeliculasService } from '../../../core/peliculas.service';
@@ -27,6 +30,7 @@ export class DetallePelicula {
   private resenasService = inject(ResenasService);
   private funcionesService = inject(FuncionesService);
   private auth = inject(AuthService);
+  private vivo = inject(CatalogoVivoService);
 
   // HU-10: solo los clientes califican; el visitante ve una invitación a ingresar
   esCliente = computed(() => this.auth.rol() === 'cliente');
@@ -78,6 +82,11 @@ export class DetallePelicula {
       return;
     }
     this.cargar(id);
+
+    // Si el admin cambia la película (por ejemplo la pasa a oculta o a próximamente)
+    // o sus funciones, el detalle se actualiza solo
+    alCambiar(() => this.vivo.peliculas(), () => this.recargarPelicula(id));
+    alCambiar(() => this.vivo.funciones(), () => this.recargarFunciones(id));
   }
 
   private async cargar(id: number) {
@@ -111,6 +120,24 @@ export class DetallePelicula {
       this.errorResenas.set('');
     } catch {
       this.errorResenas.set('No se pudieron cargar las reseñas.');
+    }
+  }
+
+  private async recargarPelicula(id: number) {
+    try {
+      this.pelicula.set(await this.peliculasService.obtenerConVenta(id));
+      this.noEncontrada.set(false);
+    } catch {
+      this.noEncontrada.set(true);   // pasó a oculta: la policy ya no la devuelve
+    }
+  }
+
+  private async recargarFunciones(id: number) {
+    try {
+      this.funciones.set(await this.funcionesService.listarProximas(id));
+      this.errorFunciones.set('');
+    } catch {
+      /* se siguen viendo las anteriores */
     }
   }
 }

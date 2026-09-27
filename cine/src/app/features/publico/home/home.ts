@@ -4,6 +4,9 @@ import { RouterLink } from '@angular/router';
 import { AlertasService } from '../../../core/alertas.service';
 import { AuthService } from '../../../core/auth.service';
 import { PeliculasService } from '../../../core/peliculas.service';
+import { CatalogoVivoService } from '../../../core/catalogo-vivo.service';
+import { alCambiar } from '../../../shared/al-cambiar';
+
 import { PeliculaConVenta } from '../../../models/pelicula';
 import { TarjetaPelicula } from '../../../shared/componentes/tarjeta-pelicula/tarjeta-pelicula';
 
@@ -21,6 +24,7 @@ export class Home {
   private service = inject(PeliculasService);
   private alertasService = inject(AlertasService);
   private auth = inject(AuthService);
+  private vivo = inject(CatalogoVivoService);
 
   peliculas = signal<PeliculaConVenta[]>([]);
   busqueda = signal('');
@@ -59,6 +63,9 @@ export class Home {
 
   constructor() {
     this.cargar();
+    // Si el admin cambia una película (cartelera / próximamente / oculta, preventa...),
+    // la cartelera y Próximamente se actualizan solas, sin recargar la página
+    alCambiar(() => this.vivo.peliculas(), () => this.recargarPeliculas());
   }
 
   private async cargar() {
@@ -107,5 +114,19 @@ export class Home {
   limpiarFiltros() {
     this.busqueda.set('');
     this.generosElegidos.set([]);
+  }
+
+  // Recarga sin mostrar "Cargando...": la pantalla cambia sola, sin parpadeos
+  private async recargarPeliculas() {
+    try {
+      const [cartelera, proximas] = await Promise.all([
+        this.service.listarCartelera(),
+        this.service.listarProximamente(),
+      ]);
+      this.peliculas.set(cartelera);
+      this.proximas.set(proximas);
+    } catch {
+      /* si falla, se sigue viendo lo anterior */
+    }
   }
 }

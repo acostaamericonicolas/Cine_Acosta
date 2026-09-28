@@ -22,7 +22,7 @@
                 @for (b of bloque; track $index) {
                 @if (b) {
                 @let e = estado(b);
-                <button type="button" class="butaca" [ngClass]="[b.tipo, e]" [attr.data-etiqueta]="etiqueta(b, e)"
+                <button type="button" class="butaca" [appTipoButaca]="b.tipo" [estadoButaca]="e" [attr.data-etiqueta]="etiqueta(b, e)"
                     [attr.aria-label]="etiqueta(b, e)" [attr.aria-pressed]="e === 'seleccionada'"
                     (click)="butacaClick.emit(b)"></button>
                 } @else {
@@ -40,7 +40,7 @@
 
 <div class="leyenda">
     @for (t of tipos; track t) {
-    <span><i class="muestra" [ngClass]="t"></i> {{ textoTipo[t] }}</span>
+    <span><i class="muestra" [appTipoButaca]="t"></i> {{ t | tipoButaca }}</span>
     }
     @if (leyendaEstados()) {
     <span><i class="muestra ocupada"></i> Ocupada</span>

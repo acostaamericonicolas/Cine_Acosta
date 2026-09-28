@@ -22,10 +22,10 @@
             <span class="funcion">{{ c.inicio | date: "EEEE d 'de' MMMM, HH:mm" }} · {{ c.sala }}</span>
             <span>
                 {{ c.cantidad_entradas }} {{ c.cantidad_entradas === 1 ? 'entrada' : 'entradas' }} ·
-                $ {{ c.total_pagado | number: '1.2-2' }} · código <code>{{ c.codigo }}</code>
+                {{ c.total_pagado | pesos }} · código <code>{{ c.codigo }}</code>
             </span>
             @if (c.estado === 'cancelada' && c.credito_devuelto !== null) {
-            <small>Se acreditaron $ {{ c.credito_devuelto | number: '1.2-2' }} a tu crédito.</small>
+            <small>Se acreditaron {{ c.credito_devuelto | pesos }} a tu crédito.</small>
             }
         </div>
         <div class="acciones">

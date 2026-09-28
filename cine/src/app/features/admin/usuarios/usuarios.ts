@@ -1,9 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
-import { form, FormField, required, email, minLength, validate } from '@angular/forms/signals';
-import { ConCambios } from '../../../core/guards/form-guard';
-import { PersonalService } from '../../../core/personal.service';
+import { form, FormField, required, email, minLength } from '@angular/forms/signals';
+import { ConCambios } from '../../../guards/form-guard';
+import { Personal as PersonalService } from '../../../services/personal';
 import { DatosAltaPersonal, Perfil } from '../../../models/perfil';
-import { fechaLocal } from '../../../shared/fechas';
+import { mensajeDeError } from '../../../shared/errores';
+import { fechaNoFutura } from '../../../validators/validators';
+import { RolPipe } from '../../../pipes/rol-pipe';
 
 const VACIO: DatosAltaPersonal = { email: '', password: '', nombre: '', apellido: '', fechaNacimiento: '', rol: 'empleado' };
 
@@ -13,13 +15,12 @@ const VACIO: DatosAltaPersonal = { email: '', password: '', nombre: '', apellido
  */
 @Component({
   selector: 'app-usuarios',
-  imports: [FormField],
+  imports: [FormField, RolPipe],
   styleUrl: './usuarios.css',
   templateUrl: './usuarios.html',
 })
 export class Usuarios implements ConCambios {
   private service = inject(PersonalService);
-  private hoy = fechaLocal();
 
   readonly roles = [
     { valor: 'empleado', texto: 'Empleado (valida entradas y entrega candy)' },
@@ -41,9 +42,7 @@ export class Usuarios implements ConCambios {
     required(s.password, { message: 'Ingresá una contraseña inicial' });
     minLength(s.password, 6, { message: 'Mínimo 6 caracteres' });
     required(s.fechaNacimiento, { message: 'Ingresá la fecha de nacimiento' });
-    validate(s.fechaNacimiento, ({ value }) =>
-      value() > this.hoy ? { kind: 'fecha-futura', message: 'La fecha no puede ser futura' } : null
-    );
+    fechaNoFutura(s.fechaNacimiento);
   });
 
   constructor() {
@@ -59,7 +58,7 @@ export class Usuarios implements ConCambios {
     try {
       this.personal.set(await this.service.listar());
     } catch (e) {
-      this.error.set((e as { message?: string }).message ?? 'No se pudo cargar el personal');
+      this.error.set(mensajeDeError(e, 'No se pudo cargar el personal'));
     } finally {
       this.cargando.set(false);
     }
@@ -81,7 +80,7 @@ export class Usuarios implements ConCambios {
       this.f().reset();
       this.personal.set(await this.service.listar());
     } catch (e) {
-      this.error.set((e as Error).message);   // por ejemplo: el mail ya pertenece a un cliente
+      this.error.set(mensajeDeError(e));   // por ejemplo: el mail ya pertenece a un cliente
     } finally {
       this.guardando.set(false);
     }

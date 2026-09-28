@@ -9,11 +9,7 @@
         <h3>{{ pelicula.nombre }}</h3>
         <p class="meta">{{ pelicula.duracion_min | duracion }} · {{ pelicula.generos.join(', ') }}</p>
 
-        @if (pelicula.restriccion_edad > 0) {
-        <span class="edad">+{{ pelicula.restriccion_edad }}</span>
-        } @else {
-        <span class="edad">Todo público</span>
-        }
+        <span class="edad">{{ pelicula.restriccion_edad | restriccion }}</span>
 
         <a [routerLink]="['/pelicula', pelicula.id]">Ver funciones</a>
     </div>

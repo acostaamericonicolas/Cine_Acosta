@@ -1,0 +1,1 @@
+var t=[{path:``,loadComponent:()=>import(`./chunk-3Ok8VaTo2.js`).then(o=>o.Validacion)}];export{t as EMPLEADO_ROUTES};

@@ -4,17 +4,20 @@
     entregas. Lo registra la base automáticamente, aunque el cambio no se haga desde esta app.
 </p>
 
-<div class="filtros">
+<form class="filtros" (submit)="ver($event)">
     <label>Desde
-        <input #d type="date" [value]="desde()" (change)="desde.set(d.value)" />
+        <input type="date" [formField]="f.desde" />
     </label>
     <label>Hasta
-        <input #h type="date" [value]="hasta()" (change)="hasta.set(h.value)" />
+        <input type="date" [formField]="f.hasta" />
     </label>
-    <button type="button" (click)="cargar()">Ver</button>
-    <input #q type="search" placeholder="Buscar (usuario, acción, código...)" aria-label="Buscar en la actividad"
-        [value]="busqueda()" (input)="busqueda.set(q.value)" />
-</div>
+    <button type="submit" [disabled]="f().invalid()">Ver</button>
+    <input type="search" placeholder="Buscar (usuario, acción, código...)" aria-label="Buscar en la actividad"
+        [formField]="f.busqueda" />
+</form>
+@if (f.hasta().invalid()) {
+<p class="error">{{ f.hasta().errors()[0].message }}</p>
+}
 
 @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
 

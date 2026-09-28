@@ -1,8 +1,55 @@
-/* You can add global styles to this file, and also import other style files */
+/*
+ * Estilos globales de Cine Acosta.
+ * Las clases utilitarias de mensajes están acá para no repetirlas en cada componente.
+ * Cada componente solo agrega lo propio (por ejemplo un max-width o un margin).
+ */
+
+/* ----- Mensajes y textos de apoyo ----- */
+
+/* Error: validaciones y errores de la base */
+.error {
+    color: #c00;
+}
+
+/* Operación exitosa */
+.ok {
+    color: #1d7a3a;
+}
+
+/* Texto explicativo y datos secundarios (fecha, duración, cantidades) */
+.ayuda,
+.meta {
+    color: #555;
+}
+
+/* Recuadro de aviso: butaca VIP, "debe asistir un adulto", sin conexión... */
+.aviso {
+    background: #fff4d6;
+    border-left: 4px solid #e0a800;
+    padding: 0.6rem 0.8rem;
+    border-radius: 4px;
+}
+
+/* Recuadro de error de la compra, con el paso donde falló (confirmar_compra) */
+.error-compra {
+    border: 1px solid #c00;
+    border-left-width: 4px;
+    background: #fdecec;
+    padding: 0.6rem 0.8rem;
+    border-radius: 4px;
+}
+
+/* ----- Impresión ----- */
 
 /* Al imprimir (comprobante, reportes) no se imprime la barra de navegación */
 @media print {
     nav {
         display: none;
+    }
+
+    .aviso,
+    .error-compra {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 }

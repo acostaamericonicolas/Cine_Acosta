@@ -14,7 +14,7 @@
 <h1>{{ p.nombre }}</h1>
 <p class="meta">
     {{ f.inicio | date: "EEEE d 'de' MMMM, HH:mm" }} · {{ f.formato }} ·
-    {{ f.idioma === 'castellano' ? 'Castellano' : 'Subtitulada' }}
+    {{ f.idioma | idioma }}
     @if (p.en_preventa) { · <strong>Preventa</strong> }
 </p>
 
@@ -106,12 +106,12 @@
     <ul>
         @for (l of lineas(); track l.butaca.id) {
         <li [class.vip]="l.butaca.tipo === 'vip'">
-            <span>Butaca {{ l.butaca.id }} · {{ textoTipo[l.butaca.tipo] }}</span>
-            <span>$ {{ l.precio | number: '1.2-2' }}</span>
+            <span>Butaca {{ l.butaca.id }} · {{ l.butaca.tipo | tipoButaca }}</span>
+            <span>{{ l.precio | pesos }}</span>
         </li>
         }
     </ul>
-    <p class="total">Total entradas: <strong>$ {{ totalEntradas() | number: '1.2-2' }}</strong></p>
+    <p class="total">Total entradas: <strong>{{ totalEntradas() | pesos }}</strong></p>
 
     @if (hayVip()) {
     <p class="aviso">Elegiste al menos una butaca <strong>VIP</strong>, que tiene un precio más alto.</p>
@@ -167,30 +167,30 @@
     }
 
     <ul>
-        <li><span>Entradas</span><span>$ {{ r.subtotal_entradas | number: '1.2-2' }}</span></li>
+        <li><span>Entradas</span><span>{{ r.subtotal_entradas | pesos }}</span></li>
         @if (r.subtotal_candy > 0) {
-        <li><span>Candy</span><span>$ {{ r.subtotal_candy | number: '1.2-2' }}</span></li>
+        <li><span>Candy</span><span>{{ r.subtotal_candy | pesos }}</span></li>
         }
         @if (r.descuento_combos > 0) {
-        <li><span>Entradas incluidas en combos</span><span>− $ {{ r.descuento_combos | number: '1.2-2' }}</span></li>
+        <li><span>Entradas incluidas en combos</span><span>− {{ r.descuento_combos | pesos }}</span></li>
         }
         @if (r.descuento_canjes > 0) {
-        <li><span>Pagado con puntos ({{ r.puntos_canjeados }} pts)</span><span>− $ {{ r.descuento_canjes | number: '1.2-2' }}</span></li>
+        <li><span>Pagado con puntos ({{ r.puntos_canjeados | puntos: 'corto' }})</span><span>− {{ r.descuento_canjes | pesos }}</span></li>
         }
         @if (r.descuento_cupon > 0) {
-        <li><span>Cupón</span><span>− $ {{ r.descuento_cupon | number: '1.2-2' }}</span></li>
+        <li><span>Cupón</span><span>− {{ r.descuento_cupon | pesos }}</span></li>
         }
         @if (r.credito_usado > 0) {
-        <li><span>Crédito</span><span>− $ {{ r.credito_usado | number: '1.2-2' }}</span></li>
+        <li><span>Crédito</span><span>− {{ r.credito_usado | pesos }}</span></li>
         }
-        <li class="total"><span>Pagaste</span><strong>$ {{ r.total_pagado | number: '1.2-2' }}</strong></li>
+        <li class="total"><span>Pagaste</span><strong>{{ r.total_pagado | pesos }}</strong></li>
     </ul>
 
     @if (r.puntos_canjeados > 0) {
-    <p>Canjeaste <strong>{{ r.puntos_canjeados }} puntos</strong>.</p>
+    <p>Canjeaste <strong>{{ r.puntos_canjeados | puntos }}</strong>.</p>
     }
     @if (r.puntos_ganados > 0) {
-    <p>Sumaste <strong>{{ r.puntos_ganados }} puntos</strong>.</p>
+    <p>Sumaste <strong>{{ r.puntos_ganados | puntos }}</strong>.</p>
     }
     @if (p.restriccion_edad > 0) {
     <p class="aviso">Película para mayores de {{ p.restriccion_edad }}: debe asistir un adulto.</p>

@@ -1,7 +1,8 @@
-import { DecimalPipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
-import { claveCanje, RecompensasService } from '../../../core/recompensas.service';
+import { claveCanje, Recompensas as RecompensasService } from '../../../services/recompensas';
 import { ItemCanjeable } from '../../../models/recompensa';
+import { mensajeDeError } from '../../../shared/errores';
+import { PesosPipe } from '../../../pipes/pesos-pipe';
 
 /**
  * HU-30: costo en puntos de cada recompensa.
@@ -10,7 +11,7 @@ import { ItemCanjeable } from '../../../models/recompensa';
  */
 @Component({
   selector: 'app-recompensas',
-  imports: [DecimalPipe],
+  imports: [PesosPipe],
   templateUrl: './recompensas.html',
   styleUrl: './recompensas.css',
 })
@@ -36,7 +37,7 @@ export class Recompensas {
     try {
       this.items.set(await this.service.catalogo());
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudo cargar el catálogo de canjes'));
+      this.error.set(mensajeDeError(e, 'No se pudo cargar el catálogo de canjes'));
     } finally {
       this.cargando.set(false);
     }
@@ -90,14 +91,11 @@ export class Recompensas {
       });
       this.mensaje.set(ok);
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudo guardar'));
+      this.error.set(mensajeDeError(e, 'No se pudo guardar'));
     } finally {
       this.guardando.set(null);
     }
   }
 
   private limpiar() { this.error.set(''); this.mensaje.set(''); }
-  private texto(e: unknown, defecto: string): string {
-    return (e as { message?: string }).message ?? defecto;
-  }
 }

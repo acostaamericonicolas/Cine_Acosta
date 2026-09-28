@@ -1,14 +1,16 @@
 import { DatePipe, NgClass } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AlertasService } from '../../../core/alertas.service';
-import { AuthService } from '../../../core/auth.service';
-import { PeliculasService } from '../../../core/peliculas.service';
-import { CatalogoVivoService } from '../../../core/catalogo-vivo.service';
+import { Alertas as AlertasService } from '../../../services/alertas';
+import { Auth as AuthService } from '../../../services/auth';
+import { Peliculas as PeliculasService } from '../../../services/peliculas';
+import { CatalogoVivo as CatalogoVivoService } from '../../../services/catalogo-vivo';
 import { alCambiar } from '../../../shared/al-cambiar';
 
 import { PeliculaConVenta } from '../../../models/pelicula';
 import { TarjetaPelicula } from '../../../shared/componentes/tarjeta-pelicula/tarjeta-pelicula';
+import { mensajeDeError } from '../../../shared/errores';
+import { SoloRolDirective } from '../../../directivas/solo-rol.directive';
 
 // Ignora mayúsculas y tildes: "amelie" encuentra "Amélie"
 const normalizar = (t: string) =>
@@ -16,7 +18,7 @@ const normalizar = (t: string) =>
 
 @Component({
   selector: 'app-home',
-  imports: [DatePipe, NgClass, RouterLink, TarjetaPelicula],
+  imports: [DatePipe, NgClass, RouterLink, TarjetaPelicula, SoloRolDirective],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
@@ -57,7 +59,6 @@ export class Home {
   alertaEnCurso = signal<number | null>(null);
   errorAlerta = signal('');
   esCliente = computed(() => this.auth.rol() === 'cliente');
-  logueado = this.auth.logueado;
 
   hayFiltros = computed(() => this.busqueda().trim() !== '' || this.generosElegidos().length > 0);
 
@@ -72,7 +73,7 @@ export class Home {
     try {
       this.peliculas.set(await this.service.listarCartelera());
     } catch (e) {
-      this.error.set((e as { message?: string }).message ?? 'No se pudo cargar la cartelera');
+      this.error.set(mensajeDeError(e, 'No se pudo cargar la cartelera'));
     } finally {
       this.cargando.set(false);
     }
@@ -99,7 +100,7 @@ export class Home {
         this.alertas.update(s => new Set(s).add(peliculaId));
       }
     } catch (e) {
-      this.errorAlerta.set((e as { message?: string }).message ?? 'No se pudo cambiar la alerta');
+      this.errorAlerta.set(mensajeDeError(e, 'No se pudo cambiar la alerta'));
     } finally {
       this.alertaEnCurso.set(null);
     }

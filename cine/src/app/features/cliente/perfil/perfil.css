@@ -1,4 +1,3 @@
-.meta,
 .vacio {
     color: #555;
 }
@@ -61,10 +60,6 @@
 
 .datos dd {
     margin: 0;
-}
-
-.error {
-    color: #c00;
 }
 
 .canjes {

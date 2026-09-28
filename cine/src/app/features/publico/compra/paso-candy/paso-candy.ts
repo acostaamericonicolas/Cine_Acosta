@@ -1,7 +1,7 @@
-import { DecimalPipe } from '@angular/common';
 import { Component, computed, input, output } from '@angular/core';
 import { CategoriaCandy, ProductoCandy } from '../../../../models/candy';
 import { ComboConDetalle } from '../../../../models/combo';
+import { PesosPipe } from '../../../../pipes/pesos-pipe';
 
 export const MAX_POR_ITEM = 20;
 
@@ -15,7 +15,7 @@ export const claveCombo = (id: number) => `combo-${id}`;
  */
 @Component({
   selector: 'app-paso-candy',
-  imports: [DecimalPipe],
+  imports: [PesosPipe],
   templateUrl: './paso-candy.html',
   styleUrl: './paso-candy.css',
 })

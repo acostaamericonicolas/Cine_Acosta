@@ -1,10 +1,11 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { form, FormField, required, min, maxLength } from '@angular/forms/signals';
-import { ConCambios } from '../../../core/guards/form-guard';
-import { CandyService } from '../../../core/candy.service';
-import { ImagenesService, MAX_IMAGEN_BYTES, TIPOS_IMAGEN } from '../../../core/imagenes.service';
+import { ConCambios } from '../../../guards/form-guard';
+import { Candy as CandyService } from '../../../services/candy';
+import { Imagenes as ImagenesService, MAX_IMAGEN_BYTES, TIPOS_IMAGEN } from '../../../services/imagenes';
 import { CategoriaCandy, ProductoNuevo } from '../../../models/candy';
+import { mensajeDeError } from '../../../shared/errores';
 
 interface ProductoModelo {
   nombre: string;
@@ -74,7 +75,7 @@ export class ProductoForm implements ConCambios {
         this.imagenPathActual = p.imagen_path;
       }
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudieron cargar los datos'));
+      this.error.set(mensajeDeError(e, 'No se pudieron cargar los datos'));
     } finally {
       this.cargando.set(false);
     }
@@ -155,13 +156,10 @@ export class ProductoForm implements ConCambios {
       this.router.navigate(['/admin/candy/productos']);
     } catch (e) {
       if (subido) await this.imagenes.eliminar('candy', subido).catch(() => { });
-      this.error.set(this.texto(e, 'No se pudo guardar'));
+      this.error.set(mensajeDeError(e, 'No se pudo guardar'));
     } finally {
       this.guardando.set(false);
     }
   }
 
-  private texto(e: unknown, defecto: string): string {
-    return (e as { message?: string }).message ?? defecto;
-  }
 }

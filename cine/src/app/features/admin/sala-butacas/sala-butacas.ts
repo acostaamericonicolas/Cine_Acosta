@@ -1,9 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { SalasService } from '../../../core/salas.service';
+import { Salas as SalasService } from '../../../services/salas';
 import { Sala } from '../../../models/sala';
 import { MapaButacas } from '../../../shared/componentes/mapa-butacas/mapa-butacas';
 import { BUTACAS, Butaca } from '../../../shared/sala-layout';
+import { mensajeDeError } from '../../../shared/errores';
 
 @Component({
   selector: 'app-sala-butacas',
@@ -66,7 +67,7 @@ export class SalaButacas {
         this.deshabilitadas.update(lista => [...lista, b.id]);
       }
     } catch (e) {
-      this.error.set((e as { message?: string }).message ?? 'No se pudo cambiar la butaca');
+      this.error.set(mensajeDeError(e, 'No se pudo cambiar la butaca'));
     } finally {
       this.ocupado.set(false);
     }

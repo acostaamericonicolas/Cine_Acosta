@@ -1,6 +1,5 @@
 .ayuda,
 .meta {
-    color: #555;
     max-width: 760px;
 }
 
@@ -21,10 +20,6 @@
 .filtros input[type='search'] {
     flex: 1 1 240px;
     padding: 0.4rem 0.6rem;
-}
-
-.error {
-    color: #c00;
 }
 
 table {

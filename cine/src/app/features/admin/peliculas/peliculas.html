@@ -28,11 +28,11 @@
             <td>{{ p.nombre }}</td>
             <td>{{ p.generos.join(', ') }}</td>
             <td>{{ p.duracion_min }} min</td>
-            <td>{{ p.restriccion_edad === 0 ? 'Todo público' : '+' + p.restriccion_edad }}</td>
+            <td>{{ p.restriccion_edad | restriccion }}</td>
             <td>
                 {{ p.fecha_estreno | date: 'dd/MM/yyyy' }}
                 @if (p.preventa) {
-                <br /><small>Preventa: $ {{ p.precio_preventa | number: '1.2-2' }}</small>
+                <br /><small>Preventa: {{ p.precio_preventa | pesos }}</small>
                 }
             </td>
             <td>

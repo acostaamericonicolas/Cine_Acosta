@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { form, FormField, required, email, pattern } from '@angular/forms/signals';
-import { ComprasService } from '../../../core/compras.service';
+import { Compras as ComprasService } from '../../../services/compras';
 
 /**
  * "Buscar mi compra": el invitado no tiene cuenta ni recibe mails,

@@ -14,7 +14,7 @@
                 <span class="etiqueta">Incluye entrada</span>
                 }
                 <small>{{ c.detalle.join(' + ') }}</small>
-                <span class="precio">$ {{ c.precio | number: '1.2-2' }}</span>
+                <span class="precio">{{ c.precio | pesos }}</span>
             </div>
             <div class="cantidad">
                 <button type="button" [disabled]="cantidad(clave) === 0" (click)="sumar(clave, -1)"
@@ -50,7 +50,7 @@
             }
             <div class="info">
                 <strong>{{ p.nombre }}</strong>
-                <span class="precio">$ {{ p.precio | number: '1.2-2' }}</span>
+                <span class="precio">{{ p.precio | pesos }}</span>
             </div>
             <div class="cantidad">
                 <button type="button" [disabled]="cantidad(clave) === 0" (click)="sumar(clave, -1)"

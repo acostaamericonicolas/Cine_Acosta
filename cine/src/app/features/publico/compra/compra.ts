@@ -1,21 +1,21 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { form, FormField, required, validate } from '@angular/forms/signals';
+import { form, FormField, required } from '@angular/forms/signals';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { AuthService } from '../../../core/auth.service';
-import { CatalogoVivoService } from '../../../core/catalogo-vivo.service';
+import { Auth as AuthService } from '../../../services/auth';
+import { CatalogoVivo as CatalogoVivoService } from '../../../services/catalogo-vivo';
 import { alCambiar } from '../../../shared/al-cambiar';
 
-import { CandyService } from '../../../core/candy.service';
-import { CombosService } from '../../../core/combos.service';
-import { ComprasService } from '../../../core/compras.service';
-import { CuponesService } from '../../../core/cupones.service';
-import { FuncionesService } from '../../../core/funciones.service';
-import { PeliculasService } from '../../../core/peliculas.service';
-import { RecompensasService } from '../../../core/recompensas.service';
-import { ReservasService } from '../../../core/reservas.service';
-import { SalasService } from '../../../core/salas.service';
+import { Candy as CandyService } from '../../../services/candy';
+import { Combos as CombosService } from '../../../services/combos';
+import { Compras as ComprasService } from '../../../services/compras';
+import { Cupones as CuponesService } from '../../../services/cupones';
+import { Funciones as FuncionesService } from '../../../services/funciones';
+import { Peliculas as PeliculasService } from '../../../services/peliculas';
+import { Recompensas as RecompensasService } from '../../../services/recompensas';
+import { Reservas as ReservasService } from '../../../services/reservas';
+import { Salas as SalasService } from '../../../services/salas';
 import { ButacaOcupada } from '../../../models/butaca-ocupada';
 import { CategoriaCandy, ProductoCandy } from '../../../models/candy';
 import { ComboConDetalle } from '../../../models/combo';
@@ -27,10 +27,16 @@ import { Precios } from '../../../models/sala';
 import { MapaButacas } from '../../../shared/componentes/mapa-butacas/mapa-butacas';
 import { edad, fechaLocal } from '../../../shared/fechas';
 import { precioEntrada } from '../../../shared/precios';
-import { BUTACAS, Butaca, TEXTO_TIPO } from '../../../shared/sala-layout';
+import { BUTACAS, Butaca } from '../../../shared/sala-layout';
 import { CodigoQr } from '../../../shared/componentes/codigo-qr/codigo-qr';
 import { PasoCandy, claveCombo, claveProducto } from './paso-candy/paso-candy';
 import { PasoPago } from './paso-pago/paso-pago';
+import { mensajeDeError } from '../../../shared/errores';
+import { fechaNoFutura } from '../../../validators/validators';
+import { PesosPipe } from '../../../pipes/pesos-pipe';
+import { PuntosPipe } from '../../../pipes/puntos-pipe';
+import { IdiomaPipe } from '../../../pipes/idioma-pipe';
+import { TipoButacaPipe } from '../../../pipes/tipo-butaca-pipe';
 
 type Paso = 'acceso' | 'edad' | 'butacas' | 'candy' | 'pago' | 'listo';
 
@@ -38,7 +44,7 @@ const idDe = (fila: string, numero: number) => `${fila}-${numero}`;
 
 @Component({
   selector: 'app-compra',
-  imports: [DatePipe, DecimalPipe, RouterLink, FormField, MapaButacas, PasoCandy, PasoPago, CodigoQr],
+  imports: [DatePipe, RouterLink, FormField, MapaButacas, PasoCandy, PasoPago, CodigoQr, PesosPipe, PuntosPipe, IdiomaPipe, TipoButacaPipe],
   templateUrl: './compra.html',
   styleUrl: './compra.css',
 })
@@ -57,7 +63,6 @@ export class Compra {
   private vivo = inject(CatalogoVivoService);
   private hoy = fechaLocal();
 
-  readonly textoTipo = TEXTO_TIPO;
 
   paso = signal<Paso>('butacas');
   funcion = signal<Funcion | null>(null);
@@ -79,9 +84,7 @@ export class Compra {
   modeloEdad = signal({ fechaNacimiento: '' });
   fEdad = form(this.modeloEdad, (s) => {
     required(s.fechaNacimiento, { message: 'Ingresá tu fecha de nacimiento' });
-    validate(s.fechaNacimiento, ({ value }) =>
-      value() > this.hoy ? { kind: 'fecha-futura', message: 'La fecha no puede ser futura' } : null
-    );
+    fechaNoFutura(s.fechaNacimiento);
   });
   avisoEdad = signal('');
 
@@ -234,7 +237,7 @@ export class Compra {
       const lista = await this.reservas.listar(this.funcionId);
       this.ocupadas.set(new Map(lista.map(o => [idDe(o.fila, o.numero), o])));
     } catch (e) {
-      this.error.set((e as { message?: string }).message ?? 'No se pudo cargar la función');
+      this.error.set(mensajeDeError(e, 'No se pudo cargar la función'));
     } finally {
       this.cargando.set(false);
     }
@@ -306,7 +309,7 @@ export class Compra {
         }));
       }
     } catch (e) {
-      this.aviso.set((e as { message?: string }).message ?? `No se pudo reservar la butaca ${b.id}.`);
+      this.aviso.set(mensajeDeError(e, `No se pudo reservar la butaca ${b.id}.`));
     } finally {
       this.procesando.set(null);
     }
@@ -326,7 +329,7 @@ export class Compra {
       this.productos.set(productos);
       this.combos.set(combos);
     } catch (e) {
-      this.errorCandy.set((e as { message?: string }).message ?? 'No se pudo cargar el candy');
+      this.errorCandy.set(mensajeDeError(e, 'No se pudo cargar el candy'));
     }
   }
 
@@ -345,16 +348,13 @@ export class Compra {
       const perfil = this.auth.perfil()!;
       const [primera, porEdad, recompensas] = await Promise.all([
         this.cuponesService.obtenerCuponPrimeraCompra(perfil.id),
-        this.cuponesService.listarPorEdad(),
+        this.cuponesService.vigentesParaEdad(edad(perfil.fecha_nacimiento, this.hoy)),
         this.recompensasService.canjeables(),
       ]);
       this.recompensas.set(recompensas);
       this.cuponPrimeraCompra.set(primera && !primera.usado ? Number(primera.porcentaje) : null);
 
-      const anios = edad(perfil.fecha_nacimiento, this.hoy);
-      const mejor = porEdad
-        .filter(c => c.activo && c.vigente_desde <= this.hoy && this.hoy <= c.vigente_hasta && anios >= c.edad_minima)
-        .sort((a, b) => b.porcentaje - a.porcentaje)[0];
+      const mejor = porEdad[0];   // vienen del mayor porcentaje al menor
       this.cuponEdad.set(mejor ? { porcentaje: Number(mejor.porcentaje), edadMinima: mejor.edad_minima } : null);
     } catch {
       // Sin cupones ni canjes se puede comprar igual; la base valida todo al confirmar

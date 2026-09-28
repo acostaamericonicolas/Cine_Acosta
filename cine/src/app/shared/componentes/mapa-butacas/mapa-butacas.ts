@@ -1,8 +1,9 @@
 import { NgClass } from '@angular/common';
 import { Component, computed, input, output } from '@angular/core';
 import { Butaca, SALA, TEXTO_TIPO, TipoButaca } from '../../sala-layout';
+import { EstadoButaca, TipoButacaDirective } from '../../../directivas/tipo-butaca.directive';
+import { TipoButacaPipe } from '../../../pipes/tipo-butaca-pipe';
 
-type EstadoButaca = 'libre' | 'deshabilitada' | 'ocupada' | 'seleccionada';
 
 const TEXTO_ESTADO: Record<EstadoButaca, string> = {
   libre: '',
@@ -13,14 +14,13 @@ const TEXTO_ESTADO: Record<EstadoButaca, string> = {
 
 @Component({
   selector: 'app-mapa-butacas',
-  imports: [NgClass],
+  imports: [NgClass, TipoButacaDirective, TipoButacaPipe],
   templateUrl: './mapa-butacas.html',
   styleUrl: './mapa-butacas.css',
 })
 export class MapaButacas {
   readonly sala = SALA;
   readonly tipos: TipoButaca[] = ['general', 'accesible', 'vip'];
-  readonly textoTipo = TEXTO_TIPO;
 
   // Los inputs llegan como listas de ids ('J-10'); se pasan a Set para consultar rápido
   deshabilitadas = input<string[]>([]);

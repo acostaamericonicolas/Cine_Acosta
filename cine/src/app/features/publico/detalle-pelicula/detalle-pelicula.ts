@@ -1,26 +1,28 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { AuthService } from '../../../core/auth.service';
-import { CatalogoVivoService } from '../../../core/catalogo-vivo.service';
+import { CatalogoVivo as CatalogoVivoService } from '../../../services/catalogo-vivo';
 import { alCambiar } from '../../../shared/al-cambiar';
 
-import { FuncionesService } from '../../../core/funciones.service';
+import { Funciones as FuncionesService } from '../../../services/funciones';
 import { Funcion } from '../../../models/funcion';
-import { PeliculasService } from '../../../core/peliculas.service';
+import { Peliculas as PeliculasService } from '../../../services/peliculas';
 import { PeliculaConVenta } from '../../../models/pelicula';
-import { ResenasService } from '../../../core/resenas.service';
+import { Resenas as ResenasService } from '../../../services/resenas';
 import { Resena } from '../../../models/resena';
-import { DuracionPipe } from '../../../shared/pipes/duracion-pipe';
-import { EstrellasPipe } from '../../../shared/pipes/estrellas-pipe';
+import { DuracionPipe } from '../../../pipes/duracion-pipe';
+import { EstrellasPipe } from '../../../pipes/estrellas-pipe';
 import { sumarDias } from '../../../shared/fechas';
 import { MiResena } from './mi-resena/mi-resena';
+import { SoloRolDirective } from '../../../directivas/solo-rol.directive';
+import { PesosPipe } from '../../../pipes/pesos-pipe';
+import { IdiomaPipe } from '../../../pipes/idioma-pipe';
 
 const RESENAS_INICIALES = 5;
 
 @Component({
   selector: 'app-detalle-pelicula',
-  imports: [DatePipe, DecimalPipe, RouterLink, DuracionPipe, EstrellasPipe, MiResena],
+  imports: [DatePipe, DecimalPipe, RouterLink, DuracionPipe, EstrellasPipe, MiResena, SoloRolDirective, PesosPipe, IdiomaPipe],
   templateUrl: './detalle-pelicula.html',
   styleUrl: './detalle-pelicula.css',
 })
@@ -29,12 +31,9 @@ export class DetallePelicula {
   private peliculasService = inject(PeliculasService);
   private resenasService = inject(ResenasService);
   private funcionesService = inject(FuncionesService);
-  private auth = inject(AuthService);
   private vivo = inject(CatalogoVivoService);
 
-  // HU-10: solo los clientes califican; el visitante ve una invitación a ingresar
-  esCliente = computed(() => this.auth.rol() === 'cliente');
-  logueado = this.auth.logueado;
+
 
   readonly resenasIniciales = RESENAS_INICIALES;
 

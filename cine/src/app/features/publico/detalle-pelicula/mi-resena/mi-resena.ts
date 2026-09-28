@@ -1,9 +1,10 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
 import { form, FormField, maxLength, validate } from '@angular/forms/signals';
-import { AuthService } from '../../../../core/auth.service';
-import { ResenasService } from '../../../../core/resenas.service';
+import { Auth as AuthService } from '../../../../services/auth';
+import { Resenas as ResenasService } from '../../../../services/resenas';
 import { Resena } from '../../../../models/resena';
-import { EstrellasPipe } from '../../../../shared/pipes/estrellas-pipe';
+import { EstrellasPipe } from '../../../../pipes/estrellas-pipe';
+import { mensajeDeError } from '../../../../shared/errores';
 
 export const MAX_COMENTARIO = 200;
 
@@ -87,7 +88,7 @@ export class MiResena {
       await this.cargar(this.peliculaId(), this.auth.perfil()!.id);
       this.cambio.emit();
     } catch (e) {
-      this.error.set((e as Error).message);
+      this.error.set(mensajeDeError(e));
     } finally {
       this.guardando.set(false);
     }

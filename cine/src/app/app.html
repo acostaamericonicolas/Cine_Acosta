@@ -1,32 +1,38 @@
 <nav>
   <a routerLink="/">Cine</a>
-    @if (auth.logueado()) {
-    <!-- Cada rol ve solo lo suyo: el cliente compra, el personal trabaja (RF-30/33) -->
-    @if (auth.rol() === 'cliente') {
+
+  <!-- Cada rol ve solo lo suyo: el cliente compra, el personal trabaja (RF-30/33) -->
+  <ng-container *appSoloRol="['cliente']">
     <a routerLink="/cliente">Mi perfil</a>
     <a routerLink="/cliente/compras">Mis compras</a>
-    }
-    @if (auth.rol() === 'empleado' || auth.rol() === 'admin') {
+  </ng-container>
+
+  <ng-container *appSoloRol="['empleado', 'admin']">
     <a routerLink="/empleado">Validar</a>
-    }
-    @if (auth.rol() === 'admin') {
-      <a routerLink="/admin/peliculas">Películas</a>
-      <a routerLink="/admin/usuarios">Personal</a>
-      <a routerLink="/admin/salas">Salas</a>
-      <a routerLink="/admin/funciones">Funciones</a>
-      <a routerLink="/admin/candy/productos">Candy</a>
-      <a routerLink="/admin/combos">Combos</a>
-      <a routerLink="/admin/cupones">Cupones</a>
-      <a routerLink="/admin/recompensas">Puntos</a>
-      <a routerLink="/admin/reportes">Reportes</a>
-      <a routerLink="/admin/actividad">Actividad</a>
-    }
-    <span>Hola, {{ auth.perfil()?.nombre }}</span>
-    <button (click)="salir()">Salir</button>
-    } @else {
-  <a routerLink="/mi-compra">Buscar mi compra</a>
-  <a routerLink="/login">Ingresar</a>
-  <a routerLink="/registro">Registrarme</a>
+  </ng-container>
+
+  <ng-container *appSoloRol="['admin']">
+    <a routerLink="/admin/peliculas">Películas</a>
+    <a routerLink="/admin/usuarios">Personal</a>
+    <a routerLink="/admin/salas">Salas</a>
+    <a routerLink="/admin/funciones">Funciones</a>
+    <a routerLink="/admin/candy/productos">Candy</a>
+    <a routerLink="/admin/combos">Combos</a>
+    <a routerLink="/admin/cupones">Cupones</a>
+    <a routerLink="/admin/recompensas">Puntos</a>
+    <a routerLink="/admin/reportes">Reportes</a>
+    <a routerLink="/admin/actividad">Actividad</a>
+  </ng-container>
+
+  <ng-container *appSoloRol="['invitado']">
+    <a routerLink="/mi-compra">Buscar mi compra</a>
+    <a routerLink="/login">Ingresar</a>
+    <a routerLink="/registro">Registrarme</a>
+  </ng-container>
+
+  @if (auth.perfil(); as p) {
+  <span>Hola, {{ p.nombre }}</span>
+  <button (click)="salir()">Salir</button>
   }
 </nav>
 

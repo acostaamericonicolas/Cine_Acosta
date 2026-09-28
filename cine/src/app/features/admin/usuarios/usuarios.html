@@ -23,7 +23,7 @@
         <tr>
             <td>{{ p.apellido }}, {{ p.nombre }}</td>
             <td>{{ p.email }}</td>
-            <td><span [class]="'rol ' + p.rol">{{ p.rol === 'admin' ? 'Administrador' : 'Empleado' }}</span></td>
+            <td><span [class]="'rol ' + p.rol">{{ p.rol | rol }}</span></td>
         </tr>
         } @empty {
         <tr>

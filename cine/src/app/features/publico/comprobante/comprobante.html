@@ -19,7 +19,7 @@
             <h1>{{ c.pelicula }}</h1>
             <p class="funcion">
                 {{ c.inicio | date: "EEEE d 'de' MMMM 'de' y, HH:mm" }} hs<br />
-                {{ c.sala }} · {{ c.formato }} · {{ c.idioma === 'castellano' ? 'Castellano' : 'Subtitulada' }} ·
+                {{ c.sala }} · {{ c.formato }} · {{ c.idioma | idioma }} ·
                 {{ c.duracion_min | duracion }}
             </p>
         </div>
@@ -41,7 +41,7 @@
         <ul class="lista">
             @for (e of c.entradas; track e.fila + e.numero) {
             <li>
-                <span>Butaca <strong>{{ e.fila }}-{{ e.numero }}</strong> · {{ textoTipo[e.tipo] }}</span>
+                <span>Butaca <strong>{{ e.fila }}-{{ e.numero }}</strong> · {{ e.tipo | tipoButaca }}</span>
                 <span>{{ e.usada_en ? 'Ingresó ' + (e.usada_en | date: 'HH:mm') : '' }}</span>
             </li>
             }
@@ -65,23 +65,23 @@
     <section>
         <h2>Pago</h2>
         <ul class="lista">
-            <li><span>Entradas</span><span>$ {{ c.subtotal_entradas | number: '1.2-2' }}</span></li>
+            <li><span>Entradas</span><span>{{ c.subtotal_entradas | pesos }}</span></li>
             @if (c.subtotal_candy > 0) {
-            <li><span>Candy</span><span>$ {{ c.subtotal_candy | number: '1.2-2' }}</span></li>
+            <li><span>Candy</span><span>{{ c.subtotal_candy | pesos }}</span></li>
             }
             @if (c.descuento_combos > 0) {
-            <li><span>Entradas incluidas en combos</span><span>− $ {{ c.descuento_combos | number: '1.2-2' }}</span></li>
+            <li><span>Entradas incluidas en combos</span><span>− {{ c.descuento_combos | pesos }}</span></li>
             }
             @if (c.descuento_canjes > 0) {
-            <li><span>Pagado con puntos ({{ c.puntos_canjeados }} pts)</span><span>− $ {{ c.descuento_canjes | number: '1.2-2' }}</span></li>
+            <li><span>Pagado con puntos ({{ c.puntos_canjeados | puntos: 'corto' }})</span><span>− {{ c.descuento_canjes | pesos }}</span></li>
             }
             @if (c.descuento_cupon > 0) {
-            <li><span>Cupón</span><span>− $ {{ c.descuento_cupon | number: '1.2-2' }}</span></li>
+            <li><span>Cupón</span><span>− {{ c.descuento_cupon | pesos }}</span></li>
             }
             @if (c.credito_usado > 0) {
-            <li><span>Crédito</span><span>− $ {{ c.credito_usado | number: '1.2-2' }}</span></li>
+            <li><span>Crédito</span><span>− {{ c.credito_usado | pesos }}</span></li>
             }
-            <li class="total"><span>Total pagado</span><strong>$ {{ c.total_pagado | number: '1.2-2' }}</strong></li>
+            <li class="total"><span>Total pagado</span><strong>{{ c.total_pagado | pesos }}</strong></li>
         </ul>
         @if (c.medio_pago) { <p class="meta">{{ c.medio_pago }}</p> }
     </section>

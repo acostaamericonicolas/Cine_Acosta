@@ -1,8 +1,12 @@
-import { DatePipe, DecimalPipe, NgStyle } from '@angular/common';
+import { DatePipe, NgStyle } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { ReportesService } from '../../../core/reportes.service';
+import { form, FormField, required } from '@angular/forms/signals';
+import { Reportes as ReportesService } from '../../../services/reportes';
 import { Barra, VentaDiaria } from '../../../models/reporte';
 import { fechaLocal, sumarDias } from '../../../shared/fechas';
+import { mensajeDeError } from '../../../shared/errores';
+import { PesosPipe } from '../../../pipes/pesos-pipe';
+import { fechaNoAnterior } from '../../../validators/validators';
 
 type Periodo = 'semana' | 'mes';
 
@@ -16,7 +20,7 @@ const numeroCsv = (n: number) => n.toFixed(2).replace('.', ',');
  */
 @Component({
   selector: 'app-reportes',
-  imports: [DatePipe, DecimalPipe, NgStyle],
+  imports: [DatePipe, NgStyle, PesosPipe, FormField],
   templateUrl: './reportes.html',
   styleUrl: './reportes.css',
 })
@@ -24,8 +28,13 @@ export class Reportes {
   private service = inject(ReportesService);
 
   // ----- HU-35 -----
-  desde = signal(sumarDias(fechaLocal(), -6));
-  hasta = signal(fechaLocal());
+  // Rango del reporte con Signal Forms (el máximo de un año lo controla la base)
+  filtroVentas = signal({ desde: sumarDias(fechaLocal(), -6), hasta: fechaLocal() });
+  fVentas = form(this.filtroVentas, (s) => {
+    required(s.desde, { message: 'Elegí la fecha desde' });
+    required(s.hasta, { message: 'Elegí la fecha hasta' });
+    fechaNoAnterior(s.hasta, s.desde, 'No puede ser anterior a "desde"');
+  });
   ventas = signal<VentaDiaria[]>([]);
   cargandoVentas = signal(true);
   errorVentas = signal('');
@@ -66,13 +75,20 @@ export class Reportes {
     this.cargarGraficos();
   }
 
-  async cargarVentas() {
+  verVentas(event: Event) {
+    event.preventDefault();
+    this.cargarVentas();
+  }
+
+  private async cargarVentas() {
     this.errorVentas.set('');
+    if (this.fVentas().invalid()) return;
     this.cargandoVentas.set(true);
     try {
-      this.ventas.set(await this.service.ventas(this.desde(), this.hasta()));
+      const { desde, hasta } = this.filtroVentas();
+      this.ventas.set(await this.service.ventas(desde, hasta));
     } catch (e) {
-      this.errorVentas.set((e as Error).message);   // por ejemplo: rango invertido o mayor a un año
+      this.errorVentas.set(mensajeDeError(e));   // por ejemplo: rango invertido o mayor a un año
       this.ventas.set([]);
     } finally {
       this.cargandoVentas.set(false);
@@ -102,7 +118,7 @@ export class Reportes {
       this.peliculas.set(peliculas);
       this.candy.set(candy);
     } catch (e) {
-      this.errorGraficos.set((e as Error).message);
+      this.errorGraficos.set(mensajeDeError(e));
     } finally {
       this.cargandoGraficos.set(false);
     }
@@ -129,7 +145,7 @@ export class Reportes {
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = `facturacion_${this.desde()}_a_${this.hasta()}.csv`;
+    a.download = `facturacion_${this.filtroVentas().desde}_a_${this.filtroVentas().hasta}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }

@@ -1,12 +1,13 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { form, FormField, required, min, maxLength } from '@angular/forms/signals';
-import { ConCambios } from '../../../core/guards/form-guard';
-import { CandyService } from '../../../core/candy.service';
+import { ConCambios } from '../../../guards/form-guard';
+import { Candy as CandyService } from '../../../services/candy';
 import { ProductoCandy } from '../../../models/candy';
-import { CombosService } from '../../../core/combos.service';
+import { Combos as CombosService } from '../../../services/combos';
 import { ItemCombo } from '../../../models/combo';
-import { ImagenesService, MAX_IMAGEN_BYTES, TIPOS_IMAGEN } from '../../../core/imagenes.service';
+import { Imagenes as ImagenesService, MAX_IMAGEN_BYTES, TIPOS_IMAGEN } from '../../../services/imagenes';
+import { mensajeDeError } from '../../../shared/errores';
 
 interface ComboModelo {
   nombre: string;
@@ -87,7 +88,7 @@ export class ComboForm implements ConCambios {
       }
       this.inicial = this.snapshot();
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudieron cargar los datos'));
+      this.error.set(mensajeDeError(e, 'No se pudieron cargar los datos'));
     } finally {
       this.cargando.set(false);
     }
@@ -189,13 +190,10 @@ export class ComboForm implements ConCambios {
       this.router.navigate(['/admin/combos']);
     } catch (e) {
       if (subido) await this.imagenes.eliminar('combos', subido).catch(() => { });
-      this.error.set(this.texto(e, 'No se pudo guardar'));
+      this.error.set(mensajeDeError(e, 'No se pudo guardar'));
     } finally {
       this.guardando.set(false);
     }
   }
 
-  private texto(e: unknown, defecto: string): string {
-    return (e as { message?: string }).message ?? defecto;
-  }
 }

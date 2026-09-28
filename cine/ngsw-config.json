@@ -31,10 +31,10 @@
     {
       "name": "cartelera",
       "urls": [
-        "https://igzqqxtnogghgdqlqhgf.supabase.co/rest/v1/peliculas*",
-        "https://igzqqxtnogghgdqlqhgf.supabase.co/rest/v1/funciones*",
-        "https://igzqqxtnogghgdqlqhgf.supabase.co/rest/v1/resenas*",
-        "https://igzqqxtnogghgdqlqhgf.supabase.co/rest/v1/precios_butaca*"
+        "https://*.supabase.co/rest/v1/peliculas*",
+        "https://*.supabase.co/rest/v1/funciones*",
+        "https://*.supabase.co/rest/v1/resenas*",
+        "https://*.supabase.co/rest/v1/precios_butaca*"
       ],
       "cacheConfig": {
         "strategy": "freshness",
@@ -46,7 +46,7 @@
     {
       "name": "imagenes",
       "urls": [
-        "https://igzqqxtnogghgdqlqhgf.supabase.co/storage/v1/object/public/**"
+        "https://*.supabase.co/storage/v1/object/public/**"
       ],
       "cacheConfig": {
         "strategy": "performance",

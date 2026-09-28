@@ -1,9 +1,11 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
-import { form, FormField, required, min, max, validate } from '@angular/forms/signals';
-import { CuponesService } from '../../../core/cupones.service';
+import { form, FormField, required, min, max } from '@angular/forms/signals';
+import { Cupones as CuponesService } from '../../../services/cupones';
 import { CuponPorEdad } from '../../../models/cupon';
 import { fechaLocal } from '../../../shared/fechas';
+import { mensajeDeError } from '../../../shared/errores';
+import { fechaNoAnterior } from '../../../validators/validators';
 
 type EstadoVigencia = 'Vigente' | 'Programado' | 'Vencido' | 'Desactivado';
 
@@ -36,9 +38,7 @@ export class Cupones {
   fNuevoCupon = form(this.nuevoCupon, (s) => {
     required(s.desde, { message: 'Elegí la fecha de inicio' });
     required(s.hasta, { message: 'Elegí la fecha de fin' });
-    validate(s.hasta, ({ value, valueOf }) =>
-      value() < valueOf(s.desde) ? { kind: 'rango-invalido', message: 'Tiene que ser posterior al inicio' } : null
-    );
+    fechaNoAnterior(s.hasta, s.desde);
     min(s.edadMinima, 0, { message: 'No puede ser negativa' });
     max(s.edadMinima, 120, { message: 'Ingresá una edad razonable' });
     min(s.porcentaje, 1, { message: 'Tiene que ser mayor a 0' });
@@ -59,7 +59,7 @@ export class Cupones {
       this.primeraCompra.set({ porcentaje });
       this.cupones.set(cupones);
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudieron cargar los cupones'));
+      this.error.set(mensajeDeError(e, 'No se pudieron cargar los cupones'));
     } finally {
       this.cargando.set(false);
     }
@@ -81,7 +81,7 @@ export class Cupones {
       await this.service.actualizarPorcentajePrimeraCompra(this.primeraCompra().porcentaje);
       this.mensaje.set('Porcentaje de primera compra actualizado. Se aplica a los próximos registros.');
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudo guardar'));
+      this.error.set(mensajeDeError(e, 'No se pudo guardar'));
     } finally {
       this.guardandoPrimeraCompra.set(false);
     }
@@ -105,7 +105,7 @@ export class Cupones {
       this.cupones.set(await this.service.listarPorEdad());
       this.mensaje.set('Cupón creado.');
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudo crear el cupón'));
+      this.error.set(mensajeDeError(e, 'No se pudo crear el cupón'));
     } finally {
       this.guardandoCupon.set(false);
     }
@@ -117,7 +117,7 @@ export class Cupones {
       await this.service.actualizarActivoPorEdad(c.id, !c.activo);
       this.cupones.update(lista => lista.map(x => (x.id === c.id ? { ...x, activo: !c.activo } : x)));
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudo cambiar el estado'));
+      this.error.set(mensajeDeError(e, 'No se pudo cambiar el estado'));
     }
   }
 
@@ -128,12 +128,9 @@ export class Cupones {
       await this.service.eliminarPorEdad(c.id);
       this.cupones.update(lista => lista.filter(x => x.id !== c.id));
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudo eliminar'));
+      this.error.set(mensajeDeError(e, 'No se pudo eliminar'));
     }
   }
   
   private limpiar() { this.error.set(''); this.mensaje.set(''); }
-  private texto(e: unknown, defecto: string): string {
-    return (e as { message?: string }).message ?? defecto;
-  }
 }

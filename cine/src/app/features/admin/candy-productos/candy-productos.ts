@@ -1,13 +1,14 @@
-import { DecimalPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CandyService } from '../../../core/candy.service';
+import { Candy as CandyService } from '../../../services/candy';
 import { CategoriaCandy, ProductoCandy } from '../../../models/candy';
-import { ImagenesService } from '../../../core/imagenes.service';
+import { Imagenes as ImagenesService } from '../../../services/imagenes';
+import { mensajeDeError } from '../../../shared/errores';
+import { PesosPipe } from '../../../pipes/pesos-pipe';
 
 @Component({
   selector: 'app-candy-productos',
-  imports: [RouterLink, DecimalPipe],
+  imports: [RouterLink, PesosPipe],
   templateUrl: './candy-productos.html',
   styleUrl: './candy-productos.css',
 })
@@ -42,7 +43,7 @@ export class CandyProductos {
       this.productos.set(productos);
       this.categorias.set(categorias);
     } catch (e) {
-      this.error.set((e as { message?: string }).message ?? 'No se pudieron cargar los productos');
+      this.error.set(mensajeDeError(e, 'No se pudieron cargar los productos'));
     } finally {
       this.cargando.set(false);
     }
@@ -54,7 +55,7 @@ export class CandyProductos {
       await this.service.actualizarProducto(p.id, { activo: !p.activo });
       this.productos.update(lista => lista.map(x => (x.id === p.id ? { ...x, activo: !p.activo } : x)));
     } catch (e) {
-      this.error.set((e as { message?: string }).message ?? 'No se pudo cambiar el estado');
+      this.error.set(mensajeDeError(e, 'No se pudo cambiar el estado'));
     }
   }
 
@@ -66,7 +67,7 @@ export class CandyProductos {
       if (p.imagen_path) await this.imagenes.eliminar('candy', p.imagen_path).catch(() => { });
       this.productos.update(lista => lista.filter(x => x.id !== p.id));
     } catch (e) {
-      this.error.set((e as { message?: string }).message ?? 'No se pudo eliminar');
+      this.error.set(mensajeDeError(e, 'No se pudo eliminar'));
     }
   }
 }

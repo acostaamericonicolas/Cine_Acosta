@@ -1,7 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { form, FormField, required, min, maxLength } from '@angular/forms/signals';
-import { CandyService } from '../../../core/candy.service';
+import { Candy as CandyService } from '../../../services/candy';
 import { CategoriaCandy } from '../../../models/candy';
+import { mensajeDeError } from '../../../shared/errores';
 
 @Component({
   selector: 'app-candy-categorias',
@@ -30,7 +31,7 @@ export class CandyCategorias {
     try {
       this.categorias.set(await this.service.listarCategorias());
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudieron cargar las categorías'));
+      this.error.set(mensajeDeError(e, 'No se pudieron cargar las categorías'));
     } finally {
       this.cargando.set(false);
     }
@@ -47,7 +48,7 @@ export class CandyCategorias {
       this.categorias.set(await this.service.listarCategorias());
       this.mensaje.set('Categoría creada.');
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudo crear la categoría'));
+      this.error.set(mensajeDeError(e, 'No se pudo crear la categoría'));
     }
   }
 
@@ -58,12 +59,9 @@ export class CandyCategorias {
       await this.service.eliminarCategoria(c.id);
       this.categorias.update(lista => lista.filter(x => x.id !== c.id));
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudo eliminar'));
+      this.error.set(mensajeDeError(e, 'No se pudo eliminar'));
     }
   }
 
   private limpiar() { this.error.set(''); this.mensaje.set(''); }
-  private texto(e: unknown, defecto: string): string {
-    return (e as { message?: string }).message ?? defecto;
-  }
 }

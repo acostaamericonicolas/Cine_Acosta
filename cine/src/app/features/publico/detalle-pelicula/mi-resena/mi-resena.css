@@ -44,14 +44,9 @@ label {
 }
 
 .meta {
-    color: #555;
     margin: 0.4rem 0;
 }
 
 .mia p {
     margin: 0 0 0.4rem;
-}
-
-.error {
-    color: #c00;
 }

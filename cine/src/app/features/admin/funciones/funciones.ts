@@ -1,16 +1,18 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { FuncionesService } from '../../../core/funciones.service';
+import { Funciones as FuncionesService } from '../../../services/funciones';
 import { Funcion } from '../../../models/funcion';
-import { PeliculasService } from '../../../core/peliculas.service';
+import { Peliculas as PeliculasService } from '../../../services/peliculas';
 import { Pelicula } from '../../../models/pelicula';
-import { SalasService } from '../../../core/salas.service';
+import { Salas as SalasService } from '../../../services/salas';
 import { Sala } from '../../../models/sala';
+import { mensajeDeError } from '../../../shared/errores';
+import { IdiomaPipe } from '../../../pipes/idioma-pipe';
 
 @Component({
   selector: 'app-funciones',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, IdiomaPipe],
   templateUrl: './funciones.html',
   styleUrl: './funciones.css',
 })
@@ -53,7 +55,7 @@ export class Funciones {
       this.peliculas.set(peliculas);
       this.salas.set(salas);
     } catch (e) {
-      this.error.set((e as { message?: string }).message ?? 'No se pudieron cargar las funciones');
+      this.error.set(mensajeDeError(e, 'No se pudieron cargar las funciones'));
     } finally {
       this.cargando.set(false);
     }
@@ -66,7 +68,7 @@ export class Funciones {
       await this.funcionesService.eliminar(f.id);
       this.funciones.update(lista => lista.filter(x => x.id !== f.id));
     } catch (e) {
-      this.error.set((e as { message?: string }).message ?? 'No se pudo eliminar');
+      this.error.set(mensajeDeError(e, 'No se pudo eliminar'));
     }
   }
 }

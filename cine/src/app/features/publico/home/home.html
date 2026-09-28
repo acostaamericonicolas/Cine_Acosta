@@ -56,15 +56,13 @@
         @for (p of proximas(); track p.id) {
         <app-tarjeta-pelicula [pelicula]="p">
             <span class="insignia-estreno">Estreno {{ p.fecha_estreno | date: 'dd/MM' }}</span>
-            @if (esCliente()) {
-            <button type="button" class="alerta" [class.activa]="alertas().has(p.id)"
+            <button *appSoloRol="['cliente']" type="button" class="alerta" [class.activa]="alertas().has(p.id)"
                 [disabled]="alertaEnCurso() === p.id" [attr.aria-pressed]="alertas().has(p.id)"
                 (click)="alternarAlerta(p.id)">
                 {{ alertas().has(p.id) ? '🔔 Alerta activada' : '🔕 Avisame cuando abra la venta' }}
             </button>
-            } @else if (!logueado()) {
-            <a class="alerta" routerLink="/login" [queryParams]="{ volverA: '/' }">Ingresá para activar la alerta</a>
-            }
+            <a *appSoloRol="['invitado']" class="alerta" routerLink="/login" [queryParams]="{ volverA: '/' }">Ingresá para
+                activar la alerta</a>
         </app-tarjeta-pelicula>
         }
     </div>

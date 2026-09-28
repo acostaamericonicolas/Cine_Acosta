@@ -1,9 +1,11 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AuthService } from '../../../core/auth.service';
-import { ComprasService } from '../../../core/compras.service';
+import { Auth as AuthService } from '../../../services/auth';
+import { Compras as ComprasService } from '../../../services/compras';
 import { CompraResumen } from '../../../models/compra';
+import { mensajeDeError } from '../../../shared/errores';
+import { formatoPesos, PesosPipe } from '../../../pipes/pesos-pipe';
 
 const DOS_HORAS = 2 * 60 * 60 * 1000;
 
@@ -22,7 +24,7 @@ const TEXTO_SITUACION: Record<Situacion, string> = {
  */
 @Component({
   selector: 'app-mis-compras',
-  imports: [DatePipe, DecimalPipe, RouterLink],
+  imports: [DatePipe, RouterLink, PesosPipe],
   templateUrl: './mis-compras.html',
   styleUrl: './mis-compras.css',
 })
@@ -47,7 +49,7 @@ export class MisCompras {
       const perfil = this.auth.perfil();
       if (perfil) this.lista.set(await this.compras.misCompras(perfil.id));
     } catch (e) {
-      this.error.set((e as { message?: string }).message ?? 'No se pudieron cargar tus compras');
+      this.error.set(mensajeDeError(e, 'No se pudieron cargar tus compras'));
     } finally {
       this.cargando.set(false);
     }
@@ -73,7 +75,7 @@ export class MisCompras {
   }
 
   async cancelar(c: CompraResumen) {
-    const partes = [`Se te acreditan $ ${this.creditoACobrar(c).toFixed(2)} como crédito (no se devuelve dinero).`];
+    const partes = [`Se te acreditan ${formatoPesos(this.creditoACobrar(c))} como crédito (no se devuelve dinero).`];
     if (c.puntos_ganados > 0) partes.push(`Se descuentan los ${c.puntos_ganados} puntos que ganaste.`);
     if (c.puntos_canjeados > 0) partes.push(`Se te devuelven los ${c.puntos_canjeados} puntos que canjeaste.`);
     partes.push('Si usaste un cupón, no se devuelve.');
@@ -84,11 +86,11 @@ export class MisCompras {
     this.cancelando.set(c.codigo);
     try {
       const r = await this.compras.cancelar(c.codigo);
-      this.mensaje.set(`Compra ${r.codigo} cancelada. Se acreditaron $ ${Number(r.credito_acreditado).toFixed(2)} a tu crédito.`);
+      this.mensaje.set(`Compra ${r.codigo} cancelada. Se acreditaron ${formatoPesos(r.credito_acreditado)} a tu crédito.`);
       await this.auth.refrescarPerfil();   // crédito y puntos nuevos
       await this.cargar();
     } catch (e) {
-      this.error.set((e as Error).message);   // mensaje de la base: dice por qué no se pudo
+      this.error.set(mensajeDeError(e));   // mensaje de la base: dice por qué no se pudo
     } finally {
       this.cancelando.set(null);
     }

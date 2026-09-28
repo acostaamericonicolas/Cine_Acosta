@@ -1,0 +1,1 @@
+import{Ft as da}from"./chunk-CFucyWDT.js";var n=class e{transform(r){return r?`+${r}`:`Todo público`}static ɵfac=function(t){return new(t||e)};static ɵpipe=da({name:`restriccion`,type:e,pure:!0})};export{n as t};

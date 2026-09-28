@@ -62,10 +62,6 @@
     margin-top: 2.5rem;
 }
 
-.ayuda {
-    color: #555;
-}
-
 .insignia-estreno {
     align-self: flex-start;
     background: #eef1f7;
@@ -91,8 +87,4 @@
 .alerta.activa {
     background: #1f3864;
     color: #fff;
-}
-
-.error {
-    color: #c00;
 }

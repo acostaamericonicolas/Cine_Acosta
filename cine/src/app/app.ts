@@ -1,16 +1,17 @@
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
-import { AlertasService } from './core/alertas.service';
-import { AuthService } from './core/auth.service';
-import { CatalogoVivoService } from './core/catalogo-vivo.service';
+import { Alertas as AlertasService } from './services/alertas';
+import { Auth as AuthService } from './services/auth';
+import { CatalogoVivo as CatalogoVivoService } from './services/catalogo-vivo';
 import { alCambiar } from './shared/al-cambiar';
 import { AvisoVenta } from './models/alerta';
+import { SoloRolDirective } from './directivas/solo-rol.directive';
 
 const CADA_UN_MINUTO = 60_000;
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, SoloRolDirective],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })

@@ -3,18 +3,21 @@
 <section class="facturacion">
     <h2>Facturación diaria y entradas vendidas</h2>
 
-    <div class="filtros no-imprimir">
+    <form class="filtros no-imprimir" (submit)="verVentas($event)">
         <label>Desde
-            <input #d type="date" [value]="desde()" (change)="desde.set(d.value)" />
+            <input type="date" [formField]="fVentas.desde" />
         </label>
         <label>Hasta
-            <input #h type="date" [value]="hasta()" (change)="hasta.set(h.value)" />
+            <input type="date" [formField]="fVentas.hasta" />
         </label>
-        <button type="button" (click)="cargarVentas()">Ver</button>
+        <button type="submit" [disabled]="fVentas().invalid()">Ver</button>
         <button type="button" [disabled]="ventas().length === 0" (click)="exportarCsv()">Exportar a Excel (CSV)</button>
         <button type="button" [disabled]="ventas().length === 0" (click)="imprimir()">Imprimir / PDF</button>
-    </div>
-    <p class="solo-imprimir">Del {{ desde() | date: 'dd/MM/yyyy' }} al {{ hasta() | date: 'dd/MM/yyyy' }}</p>
+    </form>
+    @if (fVentas.hasta().invalid()) {
+    <p class="error no-imprimir">{{ fVentas.hasta().errors()[0].message }}</p>
+    }
+    <p class="solo-imprimir">Del {{ filtroVentas().desde | date: 'dd/MM/yyyy' }} al {{ filtroVentas().hasta | date: 'dd/MM/yyyy' }}</p>
 
     @if (errorVentas()) { <p class="error" role="alert">{{ errorVentas() }}</p> }
 
@@ -40,8 +43,8 @@
                 <td>{{ v.compras }}</td>
                 <td>{{ v.entradas }}</td>
                 <td>{{ v.unidades_candy }}</td>
-                <td>$ {{ v.facturado | number: '1.2-2' }}</td>
-                <td>$ {{ v.credito_usado | number: '1.2-2' }}</td>
+                <td>{{ v.facturado | pesos }}</td>
+                <td>{{ v.credito_usado | pesos }}</td>
             </tr>
             }
         </tbody>
@@ -51,8 +54,8 @@
                 <th>{{ t.compras }}</th>
                 <th>{{ t.entradas }}</th>
                 <th>{{ t.unidades_candy }}</th>
-                <th>$ {{ t.facturado | number: '1.2-2' }}</th>
-                <th>$ {{ t.credito_usado | number: '1.2-2' }}</th>
+                <th>{{ t.facturado | pesos }}</th>
+                <th>{{ t.credito_usado | pesos }}</th>
             </tr>
         </tfoot>
     </table>

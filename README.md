@@ -54,6 +54,7 @@ Los cambios de la base a partir de HU-21 están en [`supabase/`](supabase/), num
 | `13_reportes.sql` | 35, 36 | `reporte_ventas`, `ranking_peliculas`, `ranking_candy` |
 | `14_resenas_compradores.sql` | 10, 11 | solo califica quien compró, después de su función y una vez |
 | `15_catalogo_en_vivo.sql` | 11, 38 | tabla `catalogo_version` en Realtime: las pantallas se actualizan solas cuando el admin cambia películas, funciones, combos, productos o precios |
+| `16_revision.sql` | 32, 31 | revisión de código: ingreso habilitado 30 min antes de la función; no se puede canjear dos veces el mismo producto |
 
 Lo anterior (tablas, triggers y policies de las HU 01 a 20) se creó directamente en Supabase y está documentado en la [sección 6](#6-base-de-datos-supabase).
 
@@ -111,9 +112,11 @@ En Supabase → Authentication, la **confirmación de mail tiene que estar desac
 
 ```
 cine/src/app/
-├── core/                  servicios (uno por tabla o dominio) y guards
-│   ├── guards/            auth-guard, role-guard, child-guard, form-guard
-│   └── *.service.ts
+├── services/              un servicio por tabla o dominio: auth.ts, compras.ts, peliculas.ts...
+├── guards/                auth-guard, role-guard, child-guard, form-guard
+├── pipes/                 duracion, estrellas, pesos, puntos, idioma, tipo-butaca, restriccion, rol
+├── directivas/            tipo-butaca.directive (atributo), solo-rol.directive (estructural)
+├── validators/            validators.ts: validadores reutilizables para Signal Forms
 ├── models/                interfaces y tipos de datos (sin lógica)
 ├── features/              una carpeta por área, cada una cargada con lazy loading
 │   ├── publico/           home, detalle, compra, comprobante, buscar-compra, login, registro
@@ -122,7 +125,8 @@ cine/src/app/
 │   └── admin/             ABMs del panel, personal, puntos, reportes, actividad
 └── shared/                lo que usan varias áreas
     ├── componentes/       tarjeta-pelicula, mapa-butacas, codigo-qr
-    ├── pipes/             duracion-pipe, estrellas-pipe
+    ├── errores.ts         mensajeDeError(): el texto de error para mostrar (ver 4.1)
+    ├── permisos.ts        verificarPermiso(): 0 filas = una policy bloqueó el cambio (ver 4.2)
     ├── sala-layout.ts     distribución fija de butacas
     ├── fechas.ts          fecha local, edad, sumar días (ver 4.8)
     ├── al-cambiar.ts      effect que reacciona a una señal salvo la primera vez (catálogo en vivo)
@@ -130,7 +134,7 @@ cine/src/app/
     └── ...
 ```
 
-**Por qué esta estructura.** HU-01 pide cuatro áreas (público, cliente, empleado, admin) con lazy loading. Una carpeta por área hace que cada `*.routes.ts` cargue solo sus componentes. `core/` y `shared/` evitan que un área importe cosas de otra.
+**Por qué esta estructura.** HU-01 pide cuatro áreas (público, cliente, empleado, admin) con lazy loading. Una carpeta por área hace que cada `*.routes.ts` cargue solo sus componentes. `services/`, `guards/`, `pipes/`, `directivas/`, `validators/` y `shared/` están fuera de las áreas para que ninguna área importe cosas de otra. Los nombres de carpeta son los de los ejemplos de clase.
 
 **Convenciones tomadas de los ejemplos de clase (`A342-2-main`):**
 
@@ -138,6 +142,9 @@ cine/src/app/
 |---|---|
 | Componentes standalone con archivos `nombre.ts / .html / .css` y clase sin sufijo (`Login`, `Home`) | todos |
 | Servicios con `@Service()` (el decorador de Angular 22, singleton global) | `ejemploSupabase`, `guards` |
+| Servicio en `services/nombre.ts` con clase sin sufijo (`Compras`), importado con alias: `import { Compras as ComprasService } from '../services/compras'` | `ejemploSupabase` (`Cosas as CosasService`) |
+| Directivas en `directivas/nombre.directive.ts`: de atributo con `Renderer2` y estructural con `TemplateRef` / `ViewContainerRef` | `directivas` (`hover-zoom`, `admin`) |
+| Validadores reutilizables en `validators/` | `clase-formularios` |
 | Interfaces en `models/`, separadas del servicio | `ejemploSupabase/models`, `guards/models` |
 | Un archivo por guard: `auth-guard`, `role-guard`, `child-guard`, `form-guard` | `guards` |
 | Formularios con **Signal Forms** (`form`, `FormField`, `required`, `validate`…) | `ejemploSupabase` |
@@ -147,7 +154,7 @@ cine/src/app/
 | Rutas con `loadComponent` / `loadChildren` | `rutas`, `modulos` |
 | Estado de pantalla en `signal` y derivados en `computed` | todos |
 
-**Una diferencia a propósito con el ejemplo:** en `ejemploSupabase` cada servicio crea su propio cliente con `createClient`. Acá hay **un único `SupabaseService`** y el resto de los servicios le piden el cliente. HU-01 lo pide así y, además, varios clientes en el mismo navegador compiten por la misma sesión guardada.
+**Una diferencia a propósito con el ejemplo:** en `ejemploSupabase` cada servicio crea su propio cliente con `createClient`. Acá hay **un único servicio `Supabase`** (`services/supabase.ts`, importado como `SupabaseService`) y el resto de los servicios le piden el cliente. HU-01 lo pide así y, además, varios clientes en el mismo navegador compiten por la misma sesión guardada.
 
 **Única excepción:** `SupabaseService.crearClienteSinSesion()` crea un cliente aparte, con `persistSession: false` y su propio `storageKey`. Lo usa solo el alta de personal (HU-34): con el cliente principal, `signUp` reemplazaría la sesión del admin por la de la cuenta nueva.
 
@@ -159,6 +166,8 @@ cine/src/app/
 
 Cada método de servicio hace la consulta, y si Supabase devuelve `error` lo lanza. Los componentes usan `try / catch / finally` con tres señales: `cargando`, `error` y, si corresponde, `mensaje`. Así cada pantalla muestra carga, error y éxito de la misma manera (HU-38).
 
+El texto que se muestra sale **siempre** de `mensajeDeError(e, 'texto por defecto')` (`shared/errores.ts`). Sirve para los errores de Supabase, los que lanza la base con `raise exception` y los propios. Antes cada pantalla lo resolvía a mano (32 veces) y 8 componentes tenían su propio `texto()`.
+
 Los códigos de error de Postgres se traducen a mensajes claros en el servicio, no en el componente:
 
 | Código | Significado | Ejemplo de mensaje |
@@ -169,7 +178,7 @@ Los códigos de error de Postgres se traducen a mensajes claros en el servicio, 
 
 ### 4.2 Detectar cuando una policy bloquea un cambio
 
-Si una policy RLS no permite un `update` o `delete`, Supabase **no devuelve error**: simplemente no toca ninguna fila. Por eso los `update` y `delete` terminan en `.select()` y, si vuelven 0 filas, se lanza "No tenés permiso para hacer este cambio". Sin esto, la pantalla mostraría "guardado" aunque no se haya guardado nada.
+Si una policy RLS no permite un `update` o `delete`, Supabase **no devuelve error**: simplemente no toca ninguna fila. Por eso los `update` y `delete` terminan en `.select()` y llaman a **`verificarPermiso(data)`** (`shared/permisos.ts`): si vuelven 0 filas, lanza "No tenés permiso para hacer este cambio". Sin esto, la pantalla mostraría "guardado" aunque no se haya guardado nada. Antes el chequeo estaba copiado en 14 lugares.
 
 ### 4.3 Sesión y guards
 
@@ -180,11 +189,13 @@ Si una policy RLS no permite un `update` o `delete`, Supabase **no devuelve erro
 
 | Guard | Tipo | Dónde | Por qué ese tipo |
 |---|---|---|---|
-| `authGuard` | `canActivate` | `/cliente` | Solo pide sesión. Si no hay, manda al login con `?volverA=` para volver después. |
+| `authGuard` | `canActivate` | `/cliente` (primero) | Solo pide sesión. Si no hay, manda al login con `?volverA=` para volver después. |
+| `clienteGuard` | `canActivate` | `/cliente` (después de `authGuard`) | Perfil, compras y puntos son **solo para clientes**. El personal no compra (HU-34). |
 | `adminGuard`, `empleadoGuard` | `canMatch` | `/admin`, `/empleado` | Si no corresponde, **no se descarga el código lazy** del área. El admin también puede entrar a `/empleado`. |
-| `clienteGuard` | `canMatch` | `/cliente` | Perfil, compras y puntos son **solo para clientes**. El personal no compra (HU-34). |
 | `adminChildGuard` | `canActivateChild` | hijos de `/admin` | Se vuelve a verificar en cada navegación interna del panel (por ejemplo, si la sesión se cerró en otra pestaña). |
 | `formGuard` | `canDeactivate` | formularios de admin y registro | Pregunta antes de salir si hay cambios sin guardar. |
+
+**Orden: primero la sesión y después el rol.** `verificarRol()` (`role-guard.ts`), que usan todos los guards de rol, primero controla que haya sesión: si no hay, manda al login **con `volverA`**. Recién después controla el rol, y si no corresponde manda a la home. En `/cliente` además el orden está explícito en la ruta: `canActivate: [authGuard, clienteGuard]`. Antes `clienteGuard` era `canMatch` y se ejecutaba antes que `authGuard`, así que perdía el `volverA`.
 
 Para `formGuard`, cada formulario implementa `ConCambios.hayCambios()`. Guarda un `JSON.stringify` del modelo inicial (o del que se cargó al editar) y lo compara con el actual. Así, cargar datos para editar no cuenta como "cambio", y después de guardar no se vuelve a preguntar.
 
@@ -200,6 +211,18 @@ El parámetro `volverA` solo se acepta si empieza con `/` y no con `//`, para qu
 Por eso la confirmación de mail tiene que estar desactivada: sin sesión, la policy de `perfiles` no deja insertar. Si Supabase la pide, se muestra un mensaje que lo explica.
 
 El `rol` **no se envía desde el cliente**: toma el valor por defecto `cliente` en la base. Así nadie puede registrarse como admin editando la petición.
+
+**Mensajes claros de login y registro.** `mensajeDeAuth()` (`services/auth.ts`) traduce el código del error de Supabase Auth:
+
+| Caso | Mensaje |
+|---|---|
+| `invalid_credentials` | "El mail o la contraseña no son correctos." |
+| Sin conexión | "No hay conexión con el servidor. Revisá tu internet y probá de nuevo." |
+| `user_already_exists` / `email_exists` (registro) | "Ya existe una cuenta con ese mail…" |
+| `email_not_confirmed`, `weak_password`, `over_request_rate_limit`… | un mensaje para cada uno |
+| La cuenta existe pero no tiene perfil (el registro se cortó a mitad) | "Tu cuenta existe pero su registro quedó incompleto…". Además se cierra esa sesión a medias. |
+
+Antes el login mostraba "Mail o contraseña incorrectos" ante cualquier falla.
 
 ### 4.5 Imágenes con Supabase Storage
 
@@ -218,14 +241,51 @@ El backlog proponía guardar una URL porque Storage no se vio en clase. **Se usa
 ### 4.6 Signal Forms
 
 - Los `<select>` trabajan con texto, así que los modelos de formulario guardan ids como `string` (`peliculaId: '3'`) y se convierten a número al guardar.
-- Las validaciones que no vienen incluidas se hacen con `validate()`: fecha de nacimiento no futura, al menos un género, "hasta" posterior a "desde".
+- Las validaciones que no vienen incluidas se hacen con `validate()`. Las que se repiten están en **`validators/validators.ts`**:
+  - `fechaNoFutura(s.fechaNacimiento)`, en registro, alta de personal y edad en la compra;
+  - `fechaNoAnterior(s.hasta, s.desde)`, en cupones, funciones recurrentes, reportes y actividad.
+
+  Las propias de un solo formulario (por ejemplo, "al menos un género") quedan en el componente.
+- **Todos los formularios usan Signal Forms**, incluidos los filtros de fechas de Reportes y Actividad y el selector de función de Validación, que antes estaban armados a mano con `[value]` y `(change)`.
 - Los errores se muestran solo si el campo fue `touched()`, para no llenar de rojo un formulario vacío.
 - El botón de enviar queda deshabilitado mientras el formulario es inválido o se está guardando, para evitar doble envío.
 
 ### 4.7 Componentes compartidos
 
 - **`TarjetaPelicula`** recibe la película con `input.required()` y proyecta con `<ng-content>` lo que el padre ponga adentro. La home lo usa para la insignia "Más vendida #N" sin que la tarjeta sepa nada del ranking (HU-07).
-- **`MapaButacas`** no sabe quién lo usa. Recibe listas de ids (`deshabilitadas`, `ocupadas`, `seleccionadas`) y emite `butacaClick`. El admin lo usa para habilitar o deshabilitar butacas, y la compra (HU-22) lo va a usar para elegir butacas. Las listas se convierten a `Set` con `computed` para que consultar el estado de 518 butacas sea rápido.
+- **`MapaButacas`** no sabe quién lo usa. Recibe listas de ids (`deshabilitadas`, `ocupadas`, `seleccionadas`) y emite `butacaClick`. El admin lo usa para habilitar o deshabilitar butacas, y la compra (HU-22) para elegirlas. Las listas se convierten a `Set` con `computed` para que consultar el estado de 518 butacas sea rápido. El estilo de cada butaca lo pone la directiva `appTipoButaca` (4.10).
+
+### 4.9 Pipes
+
+Todo lo que se muestra con un formato fijo pasa por un pipe de `pipes/`, en lugar de armarlo en cada template:
+
+| Pipe | Ejemplo | Antes |
+|---|---|---|
+| `pesos` | `1234.5` → "$ 1.234,50" | `$ {{ x \| number: '1.2-2' }}` en 39 lugares |
+| `puntos` | `1500` → "1.500 puntos"; `\| puntos: 'corto'` → "1.500 pts" | `\| number: '1.0-0'` + texto a mano |
+| `idioma` | `'subtitulada'` → "Subtitulada" | un ternario en 4 templates |
+| `tipoButaca` | `'vip'` → "VIP" | `textoTipo[...]` en 5 templates |
+| `restriccion` | `13` → "+13"; `0` → "Todo público" | ternarios en la tarjeta y el admin |
+| `rol` | `'admin'` → "Administrador" | ternario en Personal |
+| `duracion`, `estrellas` | "2 h 15 min", "★★★★☆" | (ya existían) |
+
+`pesos-pipe.ts` exporta también `formatoPesos()`, para los mensajes que se arman en TypeScript (por ejemplo, la confirmación de cancelación).
+
+### 4.10 Directivas
+
+Siguiendo los ejemplos de clase (`hover-zoom` y `admin`):
+
+- **`[appTipoButaca]`** (de atributo, `directivas/tipo-butaca.directive.ts`): recibe el tipo de butaca y su estado y aplica las clases con **`Renderer2`**, como pide HU-22. La usan el mapa y su leyenda.
+- **`*appSoloRol="['cliente', 'invitado']"`** (estructural, `directivas/solo-rol.directive.ts`): crea o borra el bloque con `TemplateRef` / `ViewContainerRef` según el rol de la sesión. Lee la señal `auth.rol()`, así que al iniciar o cerrar sesión se actualiza sola. `'invitado'` significa sin sesión. Se usa en:
+  - el **menú**;
+  - el botón **"Comprar"**, que el personal no ve (**ni el empleado ni el admin compran**);
+  - las reseñas y las alertas.
+
+  Es solo visual: la seguridad está en los guards y en la base.
+
+### 4.11 Estilos globales
+
+Las clases que se repetían en muchos componentes (`.error` en 13 archivos, `.ayuda` en 11, `.meta`, `.ok`, `.aviso` y `.error-compra`) están definidas **una vez en `styles.css`**. Cada componente conserva solo lo propio, por ejemplo un `max-width` o un `margin`.
 
 ### 4.8 Fechas y horarios
 
@@ -429,12 +489,14 @@ Surgieron de revisar las historias contra los requerimientos funcionales:
   - Opcionalmente, el empleado elige **la función que controla** (lista de las funciones de hoy). Si el código es de otra función, se rechaza y el mensaje dice cuál es la correcta.
   - Si es válida, muestra la película, la función, la sala, las **butacas** (cuántas personas entran), el aviso de adulto y si tiene candy pendiente.
   - Marca **todas las entradas de la compra** como usadas, porque el grupo entra junto, y la compra pasa a "Usada". El código **ya no sirve para entrar** (RF-32).
+  - **El ingreso se habilita 30 minutos antes de la función** (script 16). Antes se podía validar una entrada días antes si el empleado dejaba "Cualquier función". Si es temprano: "Todavía no se puede ingresar: la entrada para X se habilita 30 minutos antes de la función (desde el 27/09 17:30)".
 - **Candy (HU-33):** es **independiente de la entrada**: se puede retirar antes o después de entrar, pero una sola vez. Muestra la lista de lo que hay que entregar (incluidos los canjes) y lo marca como entregado.
 - **Mensajes claros** (vienen de la base):
   - "No existe ninguna compra con el código X";
   - "La compra X fue cancelada";
   - "Estas entradas ya se usaron: ingresaron el 27/09 17:42";
   - "Esta entrada es para otra función: …";
+  - "Todavía no se puede ingresar: … 30 minutos antes …";
   - "La función ya terminó";
   - "El candy de esta compra ya se entregó el …";
   - "La compra no tiene candy".
@@ -511,6 +573,7 @@ Surgieron de revisar las historias contra los requerimientos funcionales:
   - **pósters e imágenes de Storage con `performance`**: se sirven desde la caché hasta 7 días.
 - **Comprobantes sin conexión:** el service worker no guarda las llamadas `rpc()`, porque son POST. Por eso cada comprobante abierto se guarda en el dispositivo (los últimos 20). Sin conexión se muestra esa copia, con el aviso de que puede no estar al día.
 - **Cómo probarlo:** `ng build`, servir la carpeta `dist/cine/browser` con un servidor estático (por ejemplo `npx http-server dist/cine/browser`), abrir la app, y en DevTools → Application ver el service worker y probar "Offline". Con `ng serve` no se registra a propósito.
+- **URL de Supabase solo en `environment`:** `ngsw-config.json` es JSON puro (no admite comentarios ni puede leer `environment.ts`). Por eso sus patrones usan un comodín, `https://*.supabase.co/rest/v1/peliculas*`, que sirve para cualquier proyecto de Supabase. Si se cambia de proyecto, alcanza con cambiar `environment.ts`.
 - **Presupuesto del bundle inicial:** el aviso se subió de 500 kB a **600 kB**. El inicial pesa ~510 kB (~127 kB transferidos). Casi todo es Angular, el router y `supabase-js`, que se necesitan desde la primera pantalla; todas las pantallas son lazy. El límite de error sigue en 1 MB.
 
 ### 5.24 Catálogo en vivo: las pantallas se actualizan solas
@@ -600,7 +663,7 @@ Resumen:
 #### 6.2.1 Permisos: `es_admin()` y policies
 
 - **Base:** `es_admin()` es `security definer` y devuelve `true` si el perfil del usuario logueado (`auth.uid()`) tiene `rol = 'admin'`. Todas las policies de escritura del catálogo la usan (`using (es_admin())`). Es `security definer` porque un cliente no puede leer los perfiles ajenos, y la función necesita leer el suyo sin pasar por esas policies.
-- **Angular:** `roleGuard` y `childGuard` esconden las pantallas de admin, pero **la seguridad real es la policy**. Cuando una policy bloquea un `update` o `delete`, Supabase no da error: no toca ninguna fila. Por eso los servicios terminan en `.select()` y, si vuelven 0 filas, lanzan "No tenés permiso para hacer este cambio" (ver [4.2](#42-detectar-cuando-una-policy-bloquea-un-cambio)).
+- **Angular:** `adminGuard` y `adminChildGuard` esconden las pantallas de admin, pero **la seguridad real es la policy**. Cuando una policy bloquea un `update` o `delete`, Supabase no da error: no toca ninguna fila. Por eso los servicios terminan en `.select()` y, si vuelven 0 filas, lanzan "No tenés permiso para hacer este cambio" (ver [4.2](#42-detectar-cuando-una-policy-bloquea-un-cambio)).
 
 #### 6.2.2 Registro y cupón de primera compra
 
@@ -737,7 +800,7 @@ Supabase devuelve los dos en el `error` de `rpc()`: Angular muestra `error.messa
   - RLS: todos pueden leer las recompensas y solo el admin las escribe.
   - `canjes`: cada usuario ve los suyos y nadie los inserta directo.
   - `confirmar_compra` se **redefine** con un parámetro más, `p_canjes`. Primero se hace `drop` de la versión anterior: si no, Postgres tendría dos funciones con el mismo nombre y distintos parámetros, y `rpc()` podría llamar a la equivocada.
-  - El paso nuevo (`hint = 'puntos'`) valida el ítem y el saldo. Desde el script 05, el costo lo toma **de la vista `catalogo_canjes`**, la misma que ve el cliente. Después descuenta los puntos canjeados, suma los ganados en el mismo `update` y registra cada canje. `p_canjes` identifica el ítem por tipo: `{"tipo": "entrada"}` o `{"tipo": "producto", "producto_id": 3}`. Desde el script 06, un producto canjeado tiene que estar en `p_items` con al menos esa cantidad (si no, error "Querés canjear 4 × "Pochoclos" pero en la compra hay 2"). Su precio suma a `descuento_canjes`, junto con las entradas cubiertas.
+  - El paso nuevo (`hint = 'puntos'`) valida el ítem y el saldo. Desde el script 05, el costo lo toma **de la vista `catalogo_canjes`**, la misma que ve el cliente. Después descuenta los puntos canjeados, suma los ganados en el mismo `update` y registra cada canje. `p_canjes` identifica el ítem por tipo: `{"tipo": "entrada"}` o `{"tipo": "producto", "producto_id": 3}`. Desde el script 16, los canjes del mismo producto **se suman** antes de compararlos con la cantidad del carrito, así no se puede canjear dos veces lo mismo mandando dos líneas por la API. Desde el script 06, un producto canjeado tiene que estar en `p_items` con al menos esa cantidad (si no, error "Querés canjear 4 × "Pochoclos" pero en la compra hay 2"). Su precio suma a `descuento_canjes`, junto con las entradas cubiertas.
 - **Angular:**
   - `RecompensasService.catalogo()` lee la vista `catalogo_canjes` como si fuera una tabla, y `canjeables()` se queda con las activas.
   - `guardarExcepcion()` inserta, actualiza o borra la fila de `recompensas` según el caso.
@@ -785,6 +848,7 @@ Supabase devuelve los dos en el `error` de `rpc()`: Angular muestra `error.messa
   - `validar_entrada(codigo, funcion_id)` y `entregar_candy(codigo)` son `security definer` y empiezan controlando `es_empleado()`. Un cliente que las llame desde la consola recibe "Solo un empleado puede validar entradas".
   - Las dos bloquean la compra con `for update`: si dos empleados escanean el mismo código a la vez, el segundo espera y después ve "ya se usaron". **Un código no puede entrar dos veces.**
   - La entrada marca `entradas.usada_en` y `compras.estado = 'usada'`; el candy marca `compra_items.entregado_en`. Son marcas separadas, por eso son independientes.
+  - Desde el script 16, `validar_entrada` rechaza si falta más de **30 minutos** para el inicio de la función.
   - `hora_ar()` formatea las horas de los mensajes en horario de Argentina.
   - `datos_para_empleado()` arma la respuesta con película, función, sala, butacas y candy, y la usan las dos funciones.
 - **Angular:**

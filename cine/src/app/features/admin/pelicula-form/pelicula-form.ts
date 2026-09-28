@@ -1,11 +1,12 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { form, FormField, required, min, max, minLength, maxLength, validate} from '@angular/forms/signals';
-import { ConCambios } from '../../../core/guards/form-guard';
-import { PeliculasService } from '../../../core/peliculas.service';
+import { ConCambios } from '../../../guards/form-guard';
+import { Peliculas as PeliculasService } from '../../../services/peliculas';
 import { ESTADOS, EstadoPelicula, PeliculaNueva } from '../../../models/pelicula';
-import { MAX_IMAGEN_BYTES, TIPOS_IMAGEN, ImagenesService } from '../../../core/imagenes.service';
+import { MAX_IMAGEN_BYTES, TIPOS_IMAGEN, Imagenes as ImagenesService } from '../../../services/imagenes';
 import { GENEROS } from '../../../shared/generos';
+import { mensajeDeError } from '../../../shared/errores';
 
 interface PeliculaModelo {
   nombre: string;
@@ -122,7 +123,7 @@ export class PeliculaForm implements ConCambios {
       this.imagenActualUrl.set(p.imagen_url);
       this.imagenPathActual = p.imagen_path;
     } catch (e) {
-      this.error.set((e as { message?: string }).message ?? 'No se pudo cargar la película');
+      this.error.set(mensajeDeError(e, 'No se pudo cargar la película'));
     } finally {
       this.cargando.set(false);
     }
@@ -224,7 +225,7 @@ export class PeliculaForm implements ConCambios {
     } catch (e) {
       // Si el archivo se subió pero la película no se guardó, no dejamos un archivo huérfano
       if (subido) await this.imagenes.eliminar('posters', subido).catch(() => { });
-      this.error.set((e as { message?: string }).message ?? 'No se pudo guardar');
+      this.error.set(mensajeDeError(e, 'No se pudo guardar'));
     } finally {
       this.guardando.set(false);
     }

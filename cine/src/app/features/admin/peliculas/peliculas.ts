@@ -1,13 +1,16 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { PeliculasService } from '../../../core/peliculas.service';
+import { Peliculas as PeliculasService } from '../../../services/peliculas';
 import { ESTADOS, EstadoPelicula, Pelicula } from '../../../models/pelicula';
-import { ImagenesService } from '../../../core/imagenes.service';
+import { Imagenes as ImagenesService } from '../../../services/imagenes';
+import { mensajeDeError } from '../../../shared/errores';
+import { PesosPipe } from '../../../pipes/pesos-pipe';
+import { RestriccionPipe } from '../../../pipes/restriccion-pipe';
 
 @Component({
   selector: 'app-peliculas',
-  imports: [RouterLink, DatePipe, DecimalPipe],
+  imports: [RouterLink, DatePipe, PesosPipe, RestriccionPipe],
   templateUrl: './peliculas.html',
   styleUrl: './peliculas.css',
 })
@@ -28,7 +31,7 @@ export class Peliculas {
     try {
       this.peliculas.set(await this.service.listar());
     } catch (e) {
-      this.error.set((e as { message?: string }).message ?? 'No se pudieron cargar las películas');
+      this.error.set(mensajeDeError(e, 'No se pudieron cargar las películas'));
     } finally {
       this.cargando.set(false);
     }
@@ -42,7 +45,7 @@ export class Peliculas {
       this.peliculas.update(lista => lista.map(x => (x.id === p.id ? { ...x, estado } : x)));
     } catch (e) {
       sel.value = p.estado;   // volvemos al valor anterior
-      this.error.set((e as { message?: string }).message ?? 'No se pudo cambiar el estado');
+      this.error.set(mensajeDeError(e, 'No se pudo cambiar el estado'));
     }
   }
 
@@ -54,7 +57,7 @@ export class Peliculas {
       if (p.imagen_path) await this.imagenes.eliminar('posters', p.imagen_path).catch(() => { });
       this.peliculas.update(lista => lista.filter(x => x.id !== p.id));
     } catch (e) {
-      this.error.set((e as { message?: string }).message ?? 'No se pudo eliminar');
+      this.error.set(mensajeDeError(e, 'No se pudo eliminar'));
     }
   }
 }

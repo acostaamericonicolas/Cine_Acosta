@@ -27,7 +27,7 @@
         @let ocupado = guardando() === claveCanje(i);
         <tr [class.inactiva]="!i.activa">
             <td>{{ i.nombre }}</td>
-            <td>$ {{ i.precio | number: '1.2-2' }}</td>
+            <td>{{ i.precio | pesos }}</td>
             <td>
                 <input #pts type="number" min="1" step="1" [value]="puntosEditados(i)"
                     (input)="editarPuntos(i, pts.value)" [attr.aria-label]="'Puntos de ' + i.nombre" />

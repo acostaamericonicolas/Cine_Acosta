@@ -79,13 +79,6 @@ h2 small {
     font-size: 1.05rem;
 }
 
-.aviso {
-    background: #fff4d6;
-    border-left: 4px solid #e0a800;
-    padding: 0.6rem 0.8rem;
-    border-radius: 4px;
-}
-
 .estado {
     background: #eef1f7;
     padding: 0.6rem 0.8rem;
@@ -99,7 +92,6 @@ h2 small {
 }
 
 .meta {
-    color: #555;
     font-size: 0.9rem;
 }
 
@@ -112,10 +104,6 @@ footer {
     flex-direction: column;
     gap: 0.5rem;
     max-width: 320px;
-}
-
-.error {
-    color: #c00;
 }
 
 .sin-conexion {

@@ -1,11 +1,12 @@
 import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Pelicula } from '../../../models/pelicula';
-import { DuracionPipe } from '../../pipes/duracion-pipe';
+import { DuracionPipe } from '../../../pipes/duracion-pipe';
+import { RestriccionPipe } from '../../../pipes/restriccion-pipe';
 
 @Component({
   selector: 'app-tarjeta-pelicula',
-  imports: [RouterLink, DuracionPipe],
+  imports: [RouterLink, DuracionPipe, RestriccionPipe],
   templateUrl: './tarjeta-pelicula.html',
   styleUrl: './tarjeta-pelicula.css',
 })

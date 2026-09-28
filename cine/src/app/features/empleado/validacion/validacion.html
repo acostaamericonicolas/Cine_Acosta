@@ -9,14 +9,14 @@
 
 @if (modo() === 'entrada') {
 <label class="funcion">Función que controlás
-    <select #sel [value]="funcionElegida()" (change)="funcionElegida.set(sel.value)">
+    <select [formField]="fFiltro.funcion">
         <option value="">Cualquier función</option>
         @for (fn of funcionesDeHoy(); track fn.id) {
         <option [value]="fn.id">{{ fn.inicio | date: 'HH:mm' }} · {{ fn.pelicula }} · {{ fn.sala }}</option>
         }
     </select>
 </label>
-<p class="ayuda">Si elegís una función, se rechazan las entradas de otras funciones.</p>
+<p class="ayuda">El ingreso se habilita 30 minutos antes de cada función. Si elegís una función, se rechazan las entradas de otras funciones.</p>
 } @else {
 <p class="ayuda">El candy se entrega una sola vez por compra, antes o después de entrar a la sala.</p>
 }

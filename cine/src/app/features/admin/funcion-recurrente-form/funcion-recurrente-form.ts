@@ -1,14 +1,16 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { form, FormField, required, validate } from '@angular/forms/signals';
-import { ConCambios } from '../../../core/guards/form-guard';
-import { FuncionesService } from '../../../core/funciones.service';
+import { ConCambios } from '../../../guards/form-guard';
+import { Funciones as FuncionesService } from '../../../services/funciones';
 import { Formato, FORMATOS, Idioma, IDIOMAS } from '../../../models/funcion';
-import { PeliculasService } from '../../../core/peliculas.service';
+import { Peliculas as PeliculasService } from '../../../services/peliculas';
 import { Pelicula } from '../../../models/pelicula';
 import { DIAS_SEMANA, generarFechas } from '../../../shared/fechas-recurrentes';
 import { fechaLocal } from '../../../shared/fechas';
 import { DatePipe } from '@angular/common';
+import { mensajeDeError } from '../../../shared/errores';
+import { fechaNoAnterior } from '../../../validators/validators';
 
 interface FuncionRecurrenteModelo {
   peliculaId: string;
@@ -59,9 +61,7 @@ export class FuncionRecurrenteForm implements ConCambios {
     required(s.hora, { message: 'Elegí una hora' });
     required(s.desde, { message: 'Elegí la fecha de inicio' });
     required(s.hasta, { message: 'Elegí la fecha de fin' });
-    validate(s.hasta, ({ value, valueOf }) =>
-      value() < valueOf(s.desde) ? { kind: 'rango-invalido', message: 'Tiene que ser posterior a la fecha de inicio' } : null
-    );
+    fechaNoAnterior(s.hasta, s.desde);
   });
 
   // Vista previa de fechas, antes de crear nada
@@ -85,7 +85,7 @@ export class FuncionRecurrenteForm implements ConCambios {
       const todas = await this.peliculasService.listar();
       this.peliculas.set(todas.filter(p => p.estado !== 'oculta'));
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudieron cargar las películas'));
+      this.error.set(mensajeDeError(e, 'No se pudieron cargar las películas'));
     } finally {
       this.cargando.set(false);
     }
@@ -128,7 +128,7 @@ export class FuncionRecurrenteForm implements ConCambios {
         });
         resultados.push({ fecha, ok: true, detalle: `Sala #${funcion.sala_id}` });
       } catch (e) {
-        resultados.push({ fecha, ok: false, detalle: this.texto(e, 'No se pudo crear') });
+        resultados.push({ fecha, ok: false, detalle: mensajeDeError(e, 'No se pudo crear') });
       }
     }
 
@@ -136,7 +136,4 @@ export class FuncionRecurrenteForm implements ConCambios {
     this.creando.set(false);
   }
 
-  private texto(e: unknown, defecto: string): string {
-    return (e as { message?: string }).message ?? defecto;
-  }
 }

@@ -1,13 +1,15 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { form, FormField, required, min, maxLength } from '@angular/forms/signals';
-import { SalasService } from '../../../core/salas.service';
+import { Salas as SalasService } from '../../../services/salas';
 import { Sala } from '../../../models/sala';
-import { TEXTO_TIPO, TipoButaca } from '../../../shared/sala-layout';
+import { TipoButaca } from '../../../shared/sala-layout';
+import { mensajeDeError } from '../../../shared/errores';
+import { TipoButacaPipe } from '../../../pipes/tipo-butaca-pipe';
 
 @Component({
   selector: 'app-salas',
-  imports: [FormField, RouterLink],
+  imports: [FormField, RouterLink, TipoButacaPipe],
   templateUrl: './salas.html',
   styleUrl: './salas.css',
 })
@@ -15,7 +17,6 @@ export class Salas {
   private service = inject(SalasService);
 
   readonly tipos: TipoButaca[] = ['general', 'accesible', 'vip'];
-  readonly textoTipo = TEXTO_TIPO;
 
   salas = signal<Sala[]>([]);
   cargando = signal(true);
@@ -48,7 +49,7 @@ export class Salas {
       this.salas.set(salas);
       this.precios.set(precios);
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudieron cargar los datos'));
+      this.error.set(mensajeDeError(e, 'No se pudieron cargar los datos'));
     } finally {
       this.cargando.set(false);
     }
@@ -64,7 +65,7 @@ export class Salas {
       this.salas.set(await this.service.listar());
       this.mensaje.set('Sala creada.');
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudo crear la sala'));
+      this.error.set(mensajeDeError(e, 'No se pudo crear la sala'));
     }
   }
 
@@ -75,7 +76,7 @@ export class Salas {
       await this.service.cambiarActiva(s.id, !s.activa);
       this.salas.update(lista => lista.map(x => (x.id === s.id ? { ...x, activa: !s.activa } : x)));
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudo cambiar el estado de la sala'));
+      this.error.set(mensajeDeError(e, 'No se pudo cambiar el estado de la sala'));
     }
   }
 
@@ -95,7 +96,7 @@ export class Salas {
       await this.service.guardarPrecios(p);
       this.mensaje.set('Precios guardados.');
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudieron guardar los precios'));
+      this.error.set(mensajeDeError(e, 'No se pudieron guardar los precios'));
     } finally {
       this.guardandoPrecios.set(false);
     }
@@ -106,7 +107,4 @@ export class Salas {
     this.mensaje.set('');
   }
 
-  private texto(e: unknown, defecto: string): string {
-    return (e as { message?: string }).message ?? defecto;
-  }
 }

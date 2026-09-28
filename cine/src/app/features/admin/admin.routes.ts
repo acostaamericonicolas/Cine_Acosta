@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { formGuard } from '../../core/guards/form-guard';
+import { formGuard } from '../../guards/form-guard';
 
 export const ADMIN_ROUTES: Routes = [
     { path: '', pathMatch: 'full', redirectTo: 'peliculas' },

@@ -8,7 +8,7 @@
         <span>puntos acumulados</span>
     </div>
     <div>
-        <span class="valor">$ {{ p.credito | number: '1.2-2' }}</span>
+        <span class="valor">{{ p.credito | pesos }}</span>
         <span>crédito disponible</span>
     </div>
 </section>
@@ -50,9 +50,9 @@
         <span>{{ c.creado_en | date: 'dd/MM/yyyy HH:mm' }}</span>
         <span>{{ c.cantidad }} × {{ c.descripcion }}</span>
         @if (c.devuelto) {
-        <strong class="devuelto">{{ c.puntos | number: '1.0-0' }} pts devueltos (compra cancelada)</strong>
+        <strong class="devuelto">{{ c.puntos | puntos: 'corto' }} devueltos (compra cancelada)</strong>
         } @else {
-        <strong>− {{ c.puntos | number: '1.0-0' }} pts</strong>
+        <strong>− {{ c.puntos | puntos: 'corto' }}</strong>
         }
     </li>
     }

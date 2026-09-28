@@ -53,7 +53,7 @@
 
     <form (submit)="guardarPrecios($event)">
         @for (t of tipos; track t) {
-        <label>{{ textoTipo[t] }} ($)
+        <label>{{ t | tipoButaca }} ($)
             <input type="number" [formField]="fPrecios[t]" />
         </label>
         @if (fPrecios[t]().touched() && fPrecios[t]().invalid()) {

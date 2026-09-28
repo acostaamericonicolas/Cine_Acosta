@@ -1,0 +1,1 @@
+var o=[`2D`,`3D`,`4D`,`5D`];var t=[{valor:`castellano`,texto:`Castellano`},{valor:`subtitulada`,texto:`Subtitulada`}];export{t as n,o as t};

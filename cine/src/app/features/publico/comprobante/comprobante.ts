@@ -1,13 +1,17 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { form, FormField, required, email } from '@angular/forms/signals';
-import { AuthService } from '../../../core/auth.service';
-import { ComprasService } from '../../../core/compras.service';
+import { Auth as AuthService } from '../../../services/auth';
+import { Compras as ComprasService } from '../../../services/compras';
 import { Comprobante as DatosComprobante } from '../../../models/compra';
 import { CodigoQr } from '../../../shared/componentes/codigo-qr/codigo-qr';
-import { DuracionPipe } from '../../../shared/pipes/duracion-pipe';
-import { TEXTO_TIPO } from '../../../shared/sala-layout';
+import { DuracionPipe } from '../../../pipes/duracion-pipe';
+import { mensajeDeError } from '../../../shared/errores';
+import { PesosPipe } from '../../../pipes/pesos-pipe';
+import { PuntosPipe } from '../../../pipes/puntos-pipe';
+import { IdiomaPipe } from '../../../pipes/idioma-pipe';
+import { TipoButacaPipe } from '../../../pipes/tipo-butaca-pipe';
 
 /**
  * HU-27: comprobante imprimible con el código y su QR.
@@ -15,7 +19,7 @@ import { TEXTO_TIPO } from '../../../shared/sala-layout';
  */
 @Component({
   selector: 'app-comprobante',
-  imports: [DatePipe, DecimalPipe, RouterLink, FormField, CodigoQr, DuracionPipe],
+  imports: [DatePipe, RouterLink, FormField, CodigoQr, DuracionPipe, PesosPipe, PuntosPipe, IdiomaPipe, TipoButacaPipe],
   templateUrl: './comprobante.html',
   styleUrl: './comprobante.css',
 })
@@ -24,7 +28,6 @@ export class Comprobante {
   private auth = inject(AuthService);
   private compras = inject(ComprasService);
 
-  readonly textoTipo = TEXTO_TIPO;
   readonly codigo = (this.route.snapshot.paramMap.get('codigo') ?? '').toUpperCase();
 
   comprobante = signal<DatosComprobante | null>(null);
@@ -61,7 +64,7 @@ export class Comprobante {
       if (!this.auth.logueado() && mail === null) {
         this.pedirMail.set(true);
       } else {
-        this.error.set((e as Error).message);
+        this.error.set(mensajeDeError(e));
         this.pedirMail.set(!this.auth.logueado());
       }
     } finally {

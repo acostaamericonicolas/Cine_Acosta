@@ -23,7 +23,7 @@
             <td>@if (c.imagen_url) { <img [src]="c.imagen_url" [alt]="c.nombre" width="40" /> }</td>
             <td>{{ c.nombre }}</td>
             <td>{{ c.incluye_entrada ? 'Sí' : 'No' }}</td>
-            <td>{{ c.precio | number: '1.2-2' }}</td>
+            <td>{{ c.precio | pesos }}</td>
             <td>
                 <button type="button" (click)="alternarActivo(c)">
                     {{ c.activo ? 'Activo' : 'Inactivo' }}

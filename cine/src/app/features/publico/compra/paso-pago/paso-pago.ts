@@ -1,11 +1,12 @@
-import { DecimalPipe } from '@angular/common';
 import { Component, computed, input, output, signal } from '@angular/core';
 import { form, FormField, email, validate } from '@angular/forms/signals';
 import { Cupon, DatosPago, ErrorCompra, ItemCarrito, LineaEntrada, PasoError } from '../../../../models/compra';
 import { ItemCanjeable } from '../../../../models/recompensa';
-import { claveCanje } from '../../../../core/recompensas.service';
+import { claveCanje } from '../../../../services/recompensas';
 import { calcularTotales } from '../../../../shared/precios';
-import { TEXTO_TIPO } from '../../../../shared/sala-layout';
+import { PesosPipe } from '../../../../pipes/pesos-pipe';
+import { PuntosPipe } from '../../../../pipes/puntos-pipe';
+import { TipoButacaPipe } from '../../../../pipes/tipo-butaca-pipe';
 
 interface PagoModelo {
   cupon: '' | Cupon;
@@ -38,7 +39,7 @@ const TITULO_PASO: Record<PasoError, string> = {
  */
 @Component({
   selector: 'app-paso-pago',
-  imports: [DecimalPipe, FormField],
+  imports: [FormField, PesosPipe, PuntosPipe, TipoButacaPipe],
   templateUrl: './paso-pago.html',
   styleUrl: './paso-pago.css',
 })
@@ -59,7 +60,6 @@ export class PasoPago {
   confirmar = output<DatosPago>();
   volverA = output<'butacas' | 'candy'>();
 
-  readonly textoTipo = TEXTO_TIPO;
   readonly tituloPaso = TITULO_PASO;
 
   modelo = signal<PagoModelo>({

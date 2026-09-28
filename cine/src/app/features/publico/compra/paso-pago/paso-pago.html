@@ -2,8 +2,8 @@
 
 @if (registrado()) {
 <p class="saldo">
-    Tenés <strong>{{ puntosDisponibles() | number: '1.0-0' }} puntos</strong>
-    y <strong>$ {{ creditoDisponible() | number: '1.2-2' }}</strong> de crédito.
+    Tenés <strong>{{ puntosDisponibles() | puntos }}</strong>
+    y <strong>{{ creditoDisponible() | pesos }}</strong> de crédito.
 </p>
 }
 
@@ -12,48 +12,48 @@
     <ul>
         @for (e of entradas(); track e.butaca.id) {
         <li [class.vip]="e.butaca.tipo === 'vip'">
-            <span>Entrada {{ e.butaca.id }} · {{ textoTipo[e.butaca.tipo] }}</span>
-            <span>$ {{ e.precio | number: '1.2-2' }}</span>
+            <span>Entrada {{ e.butaca.id }} · {{ e.butaca.tipo | tipoButaca }}</span>
+            <span>{{ e.precio | pesos }}</span>
         </li>
         }
         @for (i of items(); track i.tipo + i.id) {
         <li>
             <span>{{ i.cantidad }} × {{ i.nombre }}</span>
-            <span>$ {{ i.precio * i.cantidad | number: '1.2-2' }}</span>
+            <span>{{ i.precio * i.cantidad | pesos }}</span>
         </li>
         }
         @if (t.descuentoCombos > 0) {
         <li class="descuento">
             <span>Entradas incluidas en combos ({{ t.combosConEntrada }})</span>
-            <span>− $ {{ t.descuentoCombos | number: '1.2-2' }}</span>
+            <span>− {{ t.descuentoCombos | pesos }}</span>
         </li>
         }
         @if (descuentoEntradasCanjeadas() > 0) {
         <li class="descuento">
             <span>Entradas canjeadas con puntos ({{ entradasCanjeadas() }})</span>
-            <span>− $ {{ descuentoEntradasCanjeadas() | number: '1.2-2' }}</span>
+            <span>− {{ descuentoEntradasCanjeadas() | pesos }}</span>
         </li>
         }
         @for (c of productosCanjeados(); track c.nombre) {
         <li class="descuento">
-            <span>{{ c.cantidad }} × {{ c.nombre }} pagados con {{ c.puntos | number: '1.0-0' }} puntos</span>
-            <span>− $ {{ c.pesos | number: '1.2-2' }}</span>
+            <span>{{ c.cantidad }} × {{ c.nombre }} pagados con {{ c.puntos | puntos }}</span>
+            <span>− {{ c.pesos | pesos }}</span>
         </li>
         }
         @if (t.descuentoCupon > 0) {
         <li class="descuento">
             <span>Cupón</span>
-            <span>− $ {{ t.descuentoCupon | number: '1.2-2' }}</span>
+            <span>− {{ t.descuentoCupon | pesos }}</span>
         </li>
         }
         @if (t.credito > 0) {
         <li class="descuento">
             <span>Crédito de tu cuenta</span>
-            <span>− $ {{ t.credito | number: '1.2-2' }}</span>
+            <span>− {{ t.credito | pesos }}</span>
         </li>
         }
     </ul>
-    <p class="total">Total a pagar: <strong>$ {{ t.total | number: '1.2-2' }}</strong></p>
+    <p class="total">Total a pagar: <strong>{{ t.total | pesos }}</strong></p>
 
     @if (hayVip()) {
     <p class="aviso">Tu compra incluye al menos una butaca <strong>VIP</strong>, que tiene un precio más alto.</p>
@@ -67,12 +67,12 @@
     @if (registrado()) {
     @if (canjeables().length > 0) {
     <fieldset class="canjes">
-        <legend>Canjear puntos (te quedan {{ puntosRestantes() | number: '1.0-0' }})</legend>
+        <legend>Canjear puntos (te quedan {{ puntosRestantes() | puntos }})</legend>
         <p class="ayuda">Pagá con puntos una entrada o lo que agregaste del candy.</p>
         @for (r of canjeables(); track claveCanje(r)) {
         <div class="canje">
             <span>
-                {{ r.nombre }} · <strong>{{ r.puntos }} pts</strong>
+                {{ r.nombre }} · <strong>{{ r.puntos | puntos: 'corto' }}</strong>
                 @if (r.tipo === 'entrada') { <small>(cubre una entrada general; la VIP paga la diferencia)</small> }
                 @else { <small>(tenés {{ enCarrito(r) }} en la compra)</small> }
             </span>
@@ -105,7 +105,7 @@
     @if (creditoDisponible() > 0) {
     <label class="en-linea">
         <input type="checkbox" [formField]="f.usarCredito" />
-        Usar mi crédito (tenés $ {{ creditoDisponible() | number: '1.2-2' }})
+        Usar mi crédito (tenés {{ creditoDisponible() | pesos }})
     </label>
     }
     } @else {
@@ -170,6 +170,6 @@
     }
 
     <button type="submit" class="confirmar" [disabled]="f().invalid() || enviando()">
-        {{ enviando() ? 'Confirmando...' : 'Confirmar compra por $ ' + (t.total | number: '1.2-2') }}
+        {{ enviando() ? 'Confirmando...' : 'Confirmar compra por ' + (t.total | pesos) }}
     </button>
 </form>

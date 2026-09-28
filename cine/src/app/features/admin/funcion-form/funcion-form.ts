@@ -1,14 +1,15 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { form, FormField, required, validate } from '@angular/forms/signals';
-import { ConCambios } from '../../../core/guards/form-guard';
-import { FuncionesService } from '../../../core/funciones.service';
+import { ConCambios } from '../../../guards/form-guard';
+import { Funciones as FuncionesService } from '../../../services/funciones';
 import { Formato, FORMATOS, Idioma, IDIOMAS } from '../../../models/funcion';
-import { PeliculasService } from '../../../core/peliculas.service';
+import { Peliculas as PeliculasService } from '../../../services/peliculas';
 import { Pelicula } from '../../../models/pelicula';
-import { SalasService } from '../../../core/salas.service';
+import { Salas as SalasService } from '../../../services/salas';
 import { Sala } from '../../../models/sala';
 import { fechaLocal } from '../../../shared/fechas';
+import { mensajeDeError } from '../../../shared/errores';
 
 interface FuncionModelo {
   peliculaId: string;   // los <select> trabajan con texto
@@ -93,7 +94,7 @@ export class FuncionForm implements ConCambios {
         this.inicial = JSON.stringify(m);
       }
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudieron cargar los datos'));
+      this.error.set(mensajeDeError(e, 'No se pudieron cargar los datos'));
     } finally {
       this.cargando.set(false);
     }
@@ -142,13 +143,10 @@ export class FuncionForm implements ConCambios {
         this.guardado = false;   // vuelve a activarse el aviso de cambios para la próxima carga
       }
     } catch (e) {
-      this.error.set(this.texto(e, 'No se pudo guardar'));
+      this.error.set(mensajeDeError(e, 'No se pudo guardar'));
     } finally {
       this.guardando.set(false);
     }
   }
 
-  private texto(e: unknown, defecto: string): string {
-    return (e as { message?: string }).message ?? defecto;
-  }
 }

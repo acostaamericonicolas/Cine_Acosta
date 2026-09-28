@@ -29,7 +29,7 @@
             <td>{{ f.inicio | date: "dd/MM HH:mm" }}</td>
             <td>{{ f.fin | date: 'HH:mm' }}</td>
             <td>{{ f.formato }}</td>
-            <td>{{ f.idioma === 'castellano' ? 'Castellano' : 'Subtitulada' }}</td>
+            <td>{{ f.idioma | idioma }}</td>
             <td>
                 <a [routerLink]="['/admin/funciones', f.id, 'editar']">Editar</a>
                 <button type="button" (click)="eliminar(f)">Eliminar</button>

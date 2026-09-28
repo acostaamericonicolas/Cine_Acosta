@@ -1,10 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { form, FormField, required, email, minLength, min, max, validate } from '@angular/forms/signals';
-import { AuthService } from '../../../core/auth.service';
+import { form, FormField, required, email, minLength, min, max } from '@angular/forms/signals';
+import { Auth as AuthService } from '../../../services/auth';
 import { DatosRegistro } from '../../../models/perfil';
-import { ConCambios } from '../../../core/guards/form-guard';
-import { fechaLocal } from '../../../shared/fechas';
+import { ConCambios } from '../../../guards/form-guard';
+import { mensajeDeError } from '../../../shared/errores';
+import { fechaNoFutura } from '../../../validators/validators';
 
 @Component({
   selector: 'app-registro',
@@ -26,7 +27,6 @@ export class Registro implements ConCambios {
     return this.f().dirty() && !this.guardado;
   }
 
-  private hoy = fechaLocal();
   tiposSangre = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', '0+', '0-', 'Prefiero no responder'];
   coloresOjos = ['Marrón', 'Negro', 'Azul', 'Verde', 'Gris', 'Miel', 'Prefiero no responder'];
 
@@ -49,9 +49,7 @@ export class Registro implements ConCambios {
     required(s.nombre, { message: 'Ingresá tu nombre' });
     required(s.apellido, { message: 'Ingresá tu apellido' });
     required(s.fechaNacimiento, { message: 'Ingresá tu fecha de nacimiento' });
-    validate(s.fechaNacimiento, ({ value }) =>
-      value() > this.hoy ? { kind: 'fecha-futura', message: 'La fecha no puede ser futura' } : null
-    );
+    fechaNoFutura(s.fechaNacimiento);
     required(s.tipoSangre, { message: 'Elegí tu tipo de sangre' });
     required(s.colorOjos, { message: 'Elegí el color de ojos' });
     min(s.diasVacaciones, 0, { message: 'No puede ser negativo' });
@@ -72,7 +70,7 @@ export class Registro implements ConCambios {
       this.guardado = true;
       this.router.navigateByUrl(this.destino ?? '/');
     } catch (e) {
-      this.error.set((e as { message?: string }).message ?? 'No se pudo completar el registro');
+      this.error.set(mensajeDeError(e, 'No se pudo completar el registro'));
     } finally {
       this.cargando.set(false);
     }

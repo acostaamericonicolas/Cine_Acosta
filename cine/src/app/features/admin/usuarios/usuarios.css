@@ -1,15 +1,9 @@
 .ayuda {
-    color: #555;
     max-width: 720px;
 }
 
 .error {
-    color: #c00;
     margin: 0;
-}
-
-.ok {
-    color: #1d7a3a;
 }
 
 table {

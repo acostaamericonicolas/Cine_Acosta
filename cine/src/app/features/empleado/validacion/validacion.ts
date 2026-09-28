@@ -1,9 +1,10 @@
 import { DatePipe } from '@angular/common';
 import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { form, FormField, required } from '@angular/forms/signals';
-import { FuncionesService } from '../../../core/funciones.service';
-import { ValidacionService } from '../../../core/validacion.service';
+import { Funciones as FuncionesService } from '../../../services/funciones';
+import { Validacion as ValidacionService } from '../../../services/validacion';
 import { DatosValidacion, FuncionDelDia, ModoValidacion } from '../../../models/validacion';
+import { mensajeDeError } from '../../../shared/errores';
 
 interface Resultado {
   ok: boolean;
@@ -33,7 +34,9 @@ export class Validacion {
 
   modo = signal<ModoValidacion>('entrada');
   funcionesDeHoy = signal<FuncionDelDia[]>([]);
-  funcionElegida = signal('');   // '' = cualquier función
+  // Función que controla el empleado ('' = cualquier función): formulario aparte, no se borra con cada escaneo
+  filtro = signal({ funcion: '' });
+  fFiltro = form(this.filtro);
 
   modelo = signal({ codigo: '' });
   f = form(this.modelo, (s) => {
@@ -66,7 +69,7 @@ export class Validacion {
     let resultado: Resultado;
     try {
       const datos = modo === 'entrada'
-        ? await this.validacion.validarEntrada(codigo, this.funcionElegida() ? Number(this.funcionElegida()) : null)
+        ? await this.validacion.validarEntrada(codigo, this.filtro().funcion ? Number(this.filtro().funcion) : null)
         : await this.validacion.entregarCandy(codigo);
       resultado = {
         ok: true, modo, codigo, hora: new Date(), datos,
@@ -74,7 +77,7 @@ export class Validacion {
       };
     } catch (e) {
       // El mensaje viene de la base: inexistente, cancelada, ya usada, otra función...
-      resultado = { ok: false, modo, codigo, hora: new Date(), datos: null, mensaje: (e as Error).message };
+      resultado = { ok: false, modo, codigo, hora: new Date(), datos: null, mensaje: mensajeDeError(e) };
     } finally {
       this.procesando.set(false);
     }

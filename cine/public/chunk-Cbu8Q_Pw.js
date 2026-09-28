@@ -1,0 +1,1 @@
+function o(e,r=`Ocurrió un error. Probá de nuevo.`){let n=e?.message;return typeof n==`string`&&n.trim()!==``?n:r}export{o as t};

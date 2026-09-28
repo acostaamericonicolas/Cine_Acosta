@@ -1,19 +1,22 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AuthService } from '../../../core/auth.service';
-import { CuponesService } from '../../../core/cupones.service';
-import { RecompensasService } from '../../../core/recompensas.service';
-import { ComprasService } from '../../../core/compras.service';
-import { ResenasService } from '../../../core/resenas.service';
+import { Auth as AuthService } from '../../../services/auth';
+import { Cupones as CuponesService } from '../../../services/cupones';
+import { Recompensas as RecompensasService } from '../../../services/recompensas';
+import { Compras as ComprasService } from '../../../services/compras';
+import { Resenas as ResenasService } from '../../../services/resenas';
 import { PeliculaVista } from '../../../models/compra';
-import { EstrellasPipe } from '../../../shared/pipes/estrellas-pipe';
+import { EstrellasPipe } from '../../../pipes/estrellas-pipe';
 import { CuponPorEdad, CuponPrimeraCompra } from '../../../models/cupon';
 import { Canje } from '../../../models/recompensa';
 import { edad, fechaLocal } from '../../../shared/fechas';
+import { mensajeDeError } from '../../../shared/errores';
+import { PesosPipe } from '../../../pipes/pesos-pipe';
+import { PuntosPipe } from '../../../pipes/puntos-pipe';
 
 @Component({
-  imports: [DatePipe, DecimalPipe, RouterLink, EstrellasPipe],
+  imports: [DatePipe, DecimalPipe, RouterLink, EstrellasPipe, PesosPipe, PuntosPipe],
   selector: 'app-perfil',
   styleUrl: './perfil.css',
   templateUrl: './perfil.html',
@@ -31,7 +34,7 @@ export class Perfil {
   error = signal('');
 
   cuponPrimeraCompra = signal<CuponPrimeraCompra | null>(null);
-  private cuponesPorEdad = signal<CuponPorEdad[]>([]);
+  cuponesEdadDisponibles = signal<CuponPorEdad[]>([]);
   canjes = signal<Canje[]>([]);
 
   // HU-12: películas ya vistas y mi calificación de cada una (película id → estrellas)
@@ -42,13 +45,6 @@ export class Perfil {
     const p = this.perfil();
     return p ? edad(p.fecha_nacimiento, this.hoy) : 0;
   });
-
-  // Cupones por edad que hoy le corresponden al usuario (activos, vigentes y con la edad alcanzada)
-  cuponesEdadDisponibles = computed(() =>
-    this.cuponesPorEdad().filter(c =>
-      c.activo && c.vigente_desde <= this.hoy && this.hoy <= c.vigente_hasta && this.edad() >= c.edad_minima
-    )
-  );
 
   constructor() {
     this.cargar();
@@ -62,7 +58,7 @@ export class Perfil {
       if (!id) return;
       const [primeraCompra, porEdad, canjes, vistas, calificaciones] = await Promise.all([
         this.cuponesService.obtenerCuponPrimeraCompra(id),
-        this.cuponesService.listarPorEdad(),
+        this.cuponesService.vigentesParaEdad(this.edad()),
         this.recompensasService.misCanjes(id),
         this.comprasService.misPeliculas(id),
         this.resenasService.misCalificaciones(id),
@@ -71,9 +67,9 @@ export class Perfil {
       this.misPeliculas.set(vistas);
       this.calificaciones.set(calificaciones);
       this.cuponPrimeraCompra.set(primeraCompra);
-      this.cuponesPorEdad.set(porEdad);
+      this.cuponesEdadDisponibles.set(porEdad);
     } catch (e) {
-      this.error.set((e as { message?: string }).message ?? 'No se pudo cargar el perfil');
+      this.error.set(mensajeDeError(e, 'No se pudo cargar el perfil'));
     } finally {
       this.cargando.set(false);
     }

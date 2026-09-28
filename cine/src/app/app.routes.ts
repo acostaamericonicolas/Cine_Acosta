@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/guards/auth-guard';
-import { adminGuard, clienteGuard, empleadoGuard } from './core/guards/role-guard';
-import { adminChildGuard } from './core/guards/child-guard';
-import { formGuard } from './core/guards/form-guard';
+import { authGuard } from './guards/auth-guard';
+import { adminGuard, clienteGuard, empleadoGuard } from './guards/role-guard';
+import { adminChildGuard } from './guards/child-guard';
+import { formGuard } from './guards/form-guard';
 
 export const routes: Routes = [
     { path: '', loadComponent: () => import('./features/publico/home/home').then(m => m.Home) },
@@ -14,8 +14,8 @@ export const routes: Routes = [
     },
     {
         path: 'cliente',
-        canMatch: [clienteGuard],
-        canActivate: [authGuard],
+        // En orden: primero que haya sesión (authGuard), después que sea cliente (clienteGuard)
+        canActivate: [authGuard, clienteGuard],
         loadChildren: () => import('./features/cliente/cliente.routes').then(m => m.CLIENTE_ROUTES),
     },
     {

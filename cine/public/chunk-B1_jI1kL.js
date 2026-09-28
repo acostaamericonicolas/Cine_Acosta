@@ -1,0 +1,1 @@
+import{Ft as da,kn as ry}from"./chunk-CFucyWDT.js";var m=`es-AR`;function u(e){return e==null||e===``?``:`$ `+ry(Number(e),m,`1.2-2`)}var i=class e{transform(n){return u(n)}static ɵfac=function(s){return new(s||e)};static ɵpipe=da({name:`pesos`,type:e,pure:!0})};export{u as n,i as t};

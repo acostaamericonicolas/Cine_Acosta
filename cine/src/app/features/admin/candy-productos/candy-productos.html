@@ -33,7 +33,7 @@
             <td>@if (p.imagen_url) { <img [src]="p.imagen_url" [alt]="p.nombre" width="40" /> }</td>
             <td>{{ p.nombre }}</td>
             <td>{{ categoriaNombre(p.categoria_id) }}</td>
-            <td>{{ p.precio | number: '1.2-2' }}</td>
+            <td>{{ p.precio | pesos }}</td>
             <td>
                 <button type="button" (click)="alternarActivo(p)">
                     {{ p.activo ? 'Activo' : 'Inactivo' }}

@@ -1,4 +1,4 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { form, FormField, email, validate } from '@angular/forms/signals';
 import { Cupon, DatosPago, ErrorCompra, ItemCarrito, LineaEntrada, PasoError } from '../../../../models/compra';
 import { ItemCanjeable } from '../../../../models/recompensa';
@@ -7,6 +7,7 @@ import { calcularTotales } from '../../../../shared/precios';
 import { PesosPipe } from '../../../../pipes/pesos-pipe';
 import { PuntosPipe } from '../../../../pipes/puntos-pipe';
 import { TipoButacaPipe } from '../../../../pipes/tipo-butaca-pipe';
+import { formatoVencimiento } from '../../../../pipes/vencimiento-pipe';
 
 interface PagoModelo {
   cupon: '' | Cupon;
@@ -65,6 +66,16 @@ export class PasoPago {
   modelo = signal<PagoModelo>({
     cupon: '', usarCredito: false, email: '', titular: '', numero: '', vencimiento: '', cvv: '',
   });
+
+  constructor() {
+    // Vencimiento: mientras se escribe, solo números y la barra sola ("1228" → "12/28").
+    // Si ya está formateado no se toca, así el effect no vuelve a dispararse.
+    effect(() => {
+      const escrito = this.modelo().vencimiento;
+      const formateado = formatoVencimiento(escrito);
+      if (formateado !== escrito) this.modelo.update(m => ({ ...m, vencimiento: formateado }));
+    });
+  }
 
   // ----- Canje de puntos (HU-31): clave del ítem ('entrada', 'producto-3') → cantidad -----
   canjes = signal<Record<string, number>>({});

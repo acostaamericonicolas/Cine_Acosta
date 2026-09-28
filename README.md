@@ -114,7 +114,7 @@ En Supabase → Authentication, la **confirmación de mail tiene que estar desac
 cine/src/app/
 ├── services/              un servicio por tabla o dominio: auth.ts, compras.ts, peliculas.ts...
 ├── guards/                auth-guard, role-guard, child-guard, form-guard
-├── pipes/                 duracion, estrellas, pesos, puntos, idioma, tipo-butaca, restriccion, rol
+├── pipes/                 duracion, estrellas, pesos, puntos, idioma, tipo-butaca, restriccion, rol, vencimiento
 ├── directivas/            tipo-butaca.directive (atributo), solo-rol.directive (estructural)
 ├── validators/            validators.ts: validadores reutilizables para Signal Forms
 ├── models/                interfaces y tipos de datos (sin lógica)
@@ -267,6 +267,7 @@ Todo lo que se muestra con un formato fijo pasa por un pipe de `pipes/`, en luga
 | `tipoButaca` | `'vip'` → "VIP" | `textoTipo[...]` en 5 templates |
 | `restriccion` | `13` → "+13"; `0` → "Todo público" | ternarios en la tarjeta y el admin |
 | `rol` | `'admin'` → "Administrador" | ternario en Personal |
+| `vencimiento` | `'1228'` → "12/28" | la barra se tipeaba a mano. En el pago se aplica **mientras se escribe**: un `effect` pasa el campo por `formatoVencimiento()`. |
 | `duracion`, `estrellas` | "2 h 15 min", "★★★★☆" | (ya existían) |
 
 `pesos-pipe.ts` exporta también `formatoPesos()`, para los mensajes que se arman en TypeScript (por ejemplo, la confirmación de cancelación).

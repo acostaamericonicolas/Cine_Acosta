@@ -1,0 +1,1 @@
+import{V as Ni}from"./chunk-DbgaOpHc.js";var a=class i{transform(r){if(!r||r<=0)return``;let e=Math.floor(r/60),n=r%60;return e===0?`${n} min`:n===0?`${e} h`:`${e} h ${n} min`}static ɵfac=function(e){return new(e||i)};static ɵpipe=Ni({name:`duracion`,type:i,pure:!0})};export{a as t};

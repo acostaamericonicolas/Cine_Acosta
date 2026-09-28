@@ -5,6 +5,7 @@
 /tmp
 /out-tsc
 /bazel-out
+/supabase
 
 # Node
 /node_modules

@@ -4,6 +4,7 @@
 }
 
 .filtros {
+    max-width: none;
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
@@ -23,7 +24,6 @@
 }
 
 table {
-    border-collapse: collapse;
     width: 100%;
 }
 
@@ -31,7 +31,7 @@ th,
 td {
     text-align: left;
     padding: 0.4rem 0.6rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--borde);
     vertical-align: top;
 }
 

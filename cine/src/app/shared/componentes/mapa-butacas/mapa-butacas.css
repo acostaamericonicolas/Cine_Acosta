@@ -6,18 +6,40 @@
     --tam: 28px;
     --sep: 4px;
     --pasillo: 28px;
-    background: #0b1a30;
-    border-radius: 12px;
-    padding: 3rem 1rem 1rem;
+    background: radial-gradient(ellipse at top, #1a1a1a, var(--fondo-2) 70%);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
     /* el espacio de arriba es para que el tooltip de la fila A no se corte */
+    padding: 3rem 1rem 1.25rem;
     overflow-x: auto;
-    color: #e5edf7;
+    color: var(--texto);
 }
 
 @media (max-width: 1100px) {
     .mapa {
         --tam: 20px;
-        --pasillo: 20px;
+        --pasillo: 18px;
+        --sep: 3px;
+    }
+}
+
+/* Celular: butacas más chicas; la sala se desplaza de costado con el dedo */
+@media (max-width: 600px) {
+    .mapa {
+        --tam: 17px;
+        --pasillo: 10px;
+        --sep: 2px;
+        padding: 2.5rem 0.25rem 1rem;
+    }
+
+    .plano {
+        padding: 0 0.75rem;
+    }
+
+    .letra {
+        width: 18px;
+        margin-right: 4px;
+        font-size: 0.8rem;
     }
 }
 
@@ -42,23 +64,24 @@
     gap: var(--sep);
 }
 
-.bloque+.bloque {
+.bloque + .bloque {
     margin-left: var(--pasillo);
 }
 
 .letra {
     width: 28px;
     margin-right: 10px;
-    font-weight: bold;
+    color: var(--texto-2);
+    font-weight: 700;
     text-align: center;
 }
 
 .num {
     width: var(--tam);
-    text-align: center;
-    font-size: 0.7rem;
-    color: #8fa3bf;
     flex: none;
+    color: var(--texto-3);
+    font-size: 0.68rem;
+    text-align: center;
 }
 
 .hueco {
@@ -67,17 +90,17 @@
     flex: none;
 }
 
-/* Colores por tipo */
+/* ----- Tipos de butaca (las clases las pone la directiva appTipoButaca) ----- */
 .general {
-    --color: #34d97b;
+    --color: var(--butaca-general);
 }
 
 .accesible {
-    --color: #ffc933;
+    --color: var(--butaca-accesible);
 }
 
 .vip {
-    --color: #ff4d79;
+    --color: var(--butaca-vip);
 }
 
 .butaca {
@@ -87,33 +110,59 @@
     flex: none;
     padding: 0;
     border: 0;
-    border-radius: 6px;
+    /* forma de butaca: respaldo redondeado arriba */
+    border-radius: 7px 7px 4px 4px;
     background: var(--color);
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: transform var(--transicion), box-shadow var(--transicion), background var(--transicion);
 }
 
-/* Estados (van después de los tipos para que los pisen) */
+/* El hover genérico de los botones (styles.css) no debe cambiar el color de la butaca */
+.butaca:hover:not(:disabled) {
+    border: 0;
+}
+
+.butaca:not(.seleccionada):not(.ocupada):not(.deshabilitada):hover {
+    background: var(--color);
+}
+
+.butaca.seleccionada:hover {
+    background: var(--rojo);
+}
+
+.butaca.ocupada:hover {
+    background: var(--butaca-ocupada);
+}
+
+/* ----- Estados (van después de los tipos para que los pisen) ----- */
 .butaca.deshabilitada {
-    background: repeating-linear-gradient(45deg, #4b5563 0 4px, #374151 4px 8px);
-    opacity: 0.75;
+    background: repeating-linear-gradient(45deg, #2b2b2b 0 4px, #1f1f1f 4px 8px);
+    cursor: not-allowed;
 }
 
 .butaca.ocupada {
-    background: #6b7280;
-    opacity: 0.55;
+    background: var(--butaca-ocupada);
+    cursor: not-allowed;
 }
 
+/* Tu selección: rojo con brillo */
 .butaca.seleccionada {
-    outline: 3px solid #fff;
-    outline-offset: 1px;
+    background: var(--rojo);
+    box-shadow: 0 0 0 2px #fff, 0 0 14px rgba(229, 9, 20, 0.8);
+    animation: elegir 0.25s ease;
 }
 
-/* La butaca se eleva */
-.butaca:hover,
+@keyframes elegir {
+    50% {
+        transform: scale(1.3);
+    }
+}
+
+/* Microinteracción: la butaca se eleva */
+.butaca:not(.ocupada):not(.deshabilitada):hover,
 .butaca:focus-visible {
-    transform: translateY(-6px) scale(1.15);
-    box-shadow: 0 8px 14px rgba(0, 0, 0, 0.45);
+    transform: translateY(-5px) scale(1.15);
+    box-shadow: 0 8px 14px rgba(0, 0, 0, 0.6);
     z-index: 10;
 }
 
@@ -126,14 +175,14 @@
     transform: translateX(-50%);
     padding: 0.25rem 0.55rem;
     border-radius: 4px;
-    background: #fff;
-    color: #0b1a30;
-    font-size: 0.75rem;
-    font-weight: bold;
+    background: var(--texto);
+    color: var(--fondo);
+    font-size: 0.72rem;
+    font-weight: 700;
     white-space: nowrap;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.15s ease;
+    transition: opacity var(--transicion);
 }
 
 .butaca:hover::after,
@@ -141,47 +190,46 @@
     opacity: 1;
 }
 
-@media (prefers-reduced-motion: reduce) {
-
-    .butaca,
-    .butaca::after {
-        transition: none;
-    }
-}
-
+/* Pantalla del cine */
 .pantalla {
-    margin: 1.25rem auto 0;
+    margin: 1.5rem auto 0;
     width: 70%;
     padding: 0.7rem 0;
-    text-align: center;
-    letter-spacing: 0.4em;
-    border-top: 3px solid #5cb3ff;
+    border-top: 3px solid rgba(255, 255, 255, 0.85);
     border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-    background: linear-gradient(180deg, rgba(92, 179, 255, 0.35), transparent);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent);
+    box-shadow: 0 -10px 30px rgba(255, 255, 255, 0.08);
+    color: var(--texto-2);
+    font-size: 0.78rem;
+    letter-spacing: 0.5em;
+    text-align: center;
 }
 
+/* ----- Leyenda ----- */
 .leyenda {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 1.5rem;
-    margin-top: 0.75rem;
+    gap: 0.6rem 1.4rem;
+    margin-top: 0.9rem;
+    color: var(--texto-2);
+    font-size: 0.88rem;
 }
 
 .muestra {
     display: inline-block;
     width: 16px;
     height: 16px;
-    border-radius: 4px;
+    margin-right: 0.25rem;
+    border-radius: 5px 5px 3px 3px;
     background: var(--color);
     vertical-align: middle;
 }
+
 .muestra.ocupada {
-    background: #6b7280;
-    opacity: 0.55;
+    background: var(--butaca-ocupada);
 }
 
 .muestra.seleccionada {
-    outline: 2px solid currentColor;
-    outline-offset: 1px;
+    background: var(--rojo);
 }

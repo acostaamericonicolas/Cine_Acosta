@@ -1,18 +1,24 @@
+/* El QR va SIEMPRE negro sobre blanco (en pantalla oscura también): así lo leen los lectores */
 figure {
     display: inline-flex;
     flex-direction: column;
     align-items: center;
     gap: 0.4rem;
     margin: 0;
-    padding: 0.75rem;
+    padding: 0.85rem;
     background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    color: #000;
+    border-radius: var(--radio);
+    box-shadow: var(--sombra-suave);
+}
+
+img {
+    border-radius: 4px;
 }
 
 figcaption {
-    font-family: monospace;
-    font-size: 1.6rem;
-    font-weight: bold;
+    font-family: var(--fuente-mono);
+    font-size: 1.45rem;
+    font-weight: 800;
     letter-spacing: 0.15em;
 }

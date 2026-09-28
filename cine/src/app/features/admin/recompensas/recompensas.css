@@ -3,7 +3,6 @@
 }
 
 table {
-    border-collapse: collapse;
     width: 100%;
     max-width: 900px;
 }
@@ -12,7 +11,7 @@ th,
 td {
     text-align: left;
     padding: 0.4rem 0.6rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--borde);
     vertical-align: top;
 }
 
@@ -21,11 +20,11 @@ td input[type='number'] {
 }
 
 td small {
-    color: #555;
+    color: var(--texto-2);
 }
 
 tr.inactiva td {
-    color: #999;
+    color: var(--texto-3);
 }
 
 /* Botón con aspecto de link, para "volver al precio" */
@@ -33,7 +32,7 @@ tr.inactiva td {
     background: none;
     border: 0;
     padding: 0;
-    color: #1f3864;
+    color: var(--texto);
     text-decoration: underline;
     cursor: pointer;
     font: inherit;

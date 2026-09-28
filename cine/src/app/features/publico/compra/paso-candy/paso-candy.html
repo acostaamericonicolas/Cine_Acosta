@@ -4,14 +4,14 @@
     <div class="grilla">
         @for (c of combos(); track c.id) {
         @let clave = claveCombo(c.id);
-        <article class="item destacado">
+        <article class="item destacado" [class.elegido]="cantidad(clave) > 0">
             @if (c.imagen_url) {
             <img [src]="c.imagen_url" [alt]="c.nombre" />
             }
             <div class="info">
                 <strong>{{ c.nombre }}</strong>
                 @if (c.incluye_entrada) {
-                <span class="etiqueta">Incluye entrada</span>
+                <span class="insignia amarilla">🎟 Incluye entrada</span>
                 }
                 <small>{{ c.detalle.join(' + ') }}</small>
                 <span class="precio">{{ c.precio | pesos }}</span>
@@ -44,7 +44,7 @@
     <div class="grilla">
         @for (p of g.productos; track p.id) {
         @let clave = claveProducto(p.id);
-        <article class="item">
+        <article class="item" [class.elegido]="cantidad(clave) > 0">
             @if (p.imagen_url) {
             <img [src]="p.imagen_url" [alt]="p.nombre" />
             }

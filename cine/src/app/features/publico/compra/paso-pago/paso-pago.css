@@ -1,57 +1,29 @@
 :host {
     display: block;
-    max-width: 520px;
+    max-width: 560px;
 }
 
-.desglose ul {
-    list-style: none;
-    padding: 0;
+.desglose {
+    margin-bottom: 1.25rem;
 }
 
-.desglose li {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.4rem 0;
-    border-bottom: 1px solid #eee;
+.desglose h3 {
+    margin-top: 0;
 }
 
 .desglose li.vip {
-    font-weight: bold;
+    color: var(--butaca-vip);
+    font-weight: 700;
 }
 
 .desglose li.descuento {
-    color: #1d7a3a;
+    color: var(--verde);
 }
 
 .total {
+    margin-top: 0.75rem;
     text-align: right;
-    font-size: 1.1rem;
-}
-
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-label {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-label.en-linea {
-    flex-direction: row;
-    align-items: center;
-}
-
-fieldset {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    font-size: 1.2rem;
 }
 
 .fila {
@@ -73,24 +45,15 @@ fieldset {
 
 .confirmar {
     margin-top: 0.5rem;
-    padding: 0.6rem 1rem;
-    background: #1f3864;
-    color: #fff;
-    border: 0;
-    border-radius: 4px;
-    font-size: 1rem;
-    cursor: pointer;
-}
-
-.confirmar:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+    padding: 0.85rem 1.2rem;
+    font-size: 1.05rem;
 }
 
 .saldo {
-    background: #eef1f7;
-    padding: 0.6rem 0.8rem;
-    border-radius: 4px;
+    padding: 0.7rem 0.9rem;
+    border-radius: var(--radio-sm);
+    background: var(--card-2);
+    border: 1px solid var(--borde);
 }
 
 .canje {
@@ -98,20 +61,23 @@ fieldset {
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
-    padding: 0.3rem 0;
+    padding: 0.35rem 0;
 }
 
 .canje small {
-    color: #555;
+    color: var(--texto-2);
 }
 
 .canje .cantidad {
     display: flex;
     align-items: center;
     gap: 0.6rem;
+    font-weight: 800;
 }
 
 .canje .cantidad button {
     width: 2rem;
     height: 2rem;
+    padding: 0;
+    border-radius: 50%;
 }

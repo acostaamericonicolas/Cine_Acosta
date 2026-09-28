@@ -3,6 +3,7 @@ section {
 }
 
 .filtros {
+    max-width: none;
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
@@ -23,15 +24,15 @@ section {
 
 .modos button {
     padding: 0.4rem 0.8rem;
-    border: 1px solid #1f3864;
-    background: #fff;
-    color: #1f3864;
+    border: 1px solid var(--rojo);
+    background: var(--card);
+    color: var(--texto);
     border-radius: 4px;
     cursor: pointer;
 }
 
 .modos button.activo {
-    background: #1f3864;
+    background: var(--rojo);
     color: #fff;
 }
 
@@ -40,7 +41,6 @@ section {
 }
 
 table {
-    border-collapse: collapse;
     width: 100%;
     max-width: 820px;
 }
@@ -49,7 +49,7 @@ th,
 td {
     text-align: right;
     padding: 0.35rem 0.6rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--borde);
     font-variant-numeric: tabular-nums;
 }
 
@@ -63,11 +63,11 @@ td:first-child::first-letter {
 }
 
 tr.sin-ventas td {
-    color: #999;
+    color: var(--texto-3);
 }
 
 tfoot th {
-    border-top: 2px solid #333;
+    border-top: 2px solid var(--borde-fuerte);
 }
 
 /* ----- Gráficos de barras con CSS (el ancho lo pone ngStyle) ----- */
@@ -92,7 +92,7 @@ tfoot th {
 }
 
 .pista {
-    background: #eef1f7;
+    background: var(--card-2);
     border-radius: 4px;
     height: 1.2rem;
 }
@@ -100,20 +100,20 @@ tfoot th {
 .relleno {
     height: 100%;
     border-radius: 4px;
-    background: #5c7cba;
+    background: var(--borde-fuerte);
     transition: width 0.3s ease;
 }
 
 .relleno.candy {
-    background: #e0a800;
+    background: var(--amarillo);
 }
 
 .relleno.primero {
-    background: #1f3864;
+    background: var(--rojo);
 }
 
 .relleno.candy.primero {
-    background: #b07f00;
+    background: #ffd84d;
 }
 
 .valor {
@@ -122,7 +122,7 @@ tfoot th {
 }
 
 .top {
-    background: #fff4d6;
+    background: var(--amarillo-suave);
     padding: 0.4rem 0.6rem;
     border-radius: 4px;
 }

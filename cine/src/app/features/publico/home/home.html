@@ -35,10 +35,10 @@
     @let puesto = top3().indexOf(p.id) + 1;
     <app-tarjeta-pelicula [pelicula]="p">
         @if (puesto > 0) {
-        <span class="insignia-top">🔥 Más vendida #{{ puesto }}</span>
+        <span class="insignia roja">🔥 Más vendida #{{ puesto }}</span>
         }
         @if (p.en_preventa) {
-        <span class="insignia-preventa">Preventa · estreno {{ p.fecha_estreno | date: 'dd/MM' }}</span>
+        <span class="insignia amarilla">Preventa · estreno {{ p.fecha_estreno | date: 'dd/MM' }}</span>
         }
     </app-tarjeta-pelicula>
     }
@@ -55,7 +55,7 @@
     <div class="grilla">
         @for (p of proximas(); track p.id) {
         <app-tarjeta-pelicula [pelicula]="p">
-            <span class="insignia-estreno">Estreno {{ p.fecha_estreno | date: 'dd/MM' }}</span>
+            <span class="insignia">Estreno {{ p.fecha_estreno | date: 'dd/MM' }}</span>
             <button *appSoloRol="['cliente']" type="button" class="alerta" [class.activa]="alertas().has(p.id)"
                 [disabled]="alertaEnCurso() === p.id" [attr.aria-pressed]="alertas().has(p.id)"
                 (click)="alternarAlerta(p.id)">

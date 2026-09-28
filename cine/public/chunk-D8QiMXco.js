@@ -1,0 +1,1 @@
+import{V as Ni}from"./chunk-DbgaOpHc.js";var n=class e{transform(r){return r?`+${r}`:`Todo público`}static ɵfac=function(t){return new(t||e)};static ɵpipe=Ni({name:`restriccion`,type:e,pure:!0})};export{n as t};

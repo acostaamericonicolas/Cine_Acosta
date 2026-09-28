@@ -1,51 +1,59 @@
-<nav>
-  <a routerLink="/">Cine</a>
+<header class="barra">
+  <div class="barra-interna">
+    <a class="logo" routerLink="/" aria-label="Cine Acosta, ir a la cartelera">
+      <span class="logo-marca">CINE</span><span class="logo-nombre">ACOSTA</span>
+    </a>
 
-  <!-- Cada rol ve solo lo suyo: el cliente compra, el personal trabaja (RF-30/33) -->
-  <ng-container *appSoloRol="['cliente']">
-    <a routerLink="/cliente">Mi perfil</a>
-    <a routerLink="/cliente/compras">Mis compras</a>
-  </ng-container>
+    <!-- En celular el menú se abre con este botón -->
+    <button type="button" class="menu-boton" [attr.aria-expanded]="menuAbierto()" aria-controls="menu-principal"
+      aria-label="Abrir menú" (click)="menuAbierto.set(!menuAbierto())">
+      <span></span><span></span><span></span>
+    </button>
 
-  <ng-container *appSoloRol="['empleado', 'admin']">
-    <a routerLink="/empleado">Validar</a>
-  </ng-container>
+    <!-- Cada rol ve solo lo suyo: el cliente compra, el personal trabaja (RF-30/33) -->
+    <nav id="menu-principal" class="menu" [class.abierto]="menuAbierto()" (click)="menuAbierto.set(false)">
+      <a routerLink="/" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }">Cartelera</a>
 
-  <ng-container *appSoloRol="['admin']">
-    <a routerLink="/admin/peliculas">Películas</a>
-    <a routerLink="/admin/usuarios">Personal</a>
-    <a routerLink="/admin/salas">Salas</a>
-    <a routerLink="/admin/funciones">Funciones</a>
-    <a routerLink="/admin/candy/productos">Candy</a>
-    <a routerLink="/admin/combos">Combos</a>
-    <a routerLink="/admin/cupones">Cupones</a>
-    <a routerLink="/admin/recompensas">Puntos</a>
-    <a routerLink="/admin/reportes">Reportes</a>
-    <a routerLink="/admin/actividad">Actividad</a>
-  </ng-container>
+      <ng-container *appSoloRol="['cliente']">
+        <a routerLink="/cliente/perfil" routerLinkActive="activo">Mi perfil</a>
+        <a routerLink="/cliente/compras" routerLinkActive="activo">Mis compras</a>
+      </ng-container>
 
-  <ng-container *appSoloRol="['invitado']">
-    <a routerLink="/mi-compra">Buscar mi compra</a>
-    <a routerLink="/login">Ingresar</a>
-    <a routerLink="/registro">Registrarme</a>
-  </ng-container>
+      <ng-container *appSoloRol="['empleado', 'admin']">
+        <a routerLink="/empleado" routerLinkActive="activo">Validar</a>
+      </ng-container>
 
-  @if (auth.perfil(); as p) {
-  <span>Hola, {{ p.nombre }}</span>
-  <button (click)="salir()">Salir</button>
-  }
-</nav>
+      <!-- El admin entra a su panel: las secciones están en la barra lateral -->
+      <ng-container *appSoloRol="['admin']">
+        <a routerLink="/admin" routerLinkActive="activo">Panel</a>
+      </ng-container>
+
+      <ng-container *appSoloRol="['invitado']">
+        <a routerLink="/mi-compra" routerLinkActive="activo">Buscar mi compra</a>
+        <a routerLink="/login" routerLinkActive="activo">Ingresar</a>
+        <a class="boton-primario" routerLink="/registro">Registrarme</a>
+      </ng-container>
+
+      @if (auth.perfil(); as p) {
+      <span class="usuario">Hola, <strong>{{ p.nombre }}</strong></span>
+      <button type="button" class="salir" (click)="salir()">Salir</button>
+      }
+    </nav>
+  </div>
+</header>
 
 @if (avisos().length > 0) {
 <ul class="avisos" role="status">
   @for (a of avisos(); track a.pelicula_id) {
   <li>
     <span>🔔 ¡Ya está a la venta <strong>{{ a.nombre }}</strong>{{ a.en_preventa ? ' en preventa' : '' }}!</span>
-    <a [routerLink]="['/pelicula', a.pelicula_id]" (click)="cerrarAviso(a.pelicula_id)">Ver funciones</a>
-    <button type="button" aria-label="Cerrar aviso" (click)="cerrarAviso(a.pelicula_id)">✕</button>
+    <a class="boton-primario" [routerLink]="['/pelicula', a.pelicula_id]" (click)="cerrarAviso(a.pelicula_id)">Ver funciones</a>
+    <button type="button" class="cerrar" aria-label="Cerrar aviso" (click)="cerrarAviso(a.pelicula_id)">✕</button>
   </li>
   }
 </ul>
 }
 
-<router-outlet />
+<main class="contenido">
+  <router-outlet />
+</main>

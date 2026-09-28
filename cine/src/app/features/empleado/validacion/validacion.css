@@ -11,19 +11,17 @@
 
 .modos button {
     flex: 1;
-    padding: 0.6rem;
+    padding: 0.75rem;
     font-size: 1.05rem;
-    border: 2px solid #1f3864;
-    border-radius: 6px;
-    background: #fff;
-    color: #1f3864;
-    cursor: pointer;
+    background: var(--card);
+    border-color: var(--borde-fuerte);
 }
 
 .modos button.activo {
-    background: #1f3864;
+    background: var(--rojo);
+    border-color: var(--rojo);
     color: #fff;
-    font-weight: bold;
+    box-shadow: var(--sombra-roja);
 }
 
 .funcion {
@@ -68,13 +66,13 @@ form button {
 }
 
 .resultado.ok {
-    background: #e3f6ea;
-    border-color: #1d7a3a;
+    background: var(--verde-suave);
+    border-color: var(--verde);
 }
 
 .resultado.rechazo {
-    background: #fdecec;
-    border-color: #c00;
+    background: var(--error-suave);
+    border-color: var(--rojo);
 }
 
 .titulo {
@@ -85,13 +83,13 @@ form button {
 
 .codigo {
     font-family: monospace;
-    color: #555;
+    color: var(--texto-2);
     margin: 0 0 0.5rem;
 }
 
 .pendiente {
-    background: #fff4d6;
-    border-left: 4px solid #e0a800;
+    background: var(--amarillo-suave);
+    border-left: 4px solid var(--amarillo);
     padding: 0.4rem 0.6rem;
     border-radius: 4px;
 }
@@ -110,10 +108,10 @@ form button {
     grid-template-columns: 5rem 4rem 7rem 1fr;
     gap: 0.5rem;
     padding: 0.3rem 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--borde);
     font-size: 0.9rem;
 }
 
 .historial li.rechazo {
-    color: #c00;
+    color: var(--error);
 }

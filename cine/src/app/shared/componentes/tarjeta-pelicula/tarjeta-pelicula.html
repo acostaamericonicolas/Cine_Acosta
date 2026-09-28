@@ -1,6 +1,9 @@
 @let pelicula = this.pelicula();
 <article class="tarjeta">
-    <img [src]="pelicula.imagen_url" [alt]="'Póster de ' + pelicula.nombre" loading="lazy" />
+    <div class="poster">
+        <img [src]="pelicula.imagen_url" [alt]="'Póster de ' + pelicula.nombre" loading="lazy" />
+        <span class="edad">{{ pelicula.restriccion_edad | restriccion }}</span>
+    </div>
 
     <div class="info">
         <!-- Lo que el padre escriba dentro de <app-tarjeta-pelicula> aparece acá -->
@@ -9,8 +12,6 @@
         <h3>{{ pelicula.nombre }}</h3>
         <p class="meta">{{ pelicula.duracion_min | duracion }} · {{ pelicula.generos.join(', ') }}</p>
 
-        <span class="edad">{{ pelicula.restriccion_edad | restriccion }}</span>
-
-        <a [routerLink]="['/pelicula', pelicula.id]">Ver funciones</a>
+        <a class="boton ver" [routerLink]="['/pelicula', pelicula.id]">Ver funciones</a>
     </div>
 </article>

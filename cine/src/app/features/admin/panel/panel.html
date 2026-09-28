@@ -1,0 +1,21 @@
+<div class="panel">
+    <aside class="lateral" [class.abierta]="abierta()">
+        <button type="button" class="plegar" [attr.aria-expanded]="abierta()" aria-controls="secciones-admin"
+            (click)="abierta.set(!abierta())">
+            Secciones del panel <span aria-hidden="true">{{ abierta() ? '▴' : '▾' }}</span>
+        </button>
+
+        <nav id="secciones-admin" (click)="abierta.set(false)">
+            @for (s of secciones; track s.titulo) {
+            <p class="grupo">{{ s.titulo }}</p>
+            @for (l of s.links; track l.ruta) {
+            <a [routerLink]="l.ruta" routerLinkActive="activo">{{ l.texto }}</a>
+            }
+            }
+        </nav>
+    </aside>
+
+    <section class="pantalla">
+        <router-outlet />
+    </section>
+</div>

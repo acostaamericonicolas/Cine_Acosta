@@ -17,7 +17,7 @@ interface Resultado {
 
 /**
  * HU-32 y HU-33: el empleado valida la entrada o entrega el candy con el código.
- * El campo de texto sirve para tipear el código y para los lectores de QR USB,
+ * El campo de texto sirve para tipear el código y para los lectores de QR,
  * que "escriben" el código y mandan Enter como un teclado.
  */
 @Component({

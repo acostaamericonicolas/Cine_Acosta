@@ -4,25 +4,23 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 1rem;
-    max-width: 720px;
-    margin-bottom: 1rem;
+    max-width: 760px;
+    margin-bottom: 1.25rem;
 }
 
-.imprimir {
-    padding: 0.5rem 1rem;
-    background: #1f3864;
-    color: #fff;
-    border: 0;
-    border-radius: 4px;
-    cursor: pointer;
+.sin-conexion {
+    max-width: 760px;
 }
 
+/* ----- La entrada: tarjeta con corte punteado, como un ticket de cine ----- */
 .comprobante {
-    max-width: 720px;
-    padding: 1.5rem;
-    border: 1px solid #ccc;
-    border-radius: 12px;
-    background: #fff;
+    max-width: 760px;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    background: var(--card);
+    border: 1px solid var(--borde);
+    border-top: 4px solid var(--rojo);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra);
 }
 
 .comprobante header {
@@ -30,21 +28,26 @@
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 1rem;
-    border-bottom: 2px dashed #ccc;
-    padding-bottom: 1rem;
+    gap: 1.25rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 2px dashed var(--borde-fuerte);
 }
 
 .marca {
     margin: 0;
+    color: var(--rojo);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.25em;
     text-transform: uppercase;
-    letter-spacing: 0.2em;
-    font-size: 0.8rem;
-    color: #555;
 }
 
 h1 {
-    margin: 0.25rem 0;
+    margin: 0.3rem 0;
+}
+
+.funcion {
+    color: var(--texto-2);
 }
 
 .funcion::first-letter {
@@ -52,81 +55,63 @@ h1 {
 }
 
 h2 {
-    font-size: 1.05rem;
-    margin: 1.25rem 0 0.4rem;
+    margin: 1.4rem 0 0.4rem;
+    font-size: 1.02rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--texto-2);
 }
 
 h2 small {
-    font-weight: normal;
-    color: #555;
-}
-
-.lista {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.lista li {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.35rem 0;
-    border-bottom: 1px solid #eee;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
 }
 
 .total {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
 }
 
+/* Estado de la compra: usada (neutro) o cancelada (rojo) */
 .estado {
-    background: #eef1f7;
-    padding: 0.6rem 0.8rem;
-    border-radius: 4px;
-    font-weight: bold;
+    margin: 1rem 0 0;
+    padding: 0.7rem 0.9rem;
+    border-radius: var(--radio-sm);
+    background: var(--card-2);
+    font-weight: 700;
 }
 
 .estado.cancelada {
-    background: #fdecec;
-    color: #c00;
+    background: var(--error-suave);
+    color: var(--error);
 }
 
-.meta {
-    font-size: 0.9rem;
+.aviso {
+    margin-top: 1rem;
 }
 
 footer {
-    margin-top: 1.25rem;
+    margin-top: 1.5rem;
+    font-size: 0.88rem;
 }
 
 .mail {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    max-width: 320px;
+    max-width: 340px;
 }
 
-.sin-conexion {
-    max-width: 720px;
-    background: #fff4d6;
-    border-left: 4px solid #e0a800;
-    padding: 0.6rem 0.8rem;
-    border-radius: 4px;
-}
-
-/* Al imprimir o guardar como PDF: solo el comprobante, sin bordes de pantalla */
+/* Al imprimir o guardar como PDF: solo la entrada (styles.css ya pasa los colores a papel blanco) */
 @media print {
     .no-imprimir {
         display: none;
     }
 
     .comprobante {
-        border: 0;
-        padding: 0;
         max-width: none;
+        border: 1px solid #999;
+        border-top: 4px solid #000;
+        box-shadow: none;
     }
 
-    .aviso,
     .estado {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;

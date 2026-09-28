@@ -1,37 +1,68 @@
+/* ----- Cabecera con el póster grande y el mismo póster desenfocado de fondo ----- */
 .cabecera {
+    position: relative;
     display: flex;
     flex-wrap: wrap;
-    gap: 1.5rem;
-    margin: 1rem 0;
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    margin: 1rem 0 0.5rem;
+    padding: clamp(1.25rem, 3vw, 2.25rem);
+    border-radius: var(--radio);
+    border: 1px solid var(--borde);
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--fondo-2);
+}
+
+.cabecera::before {
+    content: '';
+    position: absolute;
+    inset: -40px;
+    z-index: -2;
+    background: var(--poster) center / cover no-repeat;
+    filter: blur(40px) saturate(1.2);
+    opacity: 0.45;
+}
+
+.cabecera::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(90deg, rgba(8, 8, 8, 0.92) 30%, rgba(8, 8, 8, 0.6));
 }
 
 .cabecera img {
-    width: 220px;
-    max-width: 100%;
+    width: clamp(160px, 26vw, 260px);
     aspect-ratio: 2 / 3;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: var(--radio);
+    box-shadow: var(--sombra);
 }
 
-.cabecera>div {
+.cabecera > div {
     flex: 1 1 300px;
 }
 
 .restriccion {
-    font-size: 0.9rem;
+    font-size: 0.92rem;
 }
 
 .promedio {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
 }
 
 .promedio span {
-    color: #e0a800;
+    color: var(--amarillo);
     margin-right: 0.4rem;
 }
 
-.dia::first-letter {
+/* ----- Funciones ----- */
+.dia {
+    margin-top: 1.25rem;
+    color: var(--texto-2);
+    font-size: 0.95rem;
     text-transform: uppercase;
+    letter-spacing: 0.06em;
 }
 
 .funciones,
@@ -41,46 +72,53 @@
     margin: 0 0 1rem;
 }
 
-.funciones li {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem 0;
-    border-bottom: 1px solid #eee;
+.funciones {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    gap: 0.6rem;
 }
 
-.etiqueta {
-    background: #eef1f7;
-    border-radius: 4px;
-    padding: 0.1rem 0.5rem;
-    font-size: 0.85rem;
+.funciones li {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.85rem;
+    background: var(--card);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio-sm);
+    transition: border-color var(--transicion), transform var(--transicion);
+}
+
+.funciones li:hover {
+    border-color: var(--rojo);
+    transform: translateY(-2px);
+}
+
+.funciones strong {
+    font-size: 1.15rem;
 }
 
 .comprar {
     margin-left: auto;
-    background: #1f3864;
-    color: #fff;
-    padding: 0.35rem 1rem;
-    border-radius: 4px;
-    text-decoration: none;
+    padding: 0.45rem 1rem;
 }
 
+/* ----- Reseñas ----- */
 .resenas li {
-    padding: 0.6rem 0;
-    border-bottom: 1px solid #eee;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--borde);
 }
 
 .resenas .estrellas {
-    color: #e0a800;
     margin-right: 0.4rem;
 }
 
-.resenas p {
-    margin: 0.25rem 0 0;
+.resenas small {
+    margin-left: 0.4rem;
 }
-.preventa {
-    background: #fff4d6;
-    border-left: 4px solid #e0a800;
-    padding: 0.6rem 0.8rem;
-    border-radius: 4px;
+
+.resenas p {
+    margin: 0.3rem 0 0;
+    color: var(--texto-2);
 }

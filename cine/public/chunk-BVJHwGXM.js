@@ -1,0 +1,1 @@
+import{V as Ni,Yn as vh}from"./chunk-DbgaOpHc.js";var m=`es-AR`;function u(e){return e==null||e===``?``:`$ `+vh(Number(e),m,`1.2-2`)}var i=class e{transform(n){return u(n)}static ɵfac=function(s){return new(s||e)};static ɵpipe=Ni({name:`pesos`,type:e,pure:!0})};export{u as n,i as t};

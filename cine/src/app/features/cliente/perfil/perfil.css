@@ -1,5 +1,5 @@
 .vacio {
-    color: #555;
+    color: var(--texto-2);
 }
 
 .saldos {
@@ -10,17 +10,23 @@
 }
 
 .saldos>div {
-    flex: 1 1 180px;
+    flex: 1 1 200px;
     display: flex;
     flex-direction: column;
-    padding: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    gap: 0.15rem;
+    padding: 1.2rem 1.3rem;
+    background: var(--card);
+    border: 1px solid var(--borde);
+    border-left: 4px solid var(--rojo);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra-suave);
+    color: var(--texto-2);
 }
 
 .saldos .valor {
-    font-size: 1.8rem;
-    font-weight: bold;
+    color: var(--texto);
+    font-size: clamp(1.7rem, 1.4rem + 1vw, 2.2rem);
+    font-weight: 800;
 }
 
 .cupones {
@@ -34,17 +40,17 @@
     gap: 0.5rem;
     align-items: baseline;
     padding: 0.6rem 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--borde);
 }
 
 .cupones .estado {
     margin-left: auto;
-    color: #555;
+    color: var(--texto-2);
     font-size: 0.9rem;
 }
 
 .cupones .usado {
-    color: #999;
+    color: var(--texto-3);
     text-decoration: line-through;
 }
 
@@ -72,7 +78,7 @@
     flex-wrap: wrap;
     gap: 1rem;
     padding: 0.5rem 0;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--borde);
 }
 
 .canjes li strong {
@@ -80,7 +86,7 @@
 }
 
 .canjes .devuelto {
-    color: #1d7a3a;
+    color: var(--verde);
     font-weight: normal;
 }
 
@@ -107,14 +113,14 @@
 }
 
 .vista small {
-    color: #555;
+    color: var(--texto-2);
 }
 
 .vista .estrellas {
-    color: #e0a800;
+    color: var(--amarillo);
 }
 
 .vista .calificar {
-    color: #1f3864;
+    color: var(--texto);
     font-size: 0.9rem;
 }

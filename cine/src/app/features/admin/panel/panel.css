@@ -1,0 +1,91 @@
+.panel {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: clamp(1.25rem, 3vw, 2.25rem);
+    align-items: start;
+}
+
+/* ----- Barra lateral ----- */
+.lateral {
+    position: sticky;
+    top: 5.5rem;
+    background: var(--fondo-2);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    padding: 0.75rem;
+}
+
+.lateral nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.grupo {
+    margin: 0.85rem 0.6rem 0.3rem;
+    color: var(--texto-3);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.grupo:first-child {
+    margin-top: 0.25rem;
+}
+
+.lateral a {
+    padding: 0.5rem 0.7rem;
+    border-radius: var(--radio-sm);
+    color: var(--texto-2);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background var(--transicion), color var(--transicion), transform var(--transicion);
+}
+
+.lateral a:hover {
+    background: var(--card);
+    color: var(--texto);
+    transform: translateX(2px);
+}
+
+.lateral a.activo {
+    background: var(--rojo-suave);
+    color: var(--texto);
+    box-shadow: inset 3px 0 0 var(--rojo);
+}
+
+.plegar {
+    display: none;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.pantalla {
+    min-width: 0;
+}
+
+/* ----- Celular / tablet: la barra pasa arriba y se pliega ----- */
+@media (max-width: 900px) {
+    .panel {
+        grid-template-columns: 1fr;
+    }
+
+    .lateral {
+        position: static;
+        padding: 0.5rem;
+    }
+
+    .plegar {
+        display: inline-flex;
+    }
+
+    .lateral nav {
+        display: none;
+        margin-top: 0.5rem;
+    }
+
+    .lateral.abierta nav {
+        display: flex;
+    }
+}

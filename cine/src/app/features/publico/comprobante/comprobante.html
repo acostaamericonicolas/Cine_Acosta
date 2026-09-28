@@ -3,11 +3,11 @@
 } @else if (comprobante(); as c) {
 <div class="acciones no-imprimir">
     <a routerLink="/">← Volver a la cartelera</a>
-    <button type="button" class="imprimir" (click)="imprimir()">Imprimir / Guardar como PDF</button>
+    <button type="button" class="boton-primario" (click)="imprimir()">Imprimir / Guardar como PDF</button>
 </div>
 
 @if (c.sin_conexion) {
-<p class="sin-conexion no-imprimir" role="status">
+<p class="aviso sin-conexion no-imprimir" role="status">
     Sin conexión: estás viendo la copia guardada en este dispositivo. El estado de las entradas puede no estar al día.
 </p>
 }
@@ -38,7 +38,7 @@
 
     <section>
         <h2>Entradas</h2>
-        <ul class="lista">
+        <ul class="lista-filas">
             @for (e of c.entradas; track e.fila + e.numero) {
             <li>
                 <span>Butaca <strong>{{ e.fila }}-{{ e.numero }}</strong> · {{ e.tipo | tipoButaca }}</span>
@@ -51,7 +51,7 @@
     @if (c.items.length > 0) {
     <section>
         <h2>Candy <small>(retirás con el mismo código)</small></h2>
-        <ul class="lista">
+        <ul class="lista-filas">
             @for (i of c.items; track $index) {
             <li>
                 <span>{{ i.cantidad }} × {{ i.nombre }}</span>
@@ -64,7 +64,7 @@
 
     <section>
         <h2>Pago</h2>
-        <ul class="lista">
+        <ul class="lista-filas">
             <li><span>Entradas</span><span>{{ c.subtotal_entradas | pesos }}</span></li>
             @if (c.subtotal_candy > 0) {
             <li><span>Candy</span><span>{{ c.subtotal_candy | pesos }}</span></li>

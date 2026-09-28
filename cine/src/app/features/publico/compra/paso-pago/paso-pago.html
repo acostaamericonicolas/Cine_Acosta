@@ -7,9 +7,9 @@
 </p>
 }
 
-<section class="desglose">
+<section class="desglose superficie">
     <h3>Resumen</h3>
-    <ul>
+    <ul class="lista-filas">
         @for (e of entradas(); track e.butaca.id) {
         <li [class.vip]="e.butaca.tipo === 'vip'">
             <span>Entrada {{ e.butaca.id }} · {{ e.butaca.tipo | tipoButaca }}</span>

@@ -77,14 +77,14 @@
     @if (avisoEdad()) {
     <p class="error" role="alert">{{ avisoEdad() }}</p>
     }
-    <button type="submit" class="continuar" [disabled]="fEdad().invalid()">Continuar</button>
+    <button type="submit" class="boton-primario" [disabled]="fEdad().invalid()">Continuar</button>
 </form>
 <p class="ayuda">¿Tenés cuenta? <a routerLink="/login" [queryParams]="{ volverA: volverAca() }">Iniciá sesión</a> y usamos la fecha de tu perfil.</p>
 }
 
 @case ('butacas') {
 <h2>Elegí tus butacas</h2>
-<p class="ayuda">Las butacas grises las están comprando otras personas en este momento. Se actualizan solas.</p>
+<p class="ayuda">Las butacas oscuras ya están tomadas por otras personas y se actualizan solas. Tocá una libre para elegirla.</p>
 
 <app-mapa-butacas [deshabilitadas]="deshabilitadas()" [ocupadas]="ocupadasPorOtros()"
     [seleccionadas]="idsSeleccionadas()" [leyendaEstados]="true" (butacaClick)="tocar($event)" />
@@ -93,7 +93,7 @@
 <p class="error" role="alert">{{ aviso() }}</p>
 }
 
-<section class="resumen" aria-live="polite">
+<section class="resumen superficie" aria-live="polite">
     <h2>Tu selección</h2>
 
     @if (seleccionadas().length === 0) {
@@ -103,7 +103,7 @@
     <p class="reloj">Te guardamos las butacas por {{ t }} min.</p>
     }
 
-    <ul>
+    <ul class="lista-filas">
         @for (l of lineas(); track l.butaca.id) {
         <li [class.vip]="l.butaca.tipo === 'vip'">
             <span>Butaca {{ l.butaca.id }} · {{ l.butaca.tipo | tipoButaca }}</span>
@@ -120,7 +120,7 @@
     <p class="aviso">Película para mayores de {{ p.restriccion_edad }}: debe asistir un adulto.</p>
     }
 
-    <button type="button" class="continuar" (click)="irACandy()">Continuar</button>
+    <button type="button" class="boton-primario" (click)="irACandy()">Continuar</button>
     }
 </section>
 }
@@ -135,7 +135,7 @@
 }
 <div class="acciones">
     <button type="button" (click)="paso.set('butacas')">← Butacas</button>
-    <button type="button" class="continuar" [disabled]="!candyValido()" (click)="irAPago()">
+    <button type="button" class="boton-primario" [disabled]="!candyValido()" (click)="irAPago()">
         {{ carrito().length === 0 ? 'Seguir sin candy' : 'Continuar' }}
     </button>
 </div>
@@ -155,18 +155,18 @@
 
 @case ('listo') {
 @if (resultado(); as r) {
-<section class="listo">
+<section class="listo superficie">
     <h2>¡Compra confirmada!</h2>
     <p>Presentá este código o el QR en la entrada del cine y en el candy. Lo asociamos a <strong>{{ r.email }}</strong>.</p>
     <app-codigo-qr [codigo]="r.codigo" />
     <p>
-        <a class="continuar" [routerLink]="['/comprobante', r.codigo]">Ver comprobante / Guardar como PDF</a>
+        <a class="boton-primario" [routerLink]="['/comprobante', r.codigo]">Ver comprobante / Guardar como PDF</a>
     </p>
     @if (!registrado()) {
     <p class="ayuda">Anotá el código: con él y tu mail podés volver a ver el comprobante desde "Buscar mi compra".</p>
     }
 
-    <ul>
+    <ul class="lista-filas">
         <li><span>Entradas</span><span>{{ r.subtotal_entradas | pesos }}</span></li>
         @if (r.subtotal_candy > 0) {
         <li><span>Candy</span><span>{{ r.subtotal_candy | pesos }}</span></li>

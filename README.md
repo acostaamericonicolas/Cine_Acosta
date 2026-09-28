@@ -122,7 +122,7 @@ cine/src/app/
 │   ├── publico/           home, detalle, compra, comprobante, buscar-compra, login, registro
 │   ├── cliente/           perfil, mis-compras
 │   ├── empleado/          validación
-│   └── admin/             ABMs del panel, personal, puntos, reportes, actividad
+│   └── admin/             panel (barra lateral), ABMs, personal, puntos, reportes, actividad
 └── shared/                lo que usan varias áreas
     ├── componentes/       tarjeta-pelicula, mapa-butacas, codigo-qr
     ├── errores.ts         mensajeDeError(): el texto de error para mostrar (ver 4.1)
@@ -283,9 +283,37 @@ Siguiendo los ejemplos de clase (`hover-zoom` y `admin`):
 
   Es solo visual: la seguridad está en los guards y en la base.
 
-### 4.11 Estilos globales
+### 4.11 Diseño y estilos globales
 
-Las clases que se repetían en muchos componentes (`.error` en 13 archivos, `.ayuda` en 11, `.meta`, `.ok`, `.aviso` y `.error-compra`) están definidas **una vez en `styles.css`**. Cada componente conserva solo lo propio, por ejemplo un `max-width` o un `margin`.
+**Estética:** cinematográfica y premium, con base oscura, alto contraste, pósters grandes, tarjetas con bordes redondeados, sombras sutiles y animaciones suaves. **Todo el CSS es del proyecto:** no hay Google Fonts, CDN ni librerías de estilos. La tipografía es la **fuente del sistema** de cada dispositivo (Segoe UI en Windows, Roboto en Android, San Francisco en Apple), sin archivos extra.
+
+**`styles.css` es el sistema de diseño.** Todo lo que se repite está ahí, así un cambio impacta en toda la web:
+
+| Parte | Qué define |
+|---|---|
+| **Variables** (`:root`) | Paleta: fondo `#080808`, fondo secundario `#121212`, tarjetas `#1B1B1B`, texto `#FFF` / `#A8A8A8`, **rojo de acción `#E50914`** (hover más brillante), verde = confirmado, amarillo = especial (preventa, avisos, estrellas). También radios, sombras, tiempos de animación, tipografía y colores de butacas. **Cambiando una variable cambia toda la web.** |
+| **Elementos** | `body`, títulos, links, `button`, `input`, `select`, `textarea`, `fieldset`, `label`, `table`. Un formulario o una tabla nuevos se ven bien sin escribir CSS. Por eso las pantallas del admin, el login y el registro casi no tienen CSS propio. |
+| **Botones** | `button` es secundario; **`type="submit"` es la acción principal (rojo)**; `.boton` y `.boton-primario` sirven para links con aspecto de botón; `.link` es un botón con aspecto de link. |
+| **Utilitarios** | `.superficie` (tarjeta), `.grilla` (tarjetas responsive: 2 columnas en celular), `.chip`, `.insignia` (`.roja`, `.amarilla`, `.verde`), `.lista-filas` (resúmenes), `.estrellas`, `.aviso`, `.error`, `.ok`, `.ayuda`, `.meta` y `.error-compra`. |
+| **Animaciones** | Fundido de entrada de cada pantalla. Se desactivan si el sistema pide menos movimiento (`prefers-reduced-motion`). |
+| **Impresión** | Se **redefinen las variables** a papel blanco: el comprobante y los reportes salen en blanco sin CSS extra. |
+
+**Microinteracciones:**
+- tarjetas de película que se elevan y acercan el póster;
+- butacas que se elevan al pasar el mouse, y la elegida se pone roja con un "pulso";
+- productos del candy que quedan marcados en rojo al agregarlos;
+- estrellas que crecen al calificar;
+- botones que se hunden al tocarlos.
+
+**Estructura visual:**
+- **Barra superior** fija y translúcida con el logo. En celular (menos de 820 px), menú ☰ desplegable. El link de la sección actual se marca en rojo.
+- **Panel de admin con barra lateral** (`features/admin/panel/`): las secciones del admin están agrupadas (Catálogo, Candy, Ventas, Equipo, Control). Todas las rutas del admin son hijas de ese marco. En celular (menos de 900 px), la barra se pliega detrás de un botón.
+- **Detalle de película:** el mismo póster, desenfocado, hace de fondo de la cabecera (variable CSS `--poster`, que se asigna desde el template).
+- **Comprobante:** con estética de entrada de cine (borde rojo arriba, corte punteado). **El QR va siempre negro sobre blanco**, también en pantalla oscura, para que lo lean los lectores.
+- **Mapa de butacas:** general gris claro, accesible azul, VIP dorado, **tu selección roja**, ocupadas gris oscuro. En celular la sala se desplaza de costado.
+- **Responsive** desde celulares Android (360 px) hasta desktop. Las tablas del admin se desplazan en horizontal en pantallas chicas.
+
+**Cada componente conserva solo su disposición:** grillas, tamaños y márgenes propios. Los colores siempre salen de las variables.
 
 ### 4.8 Fechas y horarios
 

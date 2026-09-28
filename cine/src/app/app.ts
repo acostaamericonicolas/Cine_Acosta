@@ -1,5 +1,5 @@
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Alertas as AlertasService } from './services/alertas';
 import { Auth as AuthService } from './services/auth';
 import { CatalogoVivo as CatalogoVivoService } from './services/catalogo-vivo';
@@ -11,7 +11,7 @@ const CADA_UN_MINUTO = 60_000;
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, SoloRolDirective],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, SoloRolDirective],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -28,6 +28,9 @@ export class App {
    *  - al instante, cuando cambia una película (catálogo en vivo: el admin abrió la venta o la preventa);
    *  - cada minuto y al volver a la pestaña (la preventa también abre sola al llegar la fecha).
    */
+  // Menú desplegable en celular (se cierra al elegir una opción)
+  menuAbierto = signal(false);
+
   avisos = signal<AvisoVenta[]>([]);
   private escuchando = false;
   private reloj: ReturnType<typeof setInterval> | null = null;

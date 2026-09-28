@@ -1,53 +1,60 @@
+section {
+    margin-bottom: 1.5rem;
+}
+
 .grilla {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
 }
 
 .item {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    gap: 0.6rem;
+    padding: 0.8rem;
+    background: var(--card);
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    transition: border-color var(--transicion), transform var(--transicion), box-shadow var(--transicion);
+}
+
+.item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--sombra-suave);
 }
 
 /* Los combos se destacan (HU-19) */
 .item.destacado {
-    border: 2px solid #e0a800;
-    background: #fffbea;
+    border-color: rgba(245, 197, 24, 0.45);
+    background: linear-gradient(180deg, rgba(245, 197, 24, 0.08), var(--card) 45%);
+}
+
+/* Microinteracción: lo que ya está en la compra queda marcado en rojo */
+.item.elegido {
+    border-color: var(--rojo);
+    box-shadow: 0 0 0 1px var(--rojo), var(--sombra-suave);
 }
 
 .item img {
     width: 100%;
     aspect-ratio: 4 / 3;
     object-fit: cover;
-    border-radius: 6px;
+    border-radius: var(--radio-sm);
 }
 
 .info {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 0.25rem;
     flex: 1;
 }
 
 .info small {
-    color: #555;
+    color: var(--texto-2);
 }
 
 .precio {
-    font-weight: bold;
-}
-
-.etiqueta {
-    align-self: flex-start;
-    background: #1f3864;
-    color: #fff;
-    border-radius: 4px;
-    padding: 0.1rem 0.4rem;
-    font-size: 0.8rem;
+    font-size: 1.05rem;
+    font-weight: 800;
 }
 
 .cantidad {
@@ -56,8 +63,16 @@
     gap: 0.75rem;
 }
 
+.cantidad span {
+    min-width: 1.5rem;
+    font-weight: 800;
+    text-align: center;
+}
+
 .cantidad button {
-    width: 2rem;
-    height: 2rem;
-    font-size: 1.1rem;
+    width: 2.1rem;
+    height: 2.1rem;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 1.15rem;
 }

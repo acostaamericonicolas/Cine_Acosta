@@ -4,33 +4,7 @@ Sistema web para un cine: cartelera, venta de entradas y candy, cupones, puntos,
 
 Trabajo práctico de **Programación IV**.
 
-## Tecnologías
-
-- **Angular 22**: componentes standalone, signals, Signal Forms, lazy loading.
-- **Supabase**: Auth, base de datos Postgres con RLS, Storage y Realtime.
-- **Firebase Hosting** para publicar la app.
-- **PWA**: instalable, con service worker.
-
-## Cómo levantar el proyecto
-
-```bash
-cd cine
-npm install
-npm start          # http://localhost:4200
-```
-
-La conexión a Supabase está en `cine/src/environments/environment.ts` (`supabaseUrl` y `supabasePublishableKey`). La clave *publishable* es pública por diseño: lo que protege los datos son las policies RLS.
-
-En Supabase → Authentication, la **confirmación de mail tiene que estar desactivada**: el registro necesita una sesión activa para crear el perfil.
-
-### Publicar
-
-```bash
-cd cine
-npm run deploy     # ng build + firebase deploy --only hosting
-```
-
-Firebase publica directamente `dist/cine/browser`. En `cine/public/` van solo los insumos (favicon, íconos, manifest); nunca hay que copiar ahí el resultado del build.
+**App publicada:** [https://cine-acosta.web.app/](https://cine-acosta.web.app/)
 
 ## Funcionalidades
 
@@ -48,6 +22,13 @@ Algunos detalles:
 - **Puntos**: 1 punto por peso pagado; cada ítem cuesta en puntos lo mismo que vale en pesos.
 - **Catálogo en vivo**: si el admin cambia películas, funciones o precios, las pantallas abiertas se actualizan solas.
 - **PWA**: carga rápida, cartelera e imágenes en caché y comprobantes disponibles sin conexión.
+
+## Tecnologías
+
+- **Angular 22**: componentes standalone, signals, Signal Forms, lazy loading.
+- **Supabase**: Auth, base de datos Postgres con RLS, Storage y Realtime.
+- **Firebase Hosting** para publicar la app.
+- **PWA**: instalable, con service worker.
 
 ## Estructura
 

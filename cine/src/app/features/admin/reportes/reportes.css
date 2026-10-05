@@ -40,8 +40,8 @@ section {
     font-size: 0.9rem;
 }
 
-table {
-    width: 100%;
+/* Ancho máximo en el contenedor: la tabla adentro ocupa el 100% */
+.tabla {
     max-width: 820px;
 }
 

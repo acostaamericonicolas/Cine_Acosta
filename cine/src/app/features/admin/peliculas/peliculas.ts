@@ -7,10 +7,11 @@ import { Imagenes as ImagenesService } from '../../../services/imagenes';
 import { mensajeDeError } from '../../../shared/errores';
 import { PesosPipe } from '../../../pipes/pesos-pipe';
 import { RestriccionPipe } from '../../../pipes/restriccion-pipe';
+import { ListaGeneros } from '../../../shared/componentes/lista-generos/lista-generos';
 
 @Component({
   selector: 'app-peliculas',
-  imports: [RouterLink, DatePipe, PesosPipe, RestriccionPipe],
+  imports: [RouterLink, DatePipe, PesosPipe, RestriccionPipe, ListaGeneros],
   templateUrl: './peliculas.html',
   styleUrl: './peliculas.css',
 })

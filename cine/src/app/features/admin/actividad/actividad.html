@@ -26,28 +26,30 @@
 } @else {
 <p class="meta">{{ filtradas().length }} {{ filtradas().length === 1 ? 'registro' : 'registros' }}
     @if (filas().length === 300) { (se muestran los 300 más recientes: acotá el rango) }</p>
-<table>
-    <thead>
-        <tr>
-            <th>Fecha y hora</th>
-            <th>Quién</th>
-            <th>Acción</th>
-            <th>Detalle</th>
-        </tr>
-    </thead>
-    <tbody>
-        @for (f of filtradas(); track f.id) {
-        <tr>
-            <td class="fecha">{{ f.creado_en | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
-            <td>{{ f.usuario }}</td>
-            <td><strong>{{ f.accion }}</strong></td>
-            <td>{{ f.detalle }}</td>
-        </tr>
-        } @empty {
-        <tr>
-            <td colspan="4">No hay actividad en ese rango.</td>
-        </tr>
-        }
-    </tbody>
-</table>
+<div class="tabla">
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha y hora</th>
+                <th>Quién</th>
+                <th>Acción</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (f of filtradas(); track f.id) {
+            <tr>
+                <td class="fecha">{{ f.creado_en | date: 'dd/MM/yyyy HH:mm:ss' }}</td>
+                <td>{{ f.usuario }}</td>
+                <td><strong>{{ f.accion }}</strong></td>
+                <td>{{ f.detalle }}</td>
+            </tr>
+            } @empty {
+            <tr>
+                <td colspan="4">No hay actividad en ese rango.</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+</div>
 }

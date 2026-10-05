@@ -65,8 +65,9 @@
     min-width: 0;
 }
 
-/* ----- Celular / tablet: la barra pasa arriba y se pliega ----- */
-@media (max-width: 900px) {
+/* ----- Celular / tablet / notebook chica: la barra pasa arriba y se pliega,
+         así las tablas del admin aprovechan todo el ancho ----- */
+@media (max-width: 1100px) {
     .panel {
         grid-template-columns: 1fr;
     }

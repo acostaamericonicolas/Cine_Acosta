@@ -20,8 +20,47 @@
     gap: 0.5rem;
 }
 
+.generos .chip {
+    min-height: 2.25rem;
+    white-space: nowrap;
+}
+
 .filtros > button {
     align-self: flex-start;
+}
+
+/* Celular: los géneros van en UNA fila que se desliza con el dedo,
+   en lugar de apilarse en varios renglones antes de la cartelera.
+   Los bordes se desvanecen para indicar que hay más hacia los costados. */
+@media (max-width: 600px) {
+    .filtros {
+        gap: 0.7rem;
+        padding: 0.75rem;
+        margin-inline: calc(var(--gutter) * -0.25);
+    }
+
+    .generos {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+        margin-inline: -0.75rem;
+        padding: 0.1rem 0.75rem;
+        mask-image: linear-gradient(to right, transparent, #000 0.75rem, #000 calc(100% - 1.5rem), transparent);
+    }
+
+    .generos::-webkit-scrollbar {
+        display: none;
+    }
+
+    .generos .chip {
+        flex: none;
+        scroll-snap-align: start;
+    }
+
+    .filtros > button {
+        align-self: stretch;
+    }
 }
 
 /* ----- HU-11: Próximamente ----- */

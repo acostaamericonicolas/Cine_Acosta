@@ -28,39 +28,41 @@
     <p class="ayuda">Se aplican solos a los usuarios que tengan como mínimo la edad indicada, mientras estén vigentes.
     </p>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Edad mínima</th>
-                <th>Porcentaje</th>
-                <th>Desde</th>
-                <th>Hasta</th>
-                <th>Estado</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (c of cupones(); track c.id) {
-            <tr>
-                <td>{{ c.edad_minima }} años</td>
-                <td>{{ c.porcentaje }}%</td>
-                <td>{{ c.vigente_desde | date: 'dd/MM/yyyy' }}</td>
-                <td>{{ c.vigente_hasta | date: 'dd/MM/yyyy' }}</td>
-                <td>{{ estadoVigencia(c) }}</td>
-                <td>
-                    <button type="button" (click)="alternarActivo(c)">
-                        {{ c.activo ? 'Desactivar' : 'Activar' }}
-                    </button>
-                    <button type="button" (click)="eliminar(c)">Eliminar</button>
-                </td>
-            </tr>
-            } @empty {
-            <tr>
-                <td colspan="6">Todavía no hay cupones por edad.</td>
-            </tr>
-            }
-        </tbody>
-    </table>
+    <div class="tabla">
+        <table>
+            <thead>
+                <tr>
+                    <th>Edad mínima</th>
+                    <th>Porcentaje</th>
+                    <th>Desde</th>
+                    <th>Hasta</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (c of cupones(); track c.id) {
+                <tr>
+                    <td>{{ c.edad_minima }} años</td>
+                    <td>{{ c.porcentaje }}%</td>
+                    <td>{{ c.vigente_desde | date: 'dd/MM/yyyy' }}</td>
+                    <td>{{ c.vigente_hasta | date: 'dd/MM/yyyy' }}</td>
+                    <td>{{ estadoVigencia(c) }}</td>
+                    <td>
+                        <button type="button" (click)="alternarActivo(c)">
+                            {{ c.activo ? 'Desactivar' : 'Activar' }}
+                        </button>
+                        <button type="button" (click)="eliminar(c)">Eliminar</button>
+                    </td>
+                </tr>
+                } @empty {
+                <tr>
+                    <td colspan="6">Todavía no hay cupones por edad.</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 
     <form (submit)="agregarCupon($event)">
         <label>Edad mínima

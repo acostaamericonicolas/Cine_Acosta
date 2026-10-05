@@ -13,33 +13,35 @@
 <section>
     <h2>Salas del cine</h2>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Estado</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (s of salas(); track s.id) {
-            <tr>
-                <td>{{ s.nombre }}</td>
-                <td>{{ s.activa ? 'Activa' : 'Desactivada' }}</td>
-                <td>
-                    <a [routerLink]="['/admin/salas', s.id]">Ver butacas</a>
-                    <button type="button" (click)="alternarActiva(s)">
-                        {{ s.activa ? 'Desactivar' : 'Activar' }}
-                    </button>
-                </td>
-            </tr>
-            } @empty {
-            <tr>
-                <td colspan="3">Todavía no hay salas.</td>
-            </tr>
-            }
-        </tbody>
-    </table>
+    <div class="tabla">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Estado</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (s of salas(); track s.id) {
+                <tr>
+                    <td>{{ s.nombre }}</td>
+                    <td>{{ s.activa ? 'Activa' : 'Desactivada' }}</td>
+                    <td>
+                        <a [routerLink]="['/admin/salas', s.id]">Ver butacas</a>
+                        <button type="button" (click)="alternarActiva(s)">
+                            {{ s.activa ? 'Desactivar' : 'Activar' }}
+                        </button>
+                    </td>
+                </tr>
+                } @empty {
+                <tr>
+                    <td colspan="3">Todavía no hay salas.</td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 
     <form (submit)="agregar($event)">
         <input type="text" [formField]="fSala.nombre" placeholder="Nombre de la nueva sala"

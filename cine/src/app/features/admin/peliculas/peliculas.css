@@ -1,0 +1,7 @@
+.acciones {
+    white-space: nowrap;
+}
+
+.acciones a {
+    margin-right: 0.6rem;
+}

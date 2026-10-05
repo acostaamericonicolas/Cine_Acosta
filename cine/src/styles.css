@@ -306,6 +306,23 @@ textarea:focus {
     box-shadow: 0 0 0 3px var(--rojo-suave);
 }
 
+/* Flecha propia: la nativa se superponía al texto y lo cortaba.
+   Se reserva espacio a la derecha para que el texto nunca quede debajo. */
+select {
+    appearance: none;
+    padding-right: 2.2rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23a8a8a8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.8rem center;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+select option {
+    background: var(--card-2);
+    color: var(--texto);
+}
+
 input[type='checkbox'],
 input[type='radio'] {
     width: 1.15rem;
@@ -405,11 +422,48 @@ td img {
     border-radius: 6px;
 }
 
-/* En pantallas chicas la tabla se desplaza en horizontal en lugar de romper el diseño */
+/* Inputs dentro de una celda: compactos y del ancho de su contenido
+   (con width: 100% la tabla los achicaba hasta cortar el texto) */
+td select,
+td input:not([type='checkbox']):not([type='radio']) {
+    width: auto;
+    min-width: max-content;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+    font-size: 0.88rem;
+}
+
+/* Contenedor de tabla: <div class="tabla"><table>...</table></div>.
+   Si la tabla no entra a lo ancho (muchas columnas, panel con barra lateral,
+   celular), se desplaza en horizontal DENTRO del recuadro en lugar de salirse
+   de la pantalla y quedar cortada.
+   Las sombras de los costados aparecen solo cuando hay más contenido hacia ese lado
+   (los degradados "local" se mueven con el scroll y tapan la sombra fija). */
+.tabla {
+    max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    background:
+        linear-gradient(to right, var(--card) 40%, transparent) left / 2.5rem 100% no-repeat local,
+        linear-gradient(to left, var(--card) 40%, transparent) right / 2.5rem 100% no-repeat local,
+        radial-gradient(farthest-side at 0 50%, rgba(255, 255, 255, 0.14), transparent) left / 0.9rem 100% no-repeat scroll,
+        radial-gradient(farthest-side at 100% 50%, rgba(255, 255, 255, 0.14), transparent) right / 0.9rem 100% no-repeat scroll,
+        var(--card);
+    box-shadow: var(--sombra-suave);
+}
+
+.tabla > table {
+    border: 0;
+    border-radius: 0;
+    overflow: visible;
+    background: transparent;
+}
+
+/* En celular las celdas no parten el texto en renglones: es más legible desplazar */
 @media (max-width: 720px) {
-    table {
-        display: block;
-        overflow-x: auto;
+    .tabla th,
+    .tabla td {
         white-space: nowrap;
     }
 }

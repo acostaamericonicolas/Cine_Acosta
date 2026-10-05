@@ -1,0 +1,19 @@
+@for (g of primeros(); track g) {
+<span class="genero">{{ g }}</span>
+}
+
+@if (resto().length > 0) {
+<button #mas type="button" class="mas" [attr.aria-expanded]="abierto()"
+    [attr.aria-label]="'Ver ' + resto().length + ' géneros más'" (mouseenter)="abrir()" (mouseleave)="cerrar()"
+    (focus)="abrir()" (blur)="cerrar()" (click)="abrir()">
+    +{{ resto().length }}
+</button>
+
+@if (abierto()) {
+<div class="globo" role="tooltip" [style.top.px]="posicion().top" [style.left.px]="posicion().left">
+    @for (g of generos(); track g) {
+    <span class="genero">{{ g }}</span>
+    }
+</div>
+}
+}

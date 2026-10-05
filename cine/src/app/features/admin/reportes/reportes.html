@@ -25,40 +25,42 @@
     <p>Cargando...</p>
     } @else if (ventas().length > 0) {
     @let t = totales();
-    <table>
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th>Compras</th>
-                <th>Entradas</th>
-                <th>Candy (u.)</th>
-                <th>Facturado</th>
-                <th>Crédito usado</th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (v of ventas(); track v.fecha) {
-            <tr [class.sin-ventas]="v.compras === 0">
-                <td>{{ v.fecha | date: 'EEE dd/MM' }}</td>
-                <td>{{ v.compras }}</td>
-                <td>{{ v.entradas }}</td>
-                <td>{{ v.unidades_candy }}</td>
-                <td>{{ v.facturado | pesos }}</td>
-                <td>{{ v.credito_usado | pesos }}</td>
-            </tr>
-            }
-        </tbody>
-        <tfoot>
-            <tr>
-                <th>Total</th>
-                <th>{{ t.compras }}</th>
-                <th>{{ t.entradas }}</th>
-                <th>{{ t.unidades_candy }}</th>
-                <th>{{ t.facturado | pesos }}</th>
-                <th>{{ t.credito_usado | pesos }}</th>
-            </tr>
-        </tfoot>
-    </table>
+    <div class="tabla">
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Compras</th>
+                    <th>Entradas</th>
+                    <th>Candy (u.)</th>
+                    <th>Facturado</th>
+                    <th>Crédito usado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (v of ventas(); track v.fecha) {
+                <tr [class.sin-ventas]="v.compras === 0">
+                    <td>{{ v.fecha | date: 'EEE dd/MM' }}</td>
+                    <td>{{ v.compras }}</td>
+                    <td>{{ v.entradas }}</td>
+                    <td>{{ v.unidades_candy }}</td>
+                    <td>{{ v.facturado | pesos }}</td>
+                    <td>{{ v.credito_usado | pesos }}</td>
+                </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th>Total</th>
+                    <th>{{ t.compras }}</th>
+                    <th>{{ t.entradas }}</th>
+                    <th>{{ t.unidades_candy }}</th>
+                    <th>{{ t.facturado | pesos }}</th>
+                    <th>{{ t.credito_usado | pesos }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
     <p class="meta">Facturado = lo cobrado en pesos. No incluye compras canceladas; lo pagado con crédito o puntos se
         informa aparte.</p>
     }

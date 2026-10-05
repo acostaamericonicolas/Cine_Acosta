@@ -23,10 +23,6 @@ La conexión a Supabase está en `cine/src/environments/environment.ts` (`supaba
 
 En Supabase → Authentication, la **confirmación de mail tiene que estar desactivada**: el registro necesita una sesión activa para crear el perfil.
 
-### Base de datos
-
-Los scripts de [`supabase/`](supabase/) se ejecutan **en orden** (`01_` a `16_`) en el SQL Editor de Supabase. Se pueden volver a ejecutar sin error.
-
 ### Publicar
 
 ```bash

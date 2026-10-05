@@ -1,1 +1,0 @@
-var e=[{valor:`cartelera`,texto:`En cartelera`},{valor:`proximamente`,texto:`Próximamente`},{valor:`oculta`,texto:`Oculta`}];export{e as t};

@@ -1,1 +1,0 @@
-var t=[{path:``,loadComponent:()=>import(`./chunk-CxMCVR1k.js`).then(o=>o.Validacion)}];export{t as EMPLEADO_ROUTES};

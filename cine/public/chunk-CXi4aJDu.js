@@ -1,1 +1,0 @@
-import{Ft as da,kn as ry}from"./chunk-CFucyWDT.js";var p=class e{transform(r,t=`largo`){if(r==null)return``;let n=ry(r,`es-AR`,`1.0-0`);return t===`corto`?`${n} pts`:`${n} ${Math.abs(r)===1?`punto`:`puntos`}`}static ɵfac=function(t){return new(t||e)};static ɵpipe=da({name:`puntos`,type:e,pure:!0})};export{p as t};

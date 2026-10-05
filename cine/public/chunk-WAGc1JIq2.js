@@ -1,1 +1,0 @@
-var t=[{path:``,pathMatch:`full`,redirectTo:`perfil`},{path:`perfil`,loadComponent:()=>import(`./chunk-CPDrh7Zl.js`).then(o=>o.Perfil)},{path:`compras`,loadComponent:()=>import(`./chunk-ZoaG9Xx52.js`).then(o=>o.MisCompras)}];export{t as CLIENTE_ROUTES};

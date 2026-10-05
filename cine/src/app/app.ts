@@ -1,5 +1,6 @@
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Actualizacion as ActualizacionService } from './services/actualizacion';
 import { Alertas as AlertasService } from './services/alertas';
 import { Auth as AuthService } from './services/auth';
 import { CatalogoVivo as CatalogoVivoService } from './services/catalogo-vivo';
@@ -20,6 +21,8 @@ export class App {
   private router = inject(Router);
   private alertas = inject(AlertasService);
   private vivo = inject(CatalogoVivoService);
+  // PWA: avisa cuando hay una versión nueva de la web publicada
+  actualizacion = inject(ActualizacionService);
 
   /**
    * HU-11: películas con alerta cuya venta abrió. Sin mails, el aviso aparece acá.

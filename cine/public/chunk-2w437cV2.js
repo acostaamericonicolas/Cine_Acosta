@@ -1,1 +1,0 @@
-function n(r,e=`No tenés permiso para hacer este cambio`){if(!r||r.length===0)throw new Error(e)}export{n as t};

@@ -1,1 +1,0 @@
-import{V as Ni,Yn as vh}from"./chunk-DbgaOpHc.js";var p=class e{transform(r,t=`largo`){if(r==null)return``;let n=vh(r,`es-AR`,`1.0-0`);return t===`corto`?`${n} pts`:`${n} ${Math.abs(r)===1?`punto`:`puntos`}`}static ɵfac=function(t){return new(t||e)};static ɵpipe=Ni({name:`puntos`,type:e,pure:!0})};export{p as t};

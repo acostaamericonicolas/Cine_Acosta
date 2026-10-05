@@ -1,1 +1,0 @@
-import{V as Ni}from"./chunk-DbgaOpHc.js";import{n as t}from"./chunk-CvfWnhH4.js";var o=class e{transform(i){return t.find(r=>r.valor===i)?.texto??i??``}static ɵfac=function(r){return new(r||e)};static ɵpipe=Ni({name:`idioma`,type:e,pure:!0})};export{o as t};

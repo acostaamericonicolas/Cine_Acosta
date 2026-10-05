@@ -1,1 +1,0 @@
-import{a as T}from"./chunk-Yv3LGWrK.js";import{n as r}from"./chunk-BbZFUQnI.js";function u(t,a=`La fecha no puede ser futura`){T(t,({value:e})=>e()&&e()>r()?{kind:`fecha-futura`,message:a}:null)}function f(t,a,e=`No puede ser anterior a la fecha de inicio`){T(t,({value:h,valueOf:n})=>h()&&n(a)&&h()<n(a)?{kind:`rango-invalido`,message:e}:null)}export{u as n,f as t};

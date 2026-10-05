@@ -42,6 +42,14 @@
   </div>
 </header>
 
+<!-- PWA: se publicó una versión nueva y el service worker ya la descargó -->
+@if (actualizacion.hayVersionNueva()) {
+<div class="version-nueva" role="status">
+  <span>✨ Hay una versión nueva de Cine Acosta.</span>
+  <button type="button" class="boton-primario" (click)="actualizacion.actualizar()">Actualizar</button>
+</div>
+}
+
 @if (avisos().length > 0) {
 <ul class="avisos" role="status">
   @for (a of avisos(); track a.pelicula_id) {

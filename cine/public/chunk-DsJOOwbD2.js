@@ -1,1 +1,0 @@
-import{Ft as da}from"./chunk-CFucyWDT.js";import{n as t}from"./chunk-CvfWnhH4.js";var o=class e{transform(i){return t.find(r=>r.valor===i)?.texto??i??``}static ɵfac=function(r){return new(r||e)};static ɵpipe=da({name:`idioma`,type:e,pure:!0})};export{o as t};
